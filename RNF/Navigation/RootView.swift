@@ -6,7 +6,6 @@ struct RootView: View {
 
         TabView {
 
-            
             ContentView()
                 .tabItem {
                     Label("Habits", systemImage: "checkmark.circle")
@@ -16,12 +15,10 @@ struct RootView: View {
                 .tabItem {
                     Label("Ascension", systemImage: "flame.fill")
                 }
-            .tabItem {
-                Label("Ascension", systemImage: "flame.fill")
-            }
 
         }
-
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
     }
 
 }

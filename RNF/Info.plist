@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphamV5ZGJ4dWh6Y2F1ZmtycHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MjEyMzksImV4cCI6MjA4ODk5NzIzOX0.8FuV73QO5tRSbhVlLcogAxtad8hBpRyB1lBczKeuxLo</string>
+	<key>SUPABASE_URL</key>
+	<string>https://jajeydbxuhzcaufkrpss.supabase.co</string>
+</dict>
+</plist>
