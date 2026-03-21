@@ -6,19 +6,30 @@ struct RootView: View {
 
         TabView {
 
-            ContentView()
-                .tabItem {
-                    Label("Habits", systemImage: "checkmark.circle")
-                }
+            NavigationStack {
+                ContentView()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .tabItem {
+                Label("Habits", systemImage: "checkmark.circle")
+            }
 
-            AscensionView()
-                .tabItem {
-                    Label("Ascension", systemImage: "flame.fill")
-                }
+            NavigationStack {
+                AscensionView()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .tabItem {
+                Label("Ascension", systemImage: "flame.fill")
+            }
 
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(
+            Color(.systemBackground)
+                .ignoresSafeArea()
+        )
+        .toolbarBackground(Color(.systemBackground), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 
 }

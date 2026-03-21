@@ -2,160 +2,170 @@ import SwiftUI
 
 struct AscensionView: View {
 
-    @EnvironmentObject var game: GameState
+    @EnvironmentObject private var game: GameState
+    private let viewModel = AscensionViewModel()
     @State private var glow = false
 
     var body: some View {
 
-        VStack(spacing: 30) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
 
-            Spacer()
+                VStack(spacing: 18) {
 
-            ZStack {
+                    ZStack {
 
-                Circle()
-                    .fill(levelColor().opacity(0.25))
-                    .frame(width: glow ? 240 : 200)
-                    .blur(radius: glow ? 45 : 25)
-                    .animation(
-                        .easeInOut(duration: 2)
-                        .repeatForever(autoreverses: true),
-                        value: glow
+                        Circle()
+                            .fill(viewModel.levelColor(for: game.level).opacity(0.18))
+                            .frame(width: glow ? 232 : 208)
+                            .blur(radius: glow ? 48 : 28)
+                            .animation(
+                                .easeInOut(duration: 2.2)
+                                .repeatForever(autoreverses: true),
+                                value: glow
+                            )
+
+                        VStack(spacing: 10) {
+
+                            Text("LEVEL \(game.level)")
+                                .font(.system(size: 42, weight: .black, design: .rounded))
+                                .foregroundStyle(Color.primary)
+
+                            Text(viewModel.rankTitle(for: game.level))
+                                .font(.system(size: 22, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color.secondary)
+
+                        }
+
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
+                    .onAppear { glow.toggle() }
+
+                    HStack(spacing: 12) {
+                        summaryChip(
+                            title: "Streak",
+                            value: "\(game.streak) days",
+                            tint: Color(red: 0.9, green: 0.46, blue: 0.18)
+                        )
+
+                        summaryChip(
+                            title: "Titles",
+                            value: "\(game.titles.count) earned",
+                            tint: viewModel.levelColor(for: game.level)
+                        )
+                    }
+
+                }
+                .padding(24)
+                .background { surfaceFill }
+                .overlay(surfaceBorder)
+                .shadow(color: Color.black.opacity(0.06), radius: 24, x: 0, y: 12)
+
+                VStack(alignment: .leading, spacing: 18) {
+
+                    Text("XP PROGRESS")
+                        .font(.system(size: 12, weight: .black, design: .rounded))
+                        .tracking(1.2)
+                        .foregroundStyle(.secondary)
+
+                    ProgressView(value: Double(game.xp), total: Double(max(game.xpToNext, 1)))
+                        .tint(viewModel.levelColor(for: game.level))
+                        .scaleEffect(x: 1, y: 1.8, anchor: .center)
+
+                    Text("\(game.xp) / \(game.xpToNext) XP")
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .background { surfaceFill }
+                .overlay(surfaceBorder)
+
+                VStack(alignment: .leading, spacing: 18) {
+
+                    Text("CHARACTER STATS")
+                        .font(.system(size: 12, weight: .black, design: .rounded))
+                        .tracking(1.2)
+                        .foregroundStyle(.secondary)
+
+                    DisciplineRadarChart(
+                        stats: viewModel.radarValues(for: game.stats)
                     )
-
-                VStack(spacing: 8) {
-
-                    Text("LEVEL \(game.level)")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-
-                    Text(rankTitle())
-                        .font(.title3)
-                        .foregroundColor(.gray)
+                    .frame(height: 240)
 
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .background { surfaceFill }
+                .overlay(surfaceBorder)
 
-            }
-            .onAppear { glow.toggle() }
+                VStack(alignment: .leading, spacing: 14) {
 
-            VStack(alignment: .leading, spacing: 8) {
+                    Text("TITLES")
+                        .font(.system(size: 12, weight: .black, design: .rounded))
+                        .tracking(1.2)
+                        .foregroundStyle(.secondary)
 
-                Text("XP PROGRESS")
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                    ForEach(game.titles, id: \.self) { title in
+                        HStack(spacing: 12) {
+                            Image(systemName: "seal.fill")
+                                .foregroundStyle(viewModel.levelColor(for: game.level))
+                            Text(title)
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.white.opacity(0.72))
+                        )
+                    }
 
-                ProgressView(value: Double(game.xp), total: Double(game.xpToNext))
-                    .tint(levelColor())
-
-                Text("\(game.xp) / \(game.xpToNext) XP")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-
-            }
-            .padding(.horizontal)
-
-            VStack(alignment: .leading, spacing: 10) {
-
-                Text("CHARACTER STATS")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
-                DisciplineRadarChart(
-                    stats: radarValues()
-                )
-                .frame(height: 220)
-
-            }
-            .padding(.horizontal)
-
-            VStack(spacing: 8) {
-
-                Text("🔥 \(game.streak) Day Streak")
-                    .font(.headline)
-
-                Text("Forged Discipline")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-
-                Text("TITLES")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
-                ForEach(game.titles, id: \.self) { title in
-                    Text("• \(title)")
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .background { surfaceFill }
+                .overlay(surfaceBorder)
 
             }
-
-            Spacer()
-
+            .padding()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
         .navigationTitle("Ascension")
+        .navigationBarTitleDisplayMode(.large)
 
     }
 
-    func levelColor() -> Color {
+    private var surfaceFill: some View {
+        RoundedRectangle(cornerRadius: 28, style: .continuous)
+            .fill(Color.white.opacity(0.88))
+    }
 
-        switch game.level {
+    private var surfaceBorder: some View {
+        RoundedRectangle(cornerRadius: 28, style: .continuous)
+            .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+    }
 
-        case 1...4:
-            return .yellow
-
-        case 5...9:
-            return .purple
-
-        case 10...14:
-            return .red
-
-        case 15...19:
-            return .blue
-
-        default:
-            return .white
+    private func summaryChip(title: String, value: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .black, design: .rounded))
+                .foregroundStyle(tint.opacity(0.75))
+            Text(value)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundStyle(tint)
         }
-
-    }
-
-    func rankTitle() -> String {
-
-        switch game.level {
-
-        case 1...4:
-            return "Disciple"
-
-        case 5...9:
-            return "Awakened"
-
-        case 10...14:
-            return "Ascendant"
-
-        case 15...19:
-            return "Warlord"
-
-        default:
-            return "Apex"
-        }
-
-    }
-
-    func radarValues() -> [Double] {
-
-        let maxStat = 20.0
-
-        return [
-            Double(game.stats.strength) / maxStat,
-            Double(game.stats.discipline) / maxStat,
-            Double(game.stats.focus) / maxStat,
-            Double(game.stats.energy) / maxStat,
-            Double(game.stats.wisdom) / maxStat,
-            Double(game.stats.mind) / maxStat,
-            Double(game.stats.spirit) / maxStat
-        ]
-
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(
+            Capsule()
+                .fill(tint.opacity(0.12))
+        )
     }
 
 }

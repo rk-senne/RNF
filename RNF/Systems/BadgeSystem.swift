@@ -27,4 +27,16 @@ struct BadgeSystem {
 
     }
 
+    static func titles(for streak: Int) -> [String] {
+
+        [3, 7, 14, 30, 90].compactMap { milestone in
+            guard milestone <= streak else {
+                return nil
+            }
+
+            return badge(for: milestone)
+        }
+
+    }
+
 }

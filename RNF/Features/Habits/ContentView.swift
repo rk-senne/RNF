@@ -1,116 +1,105 @@
 import SwiftUI
-import Supabase
 
 struct ContentView: View {
 
-    // MARK: - Habit Data
-
-    @State private var habits: [Habit] = [
-        Habit(id: UUID(), name: "Drink Water", description: nil, xpReward: 10),
-        Habit(id: UUID(), name: "Read 10 Pages", description: nil, xpReward: 15),
-        Habit(id: UUID(), name: "Workout", description: nil, xpReward: 20),
-        Habit(id: UUID(), name: "Meditate", description: nil, xpReward: 10),
-        Habit(id: UUID(), name: "Stretch", description: nil, xpReward: 10),
-        Habit(id: UUID(), name: "Journal", description: nil, xpReward: 15),
-        Habit(id: UUID(), name: "Cold Shower", description: nil, xpReward: 20),
-        Habit(id: UUID(), name: "Walk 10 Minutes", description: nil, xpReward: 10)
-    ]
-
-    @State private var completedHabits: Set<UUID> = []
-
-    // MARK: - XP System
-
-    @State private var xpGained: Int? = nil
-    @State private var totalXP: Int = 120
-    @State private var levelXP: Int = 200
-    @State private var level: Int = 1
-    @State private var showLevelUp: Bool = false
-
-    // MARK: - Daily Mission System
-
-    @State private var dailyCompleted: Int = 0
-    @State private var dailyGoal: Int = 4
-    @State private var showMissionComplete: Bool = false
-
-    // MARK: - Streak & Badge System
-
-    @State private var streakDays: Int = 0
-    @State private var showBadgeUnlocked: Bool = false
-    @State private var unlockedBadge: String = ""
-
-    // MARK: - Profile
-
-    @State private var profile: Profile?
-
-    // MARK: - Player Stats
-
-    @State private var stats = Stats(
-        strength: 2,
-        discipline: 2,
-        focus: 2,
-        energy: 2,
-        wisdom: 2,
-        mind: 2,
-        spirit: 2
-    )
-
-    // MARK: - Animation
-
-    @State private var animatedHabit: UUID?
-
-    // MARK: - Data Persistence
-
-    @AppStorage("lastResetDate") private var lastResetDate: String = ""
-    
-    
-
-    // MARK: - UI
+    @EnvironmentObject private var game: GameState
+    @StateObject private var viewModel = HabitsViewModel()
 
     var body: some View {
 
-        NavigationView {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
 
-            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 18) {
 
-                DailyMissionBar(
-                    completed: dailyCompleted,
-                    goal: dailyGoal
-                )
+                    HStack(alignment: .top) {
 
-                XPBar(
-                    xp: totalXP,
-                    levelXP: levelXP,
-                    level: level
-                )
+                        VStack(alignment: .leading, spacing: 6) {
 
-                ScrollView {
+                            Text("TODAY'S FORGE")
+                                .font(.system(size: 12, weight: .black, design: .rounded))
+                                .tracking(1.2)
+                                .foregroundStyle(Color.secondary)
 
-                    VStack(spacing: 12) {
-
-                        ForEach(habits) { habit in
-
-                            HabitRow(
-                                habit: habit,
-                                completed: completedHabits.contains(habit.id),
-                                animated: animatedHabit == habit.id,
-                                action: {
-                                    Task {
-                                        await completeHabit(habit)
-                                    }
-                                }
-                            )
+                            Text("Show up. Stack wins. Keep the chain alive.")
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundStyle(Color.primary)
+                                .fixedSize(horizontal: false, vertical: true)
 
                         }
 
+                        Spacer(minLength: 16)
+
+                        VStack(alignment: .trailing, spacing: 10) {
+                            statPill(
+                                title: "Streak",
+                                value: "\(game.streak) days",
+                                tint: Color(red: 0.82, green: 0.39, blue: 0.15)
+                            )
+
+                            statPill(
+                                title: "Quests",
+                                value: "\(game.quests.count) live",
+                                tint: Color(red: 0.3, green: 0.43, blue: 0.86)
+                            )
+                        }
+
                     }
-                    .padding()
+
+                    DailyMissionBar(
+                        completed: game.dailyCompleted,
+                        goal: game.dailyGoal
+                    )
+
+                    XPBar(
+                        xp: game.xp,
+                        levelXP: game.xpToNext,
+                        level: game.level
+                    )
 
                 }
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(Color.white.opacity(0.9))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.06), radius: 24, x: 0, y: 12)
+
+                Text("Today's Quests")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.primary)
+
+                VStack(spacing: 14) {
+
+                    ForEach(game.quests) { habit in
+
+                        HabitRow(
+                            habit: habit,
+                            completed: game.completedHabitIDs.contains(habit.id),
+                            animated: viewModel.animatedHabit == habit.id,
+                            action: {
+                                Task {
+                                    await viewModel.completeHabit(habit)
+                                }
+                            }
+                        )
+
+                    }
+
+                }
+                .padding(.bottom, 24)
 
             }
-            .navigationTitle("RNF Quests")
-
+            .padding()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
+        .navigationTitle("RNF Quests")
+        .navigationBarTitleDisplayMode(.large)
 
         .overlay(XPGainOverlay)
         .overlay(LevelUpOverlay)
@@ -118,29 +107,36 @@ struct ContentView: View {
         .overlay(BadgeUnlockedOverlay)
 
         .task {
-
-            checkDailyReset()
-
-            dailyGoal = QuestDifficultySystem.questsPerDay(for: level)
-
-            let generated = QuestGenerator.generateDailyQuests(
-                profile: profile ?? Profile.placeholder,
-                quests: QuestRepository.all
-            )
-
-            let quests = [generated.main].compactMap { $0 } + generated.side
-            habits = QuestMapper.toHabits(quests)
-            await loadProfile()
+            await viewModel.load(gameState: game)
         }
 
         .onReceive(NotificationCenter.default.publisher(
             for: UIApplication.willEnterForegroundNotification
         )) { _ in
 
-            checkDailyReset()
+            viewModel.handleForegroundTransition()
 
         }
 
+    }
+
+    private func statPill(title: String, value: String, tint: Color) -> some View {
+
+        VStack(alignment: .trailing, spacing: 3) {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .black, design: .rounded))
+                .foregroundStyle(tint.opacity(0.75))
+
+            Text(value)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(tint)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(
+            Capsule()
+                .fill(tint.opacity(0.12))
+        )
     }
 
     // MARK: - Overlays
@@ -149,7 +145,7 @@ struct ContentView: View {
 
         Group {
 
-            if let xp = xpGained {
+            if let xp = viewModel.xpGained {
 
                 Text("+\(xp) XP")
                     .font(.largeTitle)
@@ -159,7 +155,7 @@ struct ContentView: View {
                     .onAppear {
 
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                            xpGained = nil
+                            viewModel.xpGained = nil
                         }
 
                     }
@@ -174,7 +170,7 @@ struct ContentView: View {
 
         Group {
 
-            if showLevelUp {
+            if viewModel.showLevelUp {
 
                 VStack(spacing: 16) {
 
@@ -182,7 +178,7 @@ struct ContentView: View {
                         .font(.largeTitle)
                         .fontWeight(.black)
 
-                    Text("LEVEL \(level)")
+                    Text("LEVEL \(game.level)")
                         .font(.title)
 
                 }
@@ -190,12 +186,12 @@ struct ContentView: View {
                 .background(Color.yellow)
                 .cornerRadius(20)
                 .shadow(radius: 20)
-                .transition(.scale)
-                .onAppear {
+                    .transition(.scale)
+                    .onAppear {
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showLevelUp = false
-                    }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            viewModel.showLevelUp = false
+                        }
 
                 }
 
@@ -209,7 +205,7 @@ struct ContentView: View {
 
         Group {
 
-            if showMissionComplete {
+            if viewModel.showMissionComplete {
 
                 VStack(spacing: 16) {
 
@@ -224,12 +220,12 @@ struct ContentView: View {
                 .background(Color.green)
                 .cornerRadius(20)
                 .shadow(radius: 20)
-                .transition(.scale)
-                .onAppear {
+                    .transition(.scale)
+                    .onAppear {
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showMissionComplete = false
-                    }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            viewModel.showMissionComplete = false
+                        }
 
                 }
 
@@ -243,7 +239,7 @@ struct ContentView: View {
 
         Group {
 
-            if showBadgeUnlocked {
+            if viewModel.showBadgeUnlocked {
 
                 VStack(spacing: 16) {
 
@@ -251,7 +247,7 @@ struct ContentView: View {
                         .font(.largeTitle)
                         .fontWeight(.black)
 
-                    Text(unlockedBadge)
+                    Text(viewModel.unlockedBadge)
                         .font(.title)
 
                 }
@@ -259,118 +255,15 @@ struct ContentView: View {
                 .background(Color.purple)
                 .cornerRadius(20)
                 .shadow(radius: 20)
-                .transition(.scale)
-                .onAppear {
+                    .transition(.scale)
+                    .onAppear {
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showBadgeUnlocked = false
-                    }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            viewModel.showBadgeUnlocked = false
+                        }
 
                 }
 
-            }
-
-        }
-
-    }
-
-    // MARK: - Supabase
-
-    func loadProfile() async {
-
-        do {
-
-            let profiles: [Profile] = try await SupabaseManager.shared.client
-                .from("profiles")
-                .select()
-                .limit(1)
-                .execute()
-                .value
-
-            profile = profiles.first
-
-        } catch {
-
-            print("Error loading profile:", error)
-
-        }
-
-    }
-
-    // MARK: - Daily Reset
-
-    func checkDailyReset() {
-
-        let today = DateFormatter.localizedString(
-            from: Date(),
-            dateStyle: .short,
-            timeStyle: .none
-        )
-
-        if lastResetDate != today {
-
-            lastResetDate = today
-
-            completedHabits.removeAll()
-            dailyCompleted = 0
-
-            print("Daily quests reset")
-
-        }
-
-    }
-
-    // MARK: - Habit Completion
-
-    func completeHabit(_ habit: Habit) async {
-
-        print("Habit tapped:", habit.name)
-
-        await MainActor.run {
-
-            animatedHabit = habit.id
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                animatedHabit = nil
-            }
-
-            completedHabits.insert(habit.id)
-
-            xpGained = habit.xpReward
-            totalXP += habit.xpReward
-            dailyCompleted += 1
-
-            StatSystem.applyReward(stats: &stats, for: habit.name)
-
-            if dailyCompleted == dailyGoal {
-
-                showMissionComplete = true
-
-                streakDays = StreakSystem.updateStreak(
-                    currentStreak: streakDays,
-                    dailyCompleted: dailyCompleted,
-                    dailyGoal: dailyGoal
-                )
-
-                if let badge = BadgeSystem.badge(for: streakDays) {
-                    unlockedBadge = badge
-                    showBadgeUnlocked = true
-                }
-            }
-
-            let result = XPSystem.applyXP(
-                currentXP: totalXP,
-                gainedXP: habit.xpReward,
-                levelXP: levelXP,
-                currentLevel: level
-            )
-
-            totalXP = result.xp
-            level = result.level
-            dailyGoal = QuestDifficultySystem.questsPerDay(for: level)
-
-            if result.leveledUp {
-                showLevelUp = true
             }
 
         }

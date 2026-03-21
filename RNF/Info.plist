@@ -6,6 +6,8 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphamV5ZGJ4dWh6Y2F1ZmtycHNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MjEyMzksImV4cCI6MjA4ODk5NzIzOX0.8FuV73QO5tRSbhVlLcogAxtad8hBpRyB1lBczKeuxLo</string>
 	<key>SUPABASE_URL</key>
