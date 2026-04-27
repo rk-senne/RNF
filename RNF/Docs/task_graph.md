@@ -70,7 +70,7 @@ Depends on:
 - P6-SVC-03
 - P6-SVC-04
 
-- [ ] P6-SVC-06 Add pure daily status calculation helper in `DailyLogService.swift`
+- [x] P6-SVC-06 Add pure daily status calculation helper in `DailyLogService.swift`
 Depends on:
 - P6-SVC-03
 

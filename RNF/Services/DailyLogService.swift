@@ -143,6 +143,21 @@ final class DailyLogService {
         return createdCompletion
     }
 
+    func calculateStatus(for dailyLog: DailyLog) -> DailyLog.Status {
+
+        if dailyLog.habits_completed == dailyLog.habits_required &&
+            dailyLog.workout_completed &&
+            dailyLog.reading_completed {
+            return .complete
+        }
+
+        if dailyLog.habits_completed > 0 {
+            return .partial
+        }
+
+        return .missed
+    }
+
     func saveDailyLog(_ dailyLog: DailyLog) async {
 
         guard dailyLog.user_id != nil else {
