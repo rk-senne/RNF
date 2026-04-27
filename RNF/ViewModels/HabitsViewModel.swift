@@ -10,6 +10,7 @@ final class HabitsViewModel: ObservableObject {
     @Published var showBadgeUnlocked = false
     @Published var unlockedBadge = ""
     @Published var animatedHabit: UUID?
+    @Published var loadErrorMessage: String?
 
     private let userService: UserService
     private let questService: QuestService
@@ -42,10 +43,18 @@ final class HabitsViewModel: ObservableObject {
 
         let profile = await userService.loadProfile()
         let questPlan = questService.generateDailyHabits(for: profile)
-        let dailyLog = await DailyLogService().getTodayLog(
-            for: profile,
-            dailyGoal: questPlan.dailyGoal
-        )
+        let dailyLog: DailyLog
+
+        do {
+            dailyLog = try await DailyLogService().getTodayLog(
+                for: profile,
+                dailyGoal: questPlan.dailyGoal
+            )
+            loadErrorMessage = nil
+        } catch {
+            loadErrorMessage = error.localizedDescription
+            return
+        }
 
         applyState(
             profile: profile,

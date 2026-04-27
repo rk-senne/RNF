@@ -4,15 +4,6 @@ import PostgREST
 
 final class DailyLogService {
 
-    private static let dayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
     private let supabase: SupabaseService
     private let habitService: HabitService
     private let userService: UserService
@@ -27,15 +18,19 @@ final class DailyLogService {
         self.userService = userService
     }
 
+    private func normalizedDay(_ date: Date) -> Date {
+        Calendar.current.startOfDay(for: date)
+    }
+
     func fetchTodayLog(userId: UUID, date: Date) async throws -> DailyLog? {
 
-        let dayString = Self.dayFormatter.string(from: date.startOfDay)
+        let normalizedDate = normalizedDay(date)
 
         let logs: [DailyLog] = try await supabase.client
             .from("daily_logs")
             .select()
             .eq("user_id", value: userId.uuidString)
-            .eq("date", value: dayString)
+            .eq("date", value: normalizedDate)
             .limit(1)
             .execute()
             .value
@@ -45,10 +40,12 @@ final class DailyLogService {
 
     func createDailyLog(userId: UUID, date: Date) async throws -> DailyLog {
 
+        let normalizedDate = normalizedDay(date)
+
         let dailyLog = DailyLog(
             id: UUID(),
             user_id: userId,
-            date: date.startOfDay,
+            date: normalizedDate,
             habits_completed: 0,
             habits_required: 2,
             workout_completed: false,
@@ -59,35 +56,44 @@ final class DailyLogService {
             created_at: nil
         )
 
-        let createdLog: DailyLog = try await supabase.client
-            .from("daily_logs")
-            .insert(dailyLog)
-            .select()
-            .single()
-            .execute()
-            .value
+        do {
+            let createdLog: DailyLog = try await supabase.client
+                .from("daily_logs")
+                .insert(dailyLog)
+                .select()
+                .single()
+                .execute()
+                .value
 
-        return createdLog
+            return createdLog
+        } catch {
+            if let existingLog = try await fetchTodayLog(userId: userId, date: normalizedDate) {
+                return existingLog
+            }
+
+            throw error
+        }
     }
 
-    func getTodayLog(for profile: Profile, dailyGoal: Int) async -> DailyLog {
+    func getTodayLog(for profile: Profile, dailyGoal: Int) async throws -> DailyLog {
 
         guard !profile.isPlaceholder else {
             return .today(goal: dailyGoal)
         }
 
-        do {
-            if let log = try await fetchTodayLog(
-                userId: profile.id,
-                date: Date()
-            ) {
-                return log
-            }
-        } catch {
-            // Fall back to a local daily log when the backend is unavailable.
+        let today = normalizedDay(Date())
+
+        if let log = try await fetchTodayLog(
+            userId: profile.id,
+            date: today
+        ) {
+            return log
         }
 
-        return .today(userID: profile.id, goal: dailyGoal)
+        return try await createDailyLog(
+            userId: profile.id,
+            date: today
+        )
     }
 
     func recordCompletion(_ completion: HabitCompletion) async {
@@ -100,10 +106,24 @@ final class DailyLogService {
             return
         }
 
+        let normalizedDailyLog = DailyLog(
+            id: dailyLog.id,
+            user_id: dailyLog.user_id,
+            date: normalizedDay(dailyLog.date),
+            habits_completed: dailyLog.habits_completed,
+            habits_required: dailyLog.habits_required,
+            workout_completed: dailyLog.workout_completed,
+            reading_completed: dailyLog.reading_completed,
+            forgiveness_used: dailyLog.forgiveness_used,
+            xp_earned: dailyLog.xp_earned,
+            status: dailyLog.status,
+            created_at: dailyLog.created_at
+        )
+
         do {
             try await supabase.client
                 .from("daily_logs")
-                .upsert(dailyLog)
+                .upsert(normalizedDailyLog)
                 .execute()
         } catch {
             // Local state stays consistent even if the backend call fails.

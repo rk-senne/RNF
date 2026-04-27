@@ -24,11 +24,11 @@ Status legend:
 - `[x]` complete
 - `[ ]` not started
 
-👉 NEXT TASK TO IMPLEMENT
+ NEXT TASK TO IMPLEMENT
 
-- [x] P6-SVC-02 Add `DailyLogService.createDailyLog(userId:date:)` insert logic in `DailyLogService.swift`
+- [ ] P6-SVC-04 Add duplicate completion lookup in `DailyLogService.recordHabitCompletion(...)`
 Depends on:
-- P6-MDL-01
+- P6-SVC-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -38,11 +38,11 @@ Depends on:
 Depends on:
 - none
 
-- [ ] P6-MDL-02 Create `Challenge.swift` matching the `challenges` table contract
+- [x] P6-MDL-02 Create `Challenge.swift` matching the `challenges` table contract
 Depends on:
 - P6-MDL-01
 
-- [ ] P6-MDL-03 Create a calendar-facing `DailyLogStatus` helper type for complete, partial, missed, and forgiven states
+- [x] P6-MDL-03 Create a calendar-facing `DailyLogStatus` helper type for complete, partial, missed, and forgiven states
 Depends on:
 - P6-MDL-01
 
@@ -56,7 +56,7 @@ Depends on:
 Depends on:
 - P6-MDL-01
 
-- [ ] P6-SVC-03 Add create-if-missing behavior to `DailyLogService.getTodayLog(...)`
+- [x] P6-SVC-03 Add create-if-missing behavior to `DailyLogService.getTodayLog(...)`
 Depends on:
 - P6-SVC-01
 - P6-SVC-02
