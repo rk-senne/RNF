@@ -52,13 +52,14 @@ write_trust() {
 codex_exec() {
   local prompt_file="$1"
   local output_file="$2"
-  local args=(exec --cd "$ROOT_DIR" --sandbox workspace-write --ask-for-approval never --output-last-message "$output_file")
+  local prompt
+  prompt="$(cat "$prompt_file")"
 
   if [[ -n "$CODEX_MODEL" ]]; then
-    args+=(--model "$CODEX_MODEL")
+    (cd "$ROOT_DIR" && "$CODEX_BIN" exec --model "$CODEX_MODEL" "$prompt") | tee "$output_file"
+  else
+    (cd "$ROOT_DIR" && "$CODEX_BIN" exec "$prompt") | tee "$output_file"
   fi
-
-  "$CODEX_BIN" "${args[@]}" - < "$prompt_file"
 }
 
 extract_risk() {
