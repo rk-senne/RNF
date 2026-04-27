@@ -52,13 +52,11 @@ write_trust() {
 codex_exec() {
   local prompt_file="$1"
   local output_file="$2"
-  local prompt
-  prompt="$(cat "$prompt_file")"
 
   if [[ -n "$CODEX_MODEL" ]]; then
-    (cd "$ROOT_DIR" && "$CODEX_BIN" exec --model "$CODEX_MODEL" "$prompt") | tee "$output_file"
+    (cd "$ROOT_DIR" && "$CODEX_BIN" exec --model "$CODEX_MODEL" --sandbox workspace-write < "$prompt_file") | tee "$output_file"
   else
-    (cd "$ROOT_DIR" && "$CODEX_BIN" exec "$prompt") | tee "$output_file"
+    (cd "$ROOT_DIR" && "$CODEX_BIN" exec --sandbox workspace-write < "$prompt_file") | tee "$output_file"
   fi
 }
 
