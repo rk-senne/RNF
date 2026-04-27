@@ -65,7 +65,7 @@ Depends on:
 Depends on:
 - P6-SVC-01
 
-- [ ] P6-SVC-05 Add habit completion insert path in `DailyLogService.recordHabitCompletion(...)`
+- [x] P6-SVC-05 Add habit completion insert path in `DailyLogService.recordHabitCompletion(...)`
 Depends on:
 - P6-SVC-03
 - P6-SVC-04

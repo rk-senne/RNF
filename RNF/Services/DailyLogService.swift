@@ -118,7 +118,29 @@ final class DailyLogService {
             .execute()
             .value
 
-        return completions.first
+        if let existingCompletion = completions.first {
+            return existingCompletion
+        }
+
+        let normalizedCompletion = HabitCompletion(
+            id: completion.id,
+            user_id: completion.user_id,
+            habit_id: completion.habit_id,
+            completed_at: completion.completed_at,
+            date: normalizedDate,
+            xp_awarded: completion.xp_awarded,
+            created_at: completion.created_at
+        )
+
+        let createdCompletion: HabitCompletion = try await supabase.client
+            .from("habit_completions")
+            .insert(normalizedCompletion)
+            .select()
+            .single()
+            .execute()
+            .value
+
+        return createdCompletion
     }
 
     func saveDailyLog(_ dailyLog: DailyLog) async {
