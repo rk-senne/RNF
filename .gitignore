@@ -24,4 +24,4 @@ Secrets.swift
 *.log
 
 # Temporary
-tmp/
+tmp/.rnf/
