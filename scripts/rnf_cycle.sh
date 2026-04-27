@@ -9,8 +9,7 @@ BUILDER_PROMPT="$ROOT_DIR/scripts/rnf_builder_prompt.txt"
 VERIFIER_PROMPT="$ROOT_DIR/scripts/rnf_verifier_prompt.txt"
 TASK_GRAPH="$ROOT_DIR/RNF/Docs/task_graph.md"
 
-CODEX_BIN="${CODEX_BIN:-codex}"
-CODEX_MODEL="${CODEX_MODEL:-}"
+CODEX_BIN="${CODEX_BIN:-/Users/regosenne/.npm-global/bin/codex}"CODEX_MODEL="${CODEX_MODEL:-}"
 RNF_MAX_CYCLES="${RNF_MAX_CYCLES:-1}"
 TRUST_MAX="${TRUST_MAX:-100}"
 
