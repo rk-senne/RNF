@@ -26,7 +26,7 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P6-SVC-04 Add duplicate completion lookup in `DailyLogService.recordHabitCompletion(...)`
+- [x] P6-SVC-04 Add duplicate completion lookup in `DailyLogService.recordHabitCompletion(...)`
 Depends on:
 - P6-SVC-01
 
@@ -61,7 +61,7 @@ Depends on:
 - P6-SVC-01
 - P6-SVC-02
 
-- [ ] P6-SVC-04 Add duplicate completion lookup in `DailyLogService.recordHabitCompletion(...)`
+- [x] P6-SVC-04 Add duplicate completion lookup in `DailyLogService.recordHabitCompletion(...)`
 Depends on:
 - P6-SVC-01
 

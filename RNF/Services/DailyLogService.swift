@@ -100,6 +100,27 @@ final class DailyLogService {
         await habitService.recordCompletion(completion)
     }
 
+    func recordHabitCompletion(_ completion: HabitCompletion) async throws -> HabitCompletion? {
+
+        guard let userId = completion.user_id else {
+            return nil
+        }
+
+        let normalizedDate = normalizedDay(completion.date)
+
+        let completions: [HabitCompletion] = try await supabase.client
+            .from("habit_completions")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .eq("habit_id", value: completion.habit_id.uuidString)
+            .eq("date", value: normalizedDate)
+            .limit(1)
+            .execute()
+            .value
+
+        return completions.first
+    }
+
     func saveDailyLog(_ dailyLog: DailyLog) async {
 
         guard dailyLog.user_id != nil else {
