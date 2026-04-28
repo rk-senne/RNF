@@ -6,6 +6,9 @@ STATE_DIR="$ROOT_DIR/.rnf"
 LOG_DIR="$STATE_DIR/logs"
 TRUST_FILE="$STATE_DIR/trust_score"
 HIGH_COUNT_FILE="$STATE_DIR/high_count"
+LAST_RISK_FILE="$STATE_DIR/last_risk"
+LAST_FAILURE_FILE="$STATE_DIR/last_failure"
+LOW_STREAK_FILE="$STATE_DIR/low_streak"
 
 BUILDER_PROMPT="$ROOT_DIR/scripts/rnf_builder_prompt.txt"
 VERIFIER_PROMPT="$ROOT_DIR/scripts/rnf_verifier_prompt.txt"
@@ -18,6 +21,7 @@ RNF_RUN_UNTIL_BLOCKED="${RNF_RUN_UNTIL_BLOCKED:-0}"
 RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES="${RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES:-10}"
 TRUST_MAX="${TRUST_MAX:-100}"
 HIGH_LIMIT="${HIGH_LIMIT:-3}"
+LOW_STREAK_PAUSE_LIMIT="${LOW_STREAK_PAUSE_LIMIT:-3}"
 
 mkdir -p "$LOG_DIR"
 
@@ -67,15 +71,148 @@ write_number() {
   printf '%s\n' "$2" > "$1"
 }
 
+read_text() {
+  local file="$1"
+  local fallback="$2"
+
+  if [[ -f "$file" ]]; then
+    local value
+    value="$(sed -n '1p' "$file")"
+    if [[ -n "$value" ]]; then
+      echo "$value"
+      return
+    fi
+  fi
+
+  echo "$fallback"
+}
+
+write_text() {
+  printf '%s\n' "$2" > "$1"
+}
+
 codex_exec() {
-  local prompt_file="$1"
+  local prompt_text="$1"
   local output_file="$2"
 
   if [[ -n "$CODEX_MODEL" ]]; then
-    "$CODEX_BIN" exec --cd "$ROOT_DIR" --model "$CODEX_MODEL" --sandbox workspace-write < "$prompt_file" | tee "$output_file"
+    printf '%s\n' "$prompt_text" | "$CODEX_BIN" exec --cd "$ROOT_DIR" --model "$CODEX_MODEL" --sandbox workspace-write | tee "$output_file"
   else
-    "$CODEX_BIN" exec --cd "$ROOT_DIR" --sandbox workspace-write < "$prompt_file" | tee "$output_file"
+    printf '%s\n' "$prompt_text" | "$CODEX_BIN" exec --cd "$ROOT_DIR" --sandbox workspace-write | tee "$output_file"
   fi
+}
+
+current_task() {
+  local task
+  task="$(grep -E '^- \[ \] ' "$TASK_GRAPH" | sed -n '1p' || true)"
+
+  if [[ -n "$task" ]]; then
+    echo "$task"
+    return
+  fi
+
+  echo "none"
+}
+
+latest_log() {
+  local pattern="$1"
+  find "$LOG_DIR" -type f -name "$pattern" -print0 2>/dev/null \
+    | xargs -0 ls -t 2>/dev/null \
+    | sed -n '1p' || true
+}
+
+last_risk_from_logs() {
+  local log
+  log="$(latest_log '*_verifier.log')"
+
+  if [[ -n "$log" ]]; then
+    local risk
+    risk="$(extract_risk "$log")"
+    if [[ -n "$risk" ]]; then
+      echo "$risk"
+      return
+    fi
+  fi
+
+  read_text "$LAST_RISK_FILE" "NONE"
+}
+
+failure_reason_from_file() {
+  local output_file="$1"
+
+  if grep -Eiq 'no (next |dependency-free )?task|no task is dependency-free|no dependency-free task|no available task|nothing to implement' "$output_file"; then
+    echo "no next task is available"
+    return
+  fi
+
+  if grep -Eiq 'build (failed|failure)|failed build|build did not succeed' "$output_file"; then
+    echo "build fails"
+    return
+  fi
+
+  if grep -Eiq 'verifier failed|risk output invalid|invalid risk' "$output_file"; then
+    echo "Verifier fails"
+    return
+  fi
+
+  if grep -Eiq 'builder failed' "$output_file"; then
+    echo "Builder fails"
+    return
+  fi
+
+  echo ""
+}
+
+last_failure_from_logs() {
+  local log
+
+  log="$(latest_log '*_builder.log')"
+  if [[ -n "$log" ]]; then
+    local reason
+    reason="$(failure_reason_from_file "$log")"
+    if [[ -n "$reason" ]]; then
+      echo "$reason"
+      return
+    fi
+  fi
+
+  log="$(latest_log '*_verifier.log')"
+  if [[ -n "$log" ]]; then
+    local risk
+    risk="$(extract_risk "$log")"
+    case "$risk" in
+      MEDIUM)
+        echo "Verifier returns MEDIUM"
+        return
+        ;;
+      HIGH)
+        echo "Verifier returns HIGH"
+        return
+        ;;
+    esac
+
+    local reason
+    reason="$(failure_reason_from_file "$log")"
+    if [[ -n "$reason" ]]; then
+      echo "$reason"
+      return
+    fi
+  fi
+
+  read_text "$LAST_FAILURE_FILE" "none"
+}
+
+prompt_with_context() {
+  local base_prompt_file="$1"
+  local last_risk="$2"
+  local last_failure="$3"
+  local task="$4"
+
+  printf '%s\n\nContext:\n- Last risk: %s\n- Last failure: %s\n- Current task: %s\n' \
+    "$(cat "$base_prompt_file")" \
+    "$last_risk" \
+    "$last_failure" \
+    "$task"
 }
 
 extract_risk() {
@@ -93,18 +230,7 @@ extract_risk() {
 
 builder_stop_reason() {
   local output_file="$1"
-
-  if grep -Eiq 'no (next |dependency-free )?task|no task is dependency-free|no dependency-free task|no available task|nothing to implement' "$output_file"; then
-    echo "no next task is available"
-    return
-  fi
-
-  if grep -Eiq 'build (failed|failure)|failed build|build did not succeed' "$output_file"; then
-    echo "build fails"
-    return
-  fi
-
-  echo ""
+  failure_reason_from_file "$output_file"
 }
 
 cycle_summary() {
@@ -133,12 +259,17 @@ require_bool "RNF_RUN_UNTIL_BLOCKED" "$RNF_RUN_UNTIL_BLOCKED"
 require_int "RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES" "$RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES"
 require_int "TRUST_MAX" "$TRUST_MAX"
 require_int "HIGH_LIMIT" "$HIGH_LIMIT"
+require_int "LOW_STREAK_PAUSE_LIMIT" "$LOW_STREAK_PAUSE_LIMIT"
 
 trust="$(read_number "$TRUST_FILE" 0)"
 high_count="$(read_number "$HIGH_COUNT_FILE" 0)"
+low_streak="$(read_number "$LOW_STREAK_FILE" 0)"
 
 write_number "$TRUST_FILE" "$trust"
 write_number "$HIGH_COUNT_FILE" "$high_count"
+write_number "$LOW_STREAK_FILE" "$low_streak"
+write_text "$LAST_RISK_FILE" "$(last_risk_from_logs)"
+write_text "$LAST_FAILURE_FILE" "$(last_failure_from_logs)"
 
 cycle=1
 
@@ -156,6 +287,11 @@ while :; do
   stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
   builder_log="$LOG_DIR/${stamp}_cycle_${cycle}_builder.log"
   verifier_log="$LOG_DIR/${stamp}_cycle_${cycle}_verifier.log"
+  current_task="$(current_task)"
+  last_risk="$(last_risk_from_logs)"
+  last_failure="$(last_failure_from_logs)"
+  builder_prompt="$(prompt_with_context "$BUILDER_PROMPT" "$last_risk" "$last_failure" "$current_task")"
+  verifier_prompt="$(prompt_with_context "$VERIFIER_PROMPT" "$last_risk" "$last_failure" "$current_task")"
 
   if [[ "$RNF_RUN_UNTIL_BLOCKED" == "1" ]]; then
     echo "RNF cycle $cycle/$RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES (run until blocked)"
@@ -164,10 +300,16 @@ while :; do
   fi
   echo "Trust score: $trust"
   echo "High-risk count: $high_count"
+  echo "LOW-risk streak: $low_streak"
+  echo "Decision context:"
+  echo "- Last risk: $last_risk"
+  echo "- Last failure: $last_failure"
+  echo "- Current task: $current_task"
 
-  if ! codex_exec "$BUILDER_PROMPT" "$builder_log"; then
+  if ! codex_exec "$builder_prompt" "$builder_log"; then
     echo "Builder failed. Stopping and resetting trust."
     write_number "$TRUST_FILE" 0
+    write_text "$LAST_FAILURE_FILE" "Builder fails"
     echo "Builder log: $builder_log"
     cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Builder fails"
     exit 1
@@ -176,38 +318,54 @@ while :; do
   stop_reason="$(builder_stop_reason "$builder_log")"
   if [[ -n "$stop_reason" ]]; then
     echo "Builder reported stop condition: $stop_reason"
+    write_text "$LAST_FAILURE_FILE" "$stop_reason"
     echo "Builder log: $builder_log"
     cycle_summary "$cycle" "N/A" "$trust" "$stop_reason"
     exit 0
   fi
 
-  if ! codex_exec "$VERIFIER_PROMPT" "$verifier_log"; then
+  if ! codex_exec "$verifier_prompt" "$verifier_log"; then
     echo "Verifier failed. Stopping and resetting trust."
     write_number "$TRUST_FILE" 0
+    write_text "$LAST_FAILURE_FILE" "Verifier fails"
     echo "Verifier log: $verifier_log"
     cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Verifier fails"
     exit 1
   fi
 
   risk="$(extract_risk "$verifier_log")"
+  write_text "$LAST_RISK_FILE" "$risk"
   echo "Verifier risk: $risk"
 
   case "$risk" in
     LOW)
       high_count=0
       write_number "$HIGH_COUNT_FILE" "$high_count"
+      low_streak="$((low_streak + 1))"
+      write_number "$LOW_STREAK_FILE" "$low_streak"
 
       if [[ "$trust" -lt "$TRUST_MAX" ]]; then
         trust="$((trust + 1))"
       fi
 
       write_number "$TRUST_FILE" "$trust"
+      write_text "$LAST_FAILURE_FILE" "none"
       echo "Trust score updated: $trust"
+      echo "LOW-risk streak updated: $low_streak"
       cycle_summary "$cycle" "$risk" "$trust" ""
+
+      if [[ "$low_streak" -ge "$LOW_STREAK_PAUSE_LIMIT" ]]; then
+        echo "LOW streak pause limit reached. Pausing for human verification."
+        cycle_summary "$cycle" "$risk" "$trust" "LOW streak pause limit reached"
+        exit 0
+      fi
       ;;
 
     MEDIUM)
       echo "MEDIUM risk. Stopping with trust score preserved."
+      low_streak=0
+      write_number "$LOW_STREAK_FILE" "$low_streak"
+      write_text "$LAST_FAILURE_FILE" "Verifier returns MEDIUM"
       echo "Verifier log: $verifier_log"
       cycle_summary "$cycle" "$risk" "$trust" "Verifier returns MEDIUM"
       exit 0
@@ -215,8 +373,11 @@ while :; do
 
     HIGH)
       high_count="$((high_count + 1))"
+      low_streak=0
       write_number "$HIGH_COUNT_FILE" "$high_count"
+      write_number "$LOW_STREAK_FILE" "$low_streak"
       write_number "$TRUST_FILE" 0
+      write_text "$LAST_FAILURE_FILE" "Verifier returns HIGH"
 
       echo "HIGH risk. Trust reset."
       echo "High-risk count: $high_count"
@@ -232,6 +393,7 @@ while :; do
 
     *)
       echo "Invalid risk value. Stopping with trust score preserved."
+      write_text "$LAST_FAILURE_FILE" "Verifier risk output invalid"
       echo "Verifier log: $verifier_log"
       cycle_summary "$cycle" "$risk" "$trust" "Verifier risk output invalid"
       exit 1
