@@ -158,6 +158,30 @@ final class DailyLogService {
         return .missed
     }
 
+    func updateStatus(userId: UUID, date: Date) async throws -> DailyLog? {
+
+        guard let dailyLog = try await fetchTodayLog(userId: userId, date: date) else {
+            return nil
+        }
+
+        let updatedStatus = calculateStatus(for: dailyLog)
+
+        struct StatusUpdate: Encodable {
+            let status: DailyLog.Status
+        }
+
+        let updatedLog: DailyLog = try await supabase.client
+            .from("daily_logs")
+            .update(StatusUpdate(status: updatedStatus))
+            .eq("id", value: dailyLog.id.uuidString)
+            .select()
+            .single()
+            .execute()
+            .value
+
+        return updatedLog
+    }
+
     func saveDailyLog(_ dailyLog: DailyLog) async {
 
         guard dailyLog.user_id != nil else {
