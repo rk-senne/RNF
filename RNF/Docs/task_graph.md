@@ -74,7 +74,7 @@ Depends on:
 Depends on:
 - P6-SVC-03
 
-- [ ] P6-SVC-07 Add `DailyLogService.updateStatus(...)` persistence logic
+- [x] P6-SVC-07 Add `DailyLogService.updateStatus(...)` persistence logic
 Depends on:
 - P6-SVC-03
 - P6-SVC-06
