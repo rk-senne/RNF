@@ -81,7 +81,7 @@ Depends on:
 
 ### Challenge Service
 
-- [ ] P6-SVC-08 Create `ChallengeService.swift` shell in `Services/`
+- [x] P6-SVC-08 Create `ChallengeService.swift` shell in `Services/`
 Depends on:
 - P6-MDL-02
 
