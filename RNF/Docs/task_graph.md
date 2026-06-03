@@ -26,10 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P13-UI-01 Surface active perks in `SkillTreeView`
+- [x] P13-TST-03 Add active perk UI smoke tests
 Depends on:
-- P13-SVC-01
-- P12-UI-02
+- P13-UI-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -770,25 +769,25 @@ Depends on:
 
 ### UI
 
-- [ ] P13-UI-01 Surface active perks in `SkillTreeView`
+- [x] P13-UI-01 Surface active perks in `SkillTreeView`
 Depends on:
 - P13-SVC-01
 - P12-UI-02
 
-- [ ] P13-UI-02 Add active perk summary to the ascension surface
+- [x] P13-UI-02 Add active perk summary to the ascension surface
 Depends on:
 - P13-UI-01
 - P12-UI-04
 
 ### Tests
 
-- [ ] P13-TST-01 Add perk aggregation and modifier unit tests
+- [x] P13-TST-01 Add perk aggregation and modifier unit tests
 Depends on:
 - P13-SYS-01
 - P13-SYS-02
 - P13-SYS-03
 
-- [ ] P13-TST-02 Add perk integration tests for XP, stats, quests, and streak protection
+- [x] P13-TST-02 Add perk integration tests for XP, stats, quests, and streak protection
 Depends on:
 - P13-ENG-01
 - P13-ENG-02
@@ -796,6 +795,6 @@ Depends on:
 - P13-ENG-04
 - P13-ENG-05
 
-- [ ] P13-TST-03 Add active perk UI smoke tests
+- [x] P13-TST-03 Add active perk UI smoke tests
 Depends on:
 - P13-UI-02

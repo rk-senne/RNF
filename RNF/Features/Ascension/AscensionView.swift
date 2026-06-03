@@ -6,8 +6,12 @@ struct AscensionView: View {
     private let viewModel = AscensionViewModel()
     private let challengeEngine = ChallengeEngine()
     private let calendarService = CalendarService()
+    private let skillTreeService = SkillTreeService()
     @State private var glow = false
     @State private var activeChallenge: Challenge?
+    @State private var activePerks: ActivePerkSummary = .empty
+    @State private var activePerksLoadFailed = false
+    @State private var isLoadingActivePerks = false
     @State private var calendarMonth = Date()
     @State private var calendarStatuses: [Date: DailyLogStatus] = [:]
     @State private var calendarLoadFailed = false
@@ -73,6 +77,8 @@ struct AscensionView: View {
                 challengeSummary
 
                 EvolutionView()
+
+                activePerkSummary
 
                 engagementEntryPoints
 
@@ -156,9 +162,107 @@ struct AscensionView: View {
         .navigationBarTitleDisplayMode(.large)
         .task(id: game.profile.id) {
             await loadChallengeSummary()
+            await loadActivePerkSummary()
             await loadCalendarSummary()
         }
 
+    }
+
+    private var activePerkSummary: some View {
+
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("ACTIVE PERKS")
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundStyle(.secondary)
+
+                Spacer(minLength: 12)
+
+                Text(activePerkStatusText)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(viewModel.levelColor(for: game.level))
+            }
+
+            if activePerkMetricCount == 0 {
+                Text(activePerksLoadFailed ? "Perks unavailable" : "No active perks")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 10),
+                        GridItem(.flexible(), spacing: 10)
+                    ],
+                    spacing: 10
+                ) {
+                    if activePerks.xpMultiplierPercent > 0 {
+                        perkMetricChip(
+                            title: "XP",
+                            value: "+\(activePerks.xpMultiplierPercent)%",
+                            icon: "arrow.up.circle.fill"
+                        )
+                    }
+
+                    if totalStatBonus > 0 {
+                        perkMetricChip(
+                            title: "Stats",
+                            value: "+\(totalStatBonus)",
+                            icon: "chart.bar.fill"
+                        )
+                    }
+
+                    if activePerks.questRewardBonus > 0 {
+                        perkMetricChip(
+                            title: "Quest XP",
+                            value: "+\(activePerks.questRewardBonus)",
+                            icon: "gift.fill"
+                        )
+                    }
+
+                    if activePerks.streakProtectionCount > 0 {
+                        perkMetricChip(
+                            title: "Protection",
+                            value: "\(activePerks.streakProtectionCount)",
+                            icon: "shield.fill"
+                        )
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background { surfaceFill }
+        .overlay(surfaceBorder)
+
+    }
+
+    private var activePerkStatusText: String {
+        if isLoadingActivePerks {
+            return "Syncing"
+        }
+
+        if activePerksLoadFailed {
+            return "Offline"
+        }
+
+        return "\(activePerks.effects.count) active"
+    }
+
+    private var totalStatBonus: Int {
+        activePerks.statBonuses.values.reduce(0, +)
+    }
+
+    private var activePerkMetricCount: Int {
+        [
+            activePerks.xpMultiplierPercent,
+            totalStatBonus,
+            activePerks.questRewardBonus,
+            activePerks.streakProtectionCount
+        ]
+        .filter { $0 > 0 }
+        .count
     }
 
     private var engagementEntryPoints: some View {
@@ -402,6 +506,20 @@ struct AscensionView: View {
         activeChallenge = await challengeEngine.loadActiveChallenge(userId: game.profile.id)
     }
 
+    private func loadActivePerkSummary() async {
+        isLoadingActivePerks = true
+        activePerksLoadFailed = false
+
+        do {
+            activePerks = try await skillTreeService.activePerks(for: game.profile)
+        } catch {
+            activePerks = .empty
+            activePerksLoadFailed = true
+        }
+
+        isLoadingActivePerks = false
+    }
+
     private func loadCalendarSummary() async {
         calendarMonth = Date()
 
@@ -479,6 +597,35 @@ struct AscensionView: View {
         .background(
             Capsule()
                 .fill(tint.opacity(0.12))
+        )
+    }
+
+    private func perkMetricChip(title: String, value: String, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(viewModel.levelColor(for: game.level))
+                .frame(width: 22, height: 22)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title.uppercased())
+                    .font(.system(size: 9, weight: .black, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                Text(value)
+                    .font(.system(size: 15, weight: .black, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.72))
         )
     }
 

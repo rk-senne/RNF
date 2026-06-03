@@ -35,4 +35,54 @@ final class EngagementNavigationSmokeTests: XCTestCase {
         XCTAssertNotNil(view.body)
     }
 
+    func testSkillTreeActivePerkSurfaceBuildsForUnlockedProfile() {
+        let game = GameState()
+        var profile = Profile.placeholder
+        profile.level = SkillTreeSystem.unlockLevel
+        profile.energy = SkillTreeSystem.unlockLevel
+
+        game.apply(
+            profile: profile,
+            levelState: XPSystem.levelState(for: profile.xp_total),
+            titles: [],
+            quests: [],
+            dailyGoal: 1,
+            dailyCompleted: 0,
+            completedHabitIDs: [],
+            dailyLog: .today(goal: 1)
+        )
+
+        let view = NavigationStack {
+            SkillTreeView()
+                .environmentObject(game)
+        }
+
+        XCTAssertNotNil(view.body)
+    }
+
+    func testAscensionActivePerkSummarySurfaceBuilds() {
+        let game = GameState()
+        var profile = Profile.placeholder
+        profile.level = SkillTreeSystem.unlockLevel
+        profile.energy = SkillTreeSystem.unlockLevel
+
+        game.apply(
+            profile: profile,
+            levelState: XPSystem.levelState(for: profile.xp_total),
+            titles: [],
+            quests: [],
+            dailyGoal: 1,
+            dailyCompleted: 0,
+            completedHabitIDs: [],
+            dailyLog: .today(goal: 1)
+        )
+
+        let view = NavigationStack {
+            AscensionView()
+                .environmentObject(game)
+        }
+
+        XCTAssertNotNil(view.body)
+    }
+
 }

@@ -3,6 +3,15 @@ import SwiftUI
 struct SkillTreeView: View {
 
     @EnvironmentObject private var game: GameState
+    @State private var activePerks: ActivePerkSummary = .empty
+    @State private var isLoadingActivePerks = false
+    @State private var activePerkLoadFailed = false
+
+    private let skillTreeService: SkillTreeService
+
+    init(skillTreeService: SkillTreeService = SkillTreeService()) {
+        self.skillTreeService = skillTreeService
+    }
 
     private var isUnlocked: Bool {
         SkillTreeSystem.isSkillTreeUnlocked(for: game.profile)
@@ -17,6 +26,7 @@ struct SkillTreeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
+                activePerksSection
 
                 LazyVGrid(
                     columns: [
@@ -43,6 +53,9 @@ struct SkillTreeView: View {
         .background(Color(.systemBackground))
         .navigationTitle("Skill Tree")
         .navigationBarTitleDisplayMode(.large)
+        .task(id: game.profile.id) {
+            await loadActivePerks()
+        }
     }
 
     private var header: some View {
@@ -90,6 +103,107 @@ struct SkillTreeView: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
         )
+    }
+
+    private var activePerksSection: some View {
+
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("ACTIVE PERKS")
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.secondary)
+
+                Spacer()
+
+                Text(activePerkStatusText)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.secondary)
+            }
+
+            if activePerks.effects.isEmpty {
+                Text(activePerkEmptyText)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(activePerks.effects) { effect in
+                        ActivePerkRow(effect: effect)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+        )
+    }
+
+    private var activePerkStatusText: String {
+        if isLoadingActivePerks {
+            return "Syncing"
+        }
+
+        if activePerkLoadFailed {
+            return "Unavailable"
+        }
+
+        return "\(activePerks.effects.count)"
+    }
+
+    private var activePerkEmptyText: String {
+        activePerkLoadFailed ? "Perks unavailable" : "No active perks"
+    }
+
+    private func loadActivePerks() async {
+        isLoadingActivePerks = true
+        activePerkLoadFailed = false
+
+        do {
+            activePerks = try await skillTreeService.activePerks(for: game.profile)
+        } catch {
+            activePerks = .empty
+            activePerkLoadFailed = true
+        }
+
+        isLoadingActivePerks = false
+    }
+
+}
+
+private struct ActivePerkRow: View {
+
+    let effect: PerkEffect
+
+    var body: some View {
+
+        HStack(spacing: 10) {
+            Image(systemName: effect.iconName)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(Color(red: 0.31, green: 0.25, blue: 0.72))
+                .frame(width: 24, height: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(effect.name)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.primary)
+                    .lineLimit(1)
+
+                Text(effect.summaryText)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
 }
@@ -157,6 +271,44 @@ private struct SkillTreePathCard: View {
         }
 
         return tint
+    }
+
+}
+
+private extension PerkEffect {
+
+    var summaryText: String {
+        switch effect_type {
+
+        case .xpMultiplier:
+            return "+\(value)% XP"
+
+        case .statBonus:
+            return "+\(value) \(stat_type?.displayName ?? "Stat")"
+
+        case .questRewardBonus:
+            return "+\(value) quest XP"
+
+        case .streakProtection:
+            return "\(value) streak protection"
+        }
+    }
+
+    var iconName: String {
+        switch effect_type {
+
+        case .xpMultiplier:
+            return "arrow.up.circle.fill"
+
+        case .statBonus:
+            return stat_type?.iconName ?? "plus.circle.fill"
+
+        case .questRewardBonus:
+            return "gift.fill"
+
+        case .streakProtection:
+            return "shield.fill"
+        }
     }
 
 }
