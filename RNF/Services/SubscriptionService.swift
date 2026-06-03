@@ -23,15 +23,18 @@ final class SubscriptionService {
     private let supabase: SupabaseService
     private let productIDs: Set<String>
     private let analyticsService: AnalyticsService
+    private let authProvider: AuthProviding
 
     init(
         supabase: SupabaseService = .shared,
         productIDs: Set<String> = [],
-        analyticsService: AnalyticsService = AnalyticsService()
+        analyticsService: AnalyticsService = AnalyticsService(),
+        authProvider: AuthProviding? = nil
     ) {
         self.supabase = supabase
         self.productIDs = productIDs
         self.analyticsService = analyticsService
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     func getSubscriptionState() async {
@@ -96,6 +99,11 @@ final class SubscriptionService {
                 planType: update.plan_type
             )
         }
+    }
+
+    func syncSubscription() async throws {
+        let userId = try await authProvider.requireCurrentUserID()
+        try await syncSubscription(userId: userId)
     }
 
     func trackTrialStarted(

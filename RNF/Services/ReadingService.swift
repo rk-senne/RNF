@@ -9,13 +9,16 @@ final class ReadingService {
 
     private let supabase: SupabaseService
     private let dailyLogService: DailyLogService
+    private let authProvider: AuthProviding
 
     init(
         supabase: SupabaseService = .shared,
-        dailyLogService: DailyLogService = DailyLogService()
+        dailyLogService: DailyLogService = DailyLogService(),
+        authProvider: AuthProviding? = nil
     ) {
         self.supabase = supabase
         self.dailyLogService = dailyLogService
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     func uploadReadingProof(
@@ -55,12 +58,30 @@ final class ReadingService {
         return createdUpload
     }
 
+    func uploadReadingProof(
+        imageData: Data,
+        date: Date = Date()
+    ) async throws -> ReadingUpload {
+
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await uploadReadingProof(
+            imageData: imageData,
+            userId: userId,
+            date: date
+        )
+    }
+
     func dailyLogForReading(userId: UUID, date: Date = Date()) async throws -> DailyLog {
         if let dailyLog = try await dailyLogService.fetchTodayLog(userId: userId, date: date) {
             return dailyLog
         }
 
         return try await dailyLogService.createDailyLog(userId: userId, date: date)
+    }
+
+    func dailyLogForReading(date: Date = Date()) async throws -> DailyLog {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await dailyLogForReading(userId: userId, date: date)
     }
 
     func completeReading(userId: UUID, date: Date = Date()) async throws -> DailyLog {
@@ -80,6 +101,11 @@ final class ReadingService {
             .value
 
         return try await dailyLogService.updateStatus(userId: userId, date: date) ?? completedLog
+    }
+
+    func completeReading(date: Date = Date()) async throws -> DailyLog {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await completeReading(userId: userId, date: date)
     }
 
     private static func proofPath(userId: UUID, date: Date) -> String {

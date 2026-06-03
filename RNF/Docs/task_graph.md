@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-AUTH-02 Wire authenticated user resolution into production user-owned services
+- [ ] P14-AUTH-03 Replace global first-profile reads in production launch paths
 Depends on:
-- P14-AUTH-01
+- P14-AUTH-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -821,7 +821,7 @@ Depends on:
 Depends on:
 - P14-MIG-02
 
-- [ ] P14-AUTH-02 Wire authenticated user resolution into production user-owned services
+- [x] P14-AUTH-02 Wire authenticated user resolution into production user-owned services
 Depends on:
 - P14-AUTH-01
 

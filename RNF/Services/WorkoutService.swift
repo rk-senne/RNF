@@ -6,13 +6,16 @@ final class WorkoutService {
 
     private let supabase: SupabaseService
     private let dailyLogService: DailyLogService
+    private let authProvider: AuthProviding
 
     init(
         supabase: SupabaseService = .shared,
-        dailyLogService: DailyLogService = DailyLogService()
+        dailyLogService: DailyLogService = DailyLogService(),
+        authProvider: AuthProviding? = nil
     ) {
         self.supabase = supabase
         self.dailyLogService = dailyLogService
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     func dailyLogForWorkout(userId: UUID, date: Date = Date()) async throws -> DailyLog {
@@ -21,6 +24,11 @@ final class WorkoutService {
         }
 
         return try await dailyLogService.createDailyLog(userId: userId, date: date)
+    }
+
+    func dailyLogForWorkout(date: Date = Date()) async throws -> DailyLog {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await dailyLogForWorkout(userId: userId, date: date)
     }
 
     func completeWorkout(userId: UUID, date: Date = Date()) async throws -> DailyLog {
@@ -40,6 +48,11 @@ final class WorkoutService {
             .value
 
         return try await dailyLogService.updateStatus(userId: userId, date: date) ?? completedLog
+    }
+
+    func completeWorkout(date: Date = Date()) async throws -> DailyLog {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await completeWorkout(userId: userId, date: date)
     }
 
     func startTimer(duration: TimeInterval) async {

@@ -6,13 +6,16 @@ final class ChallengeService {
 
     private let supabase: SupabaseService
     private let analyticsService: AnalyticsService
+    private let authProvider: AuthProviding
 
     init(
         supabase: SupabaseService = .shared,
-        analyticsService: AnalyticsService = AnalyticsService()
+        analyticsService: AnalyticsService = AnalyticsService(),
+        authProvider: AuthProviding? = nil
     ) {
         self.supabase = supabase
         self.analyticsService = analyticsService
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     private func normalizedDay(_ date: Date) -> Date {
@@ -57,6 +60,11 @@ final class ChallengeService {
         return createdChallenge
     }
 
+    func startChallenge(startDate: Date = Date()) async throws -> Challenge {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await startChallenge(userId: userId, startDate: startDate)
+    }
+
     func getActiveChallenge(userId: UUID) async throws -> Challenge? {
 
         let challenges: [Challenge] = try await supabase.client
@@ -69,6 +77,11 @@ final class ChallengeService {
             .value
 
         return challenges.first
+    }
+
+    func getActiveChallenge() async throws -> Challenge? {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await getActiveChallenge(userId: userId)
     }
 
     func advanceDay(_ challenge: Challenge) async throws -> Challenge {

@@ -13,9 +13,14 @@ final class UserService {
     }
 
     private let supabase: SupabaseService
+    private let authProvider: AuthProviding
 
-    init(supabase: SupabaseService = .shared) {
+    init(
+        supabase: SupabaseService = .shared,
+        authProvider: AuthProviding? = nil
+    ) {
         self.supabase = supabase
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     func loadProfile() async -> Profile {
@@ -48,6 +53,11 @@ final class UserService {
         return rows.first?.forgiveness_tokens ?? 0
     }
 
+    func fetchForgivenessTokens() async throws -> Int {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await fetchForgivenessTokens(userId: userId)
+    }
+
     func decrementForgivenessTokens(userId: UUID) async throws -> Int {
 
         let currentTokens = try await fetchForgivenessTokens(userId: userId)
@@ -67,6 +77,11 @@ final class UserService {
             .value
 
         return updatedRow.forgiveness_tokens
+    }
+
+    func decrementForgivenessTokens() async throws -> Int {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await decrementForgivenessTokens(userId: userId)
     }
 
     func saveProfile(_ profile: Profile) async {
