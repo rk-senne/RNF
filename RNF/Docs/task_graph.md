@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
+- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
 Depends on:
-- P14-SVC-01
+- P14-OBS-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -860,7 +860,7 @@ Depends on:
 
 ### Observability
 
-- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
+- [x] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
 Depends on:
 - P14-SVC-01
 
