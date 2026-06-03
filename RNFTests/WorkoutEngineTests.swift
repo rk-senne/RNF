@@ -143,6 +143,47 @@ final class WorkoutEngineTests: XCTestCase {
         XCTAssertNotNil(workoutPatch)
     }
 
+    func testCompleteWorkoutReturnsExistingDailyLogWithoutPatchWhenAlreadyCompleted() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.dailyLogJSON(
+                        id: dailyLogId,
+                        userId: userId,
+                        workoutCompleted: true,
+                        wrappedInArray: request.httpMethod == "GET"
+                    )
+                )
+            )
+        }
+
+        let supabase = makeSupabaseService()
+        let service = WorkoutService(
+            supabase: supabase,
+            dailyLogService: DailyLogService(supabase: supabase)
+        )
+        let result = try await service.completeWorkout(userId: userId, date: date)
+
+        XCTAssertEqual(result.id, dailyLogId)
+        XCTAssertTrue(result.workout_completed)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
+    }
+
     private func makeSupabaseService() -> SupabaseService {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]

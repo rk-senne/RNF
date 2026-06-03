@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
 Depends on:
-- P14-SVC-02
+- P14-SVC-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -840,7 +840,7 @@ Depends on:
 - P14-SVC-01
 - P14-MIG-01
 
-- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+- [x] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
 Depends on:
 - P14-SVC-02
 

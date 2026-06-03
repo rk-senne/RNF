@@ -27,6 +27,11 @@ final class ReadingService {
         date: Date = Date()
     ) async throws -> ReadingUpload {
 
+        if let existingUpload = try await fetchReadingUpload(userId: userId, date: date) {
+            _ = try await completeReading(userId: userId, date: date)
+            return existingUpload
+        }
+
         let path = Self.proofPath(userId: userId, date: date)
 
         try await supabase.client.storage
@@ -87,6 +92,10 @@ final class ReadingService {
     func completeReading(userId: UUID, date: Date = Date()) async throws -> DailyLog {
         let dailyLog = try await dailyLogForReading(userId: userId, date: date)
 
+        guard !dailyLog.reading_completed else {
+            return dailyLog
+        }
+
         struct ReadingCompletionUpdate: Encodable {
             let reading_completed: Bool
         }
@@ -110,6 +119,20 @@ final class ReadingService {
 
     private static func proofPath(userId: UUID, date: Date) -> String {
         "\(userId.uuidString)/\(date.formatted("yyyy-MM-dd")).jpg"
+    }
+
+    private func fetchReadingUpload(userId: UUID, date: Date) async throws -> ReadingUpload? {
+
+        let uploads: [ReadingUpload] = try await supabase.client
+            .from("reading_uploads")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .eq("date", value: date.startOfDay)
+            .limit(1)
+            .execute()
+            .value
+
+        return uploads.first
     }
 
 }

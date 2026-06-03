@@ -81,6 +81,10 @@ final class ReadingEngineTests: XCTestCase {
                 )
             }
 
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (response, Self.jsonData("[]"))
+            }
+
             if request.httpMethod == "PATCH", url.contains("daily_logs") {
                 return (
                     response,
@@ -166,6 +170,107 @@ final class ReadingEngineTests: XCTestCase {
             .compactMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Bool] }
             .first { $0["reading_completed"] == true }
         XCTAssertNotNil(readingPatch)
+    }
+
+    func testCompleteReadingReturnsExistingDailyLogWithoutPatchWhenAlreadyCompleted() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.dailyLogJSON(
+                        id: dailyLogId,
+                        userId: userId,
+                        readingCompleted: true,
+                        wrappedInArray: request.httpMethod == "GET"
+                    )
+                )
+            )
+        }
+
+        let supabase = makeSupabaseService()
+        let service = ReadingService(
+            supabase: supabase,
+            dailyLogService: DailyLogService(supabase: supabase)
+        )
+        let result = try await service.completeReading(userId: userId, date: date)
+
+        XCTAssertEqual(result.id, dailyLogId)
+        XCTAssertTrue(result.reading_completed)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
+    }
+
+    func testUploadReadingProofReturnsExistingUploadWithoutDuplicateInsert() async throws {
+        let userId = UUID()
+        let uploadId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let url = request.url?.absoluteString ?? ""
+
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (
+                    response,
+                    Self.jsonData(
+                        "[\(Self.readingUploadJSON(id: uploadId, userId: userId, imageURL: "reading-proof/\(userId.uuidString)/2026-06-08.jpg"))]"
+                    )
+                )
+            }
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.dailyLogJSON(
+                        id: dailyLogId,
+                        userId: userId,
+                        readingCompleted: true,
+                        wrappedInArray: request.httpMethod == "GET"
+                    )
+                )
+            )
+        }
+
+        let supabase = makeSupabaseService()
+        let service = ReadingService(
+            supabase: supabase,
+            dailyLogService: DailyLogService(supabase: supabase)
+        )
+        let result = try await service.uploadReadingProof(
+            imageData: Data("proof-image".utf8),
+            userId: userId,
+            date: date
+        )
+
+        XCTAssertEqual(result.id, uploadId)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET", "GET"])
+        XCTAssertFalse(requests.contains { request in
+            request.httpMethod == "POST" &&
+                ((request.url?.absoluteString.contains("reading_uploads") ?? false) ||
+                 (request.url?.absoluteString.contains("/storage/v1/object/reading-proof/") ?? false))
+        })
     }
 
     private func makeSupabaseService() -> SupabaseService {

@@ -34,6 +34,10 @@ final class WorkoutService {
     func completeWorkout(userId: UUID, date: Date = Date()) async throws -> DailyLog {
         let dailyLog = try await dailyLogForWorkout(userId: userId, date: date)
 
+        guard !dailyLog.workout_completed else {
+            return dailyLog
+        }
+
         struct WorkoutCompletionUpdate: Encodable {
             let workout_completed: Bool
         }
