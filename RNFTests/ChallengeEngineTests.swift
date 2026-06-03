@@ -86,6 +86,75 @@ final class ChallengeEngineTests: XCTestCase {
         XCTAssertEqual(completionBody?["status"], "completed")
     }
 
+    func testAdvanceIfDayCompleteUsesNormalizedChallengeStartDayBoundary() async {
+        let userId = UUID()
+        let challengeId = UUID()
+        let dailyLogId = UUID()
+        let challengeStartDate = "2026-03-10T23:30:00Z"
+        let testDate = Self.date("2026-03-10T00:05:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let url = request.url?.absoluteString ?? ""
+
+            if request.httpMethod == "GET", url.contains("challenges") {
+                return (
+                    response,
+                    Self.jsonData(
+                        "[\(Self.challengeJSON(id: challengeId, userId: userId, currentDay: 1, status: "active", startDate: challengeStartDate))]"
+                    )
+                )
+            }
+
+            if request.httpMethod == "GET", url.contains("daily_logs") {
+                return (
+                    response,
+                    Self.jsonData(
+                        "[\(Self.dailyLogJSON(id: dailyLogId, userId: userId, status: "partial"))]"
+                    )
+                )
+            }
+
+            if request.httpMethod == "PATCH", url.contains("daily_logs") {
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(id: dailyLogId, userId: userId, status: "complete")
+                    )
+                )
+            }
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.challengeJSON(
+                        id: challengeId,
+                        userId: userId,
+                        currentDay: 2,
+                        status: "active",
+                        startDate: challengeStartDate
+                    )
+                )
+            )
+        }
+
+        let engine = makeChallengeEngine(calendar: Self.gmtCalendar())
+        let result = await engine.advanceIfDayComplete(userId: userId, date: testDate)
+
+        XCTAssertEqual(result?.id, challengeId)
+        XCTAssertEqual(result?.current_day, 2)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET", "GET", "PATCH", "PATCH"])
+        XCTAssertTrue(requests[1].url?.absoluteString.contains("daily_logs") ?? false)
+    }
+
     func testRestartChallengeResetsCompletedChallengeAndStartsNewChallenge() async {
         let userId = UUID()
         let completedChallengeId = UUID()
@@ -247,13 +316,14 @@ final class ChallengeEngineTests: XCTestCase {
         XCTAssertNotNil(forgivenDailyLogSave)
     }
 
-    private func makeChallengeEngine() -> ChallengeEngine {
+    private func makeChallengeEngine(calendar: Calendar = .current) -> ChallengeEngine {
         let supabase = makeSupabaseService()
 
         return ChallengeEngine(
             challengeService: ChallengeService(supabase: supabase),
             dailyLogService: DailyLogService(supabase: supabase),
-            userService: UserService(supabase: supabase)
+            userService: UserService(supabase: supabase),
+            calendar: calendar
         )
     }
 
@@ -280,6 +350,12 @@ final class ChallengeEngineTests: XCTestCase {
 
     private static func date(_ string: String) -> Date {
         ISO8601DateFormatter().date(from: string) ?? Date(timeIntervalSince1970: 0)
+    }
+
+    private static func gmtCalendar() -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar
     }
 
     private static func requestBodyData(from request: URLRequest) -> Data? {
@@ -318,14 +394,16 @@ final class ChallengeEngineTests: XCTestCase {
         id: UUID,
         userId: UUID,
         currentDay: Int,
-        status: String
+        status: String,
+        startDate: String = "2026-03-10T00:00:00Z",
+        endDate: String = "2026-06-08T00:00:00Z"
     ) -> String {
         """
         {
           "id": "\(id.uuidString)",
           "user_id": "\(userId.uuidString)",
-          "start_date": "2026-03-10T00:00:00Z",
-          "end_date": "2026-06-08T00:00:00Z",
+          "start_date": "\(startDate)",
+          "end_date": "\(endDate)",
           "current_day": \(currentDay),
           "status": "\(status)",
           "created_at": null

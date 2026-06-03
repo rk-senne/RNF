@@ -117,6 +117,19 @@ final class ChallengeServiceTests: XCTestCase {
         XCTAssertEqual(bodyObject?["current_day"], Challenge.totalDays)
     }
 
+    func testChallengeEndDateUsesNormalizedStartDate() throws {
+        let startDate = Self.date("2026-03-10T15:45:30Z")
+        let normalizedStartDate = Calendar.current.startOfDay(for: startDate)
+        let expectedEndDate = try XCTUnwrap(
+            Calendar.current.date(byAdding: .day, value: Challenge.totalDays - 1, to: normalizedStartDate)
+        )
+
+        XCTAssertEqual(
+            Challenge.endDate(for: startDate),
+            expectedEndDate
+        )
+    }
+
     private func makeSupabaseService() -> SupabaseService {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
@@ -136,6 +149,10 @@ final class ChallengeServiceTests: XCTestCase {
 
     private static func jsonData(_ string: String) -> Data {
         Data(string.utf8)
+    }
+
+    private static func date(_ string: String) -> Date {
+        ISO8601DateFormatter().date(from: string) ?? Date(timeIntervalSince1970: 0)
     }
 
     private static func requestBodyData(from request: URLRequest) -> Data? {

@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
+- [ ] P14-TIME-02 Document timezone policy in service and state docs
 Depends on:
-- P14-MIG-01
+- P14-TIME-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -850,7 +850,7 @@ Depends on:
 
 ### Date And Time Safety
 
-- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
+- [x] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
 Depends on:
 - P14-MIG-01
 

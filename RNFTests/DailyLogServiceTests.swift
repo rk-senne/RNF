@@ -248,6 +248,35 @@ final class DailyLogServiceTests: XCTestCase {
         XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
     }
 
+    func testFetchTodayLogQueriesNormalizedDate() async throws {
+        let userId = UUID()
+        let inputDate = Self.date("2026-03-10T15:45:30Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData("[]"))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        _ = try await service.fetchTodayLog(userId: userId, date: inputDate)
+
+        let request = try XCTUnwrap(requests.first)
+        let dateFilter = try XCTUnwrap(Self.queryValue(named: "date", in: request))
+        let normalizedDateString = String(dateFilter.dropFirst("eq.".count))
+        let queriedDate = try XCTUnwrap(Self.date(from: normalizedDateString))
+
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertTrue(dateFilter.hasPrefix("eq."))
+        XCTAssertEqual(queriedDate, Calendar.current.startOfDay(for: inputDate))
+    }
+
     func testSaveDailyLogSurfacesLocalOnlyResultWhenRemoteSaveFails() async throws {
         let userId = UUID()
         var requests: [URLRequest] = []
@@ -331,6 +360,32 @@ final class DailyLogServiceTests: XCTestCase {
 
     private static func jsonData(_ string: String) -> Data {
         Data(string.utf8)
+    }
+
+    private static func date(_ string: String) -> Date {
+        ISO8601DateFormatter().date(from: string) ?? Date(timeIntervalSince1970: 0)
+    }
+
+    private static func date(from string: String) -> Date? {
+        let fractionalFormatter = ISO8601DateFormatter()
+        fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        if let date = fractionalFormatter.date(from: string) {
+            return date
+        }
+
+        return ISO8601DateFormatter().date(from: string)
+    }
+
+    private static func queryValue(named name: String, in request: URLRequest) -> String? {
+        guard let url = request.url else {
+            return nil
+        }
+
+        return URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?
+            .first { $0.name == name }?
+            .value
     }
 
     private static func requestBodyData(from request: URLRequest) -> Data? {
