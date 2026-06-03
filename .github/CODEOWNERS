@@ -1,0 +1,13 @@
+# Default owner until the team grows.
+* @rk-senne
+
+# High-risk areas.
+/supabase/migrations/ @rk-senne
+/.github/ @rk-senne
+/scripts/ @rk-senne
+/RNF/Docs/ @rk-senne
+
+# Core app boundaries.
+/RNF/Core/ @rk-senne
+/RNF/Services/ @rk-senne
+/RNF/Systems/ @rk-senne

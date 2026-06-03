@@ -1,0 +1,54 @@
+name: Engineering Task
+description: Track a concrete implementation, refactor, test, or infrastructure task.
+title: "[Task]: "
+labels:
+  - type/chore
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - auth
+        - supabase
+        - services
+        - engine
+        - ui
+        - tests
+        - docs
+        - automation
+        - migrations
+        - other
+    validations:
+      required: true
+  - type: input
+    id: task_graph
+    attributes:
+      label: Task Graph Reference
+      placeholder: "Example: P6-SVC-10"
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      placeholder: |
+        - 
+        - 
+        - 
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk
+      options:
+        - LOW
+        - MEDIUM
+        - HIGH
+    validations:
+      required: true

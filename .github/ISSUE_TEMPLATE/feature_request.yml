@@ -1,0 +1,60 @@
+name: Feature Request
+description: Propose a product capability or user-facing improvement.
+title: "[Feature]: "
+labels:
+  - type/feature
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - auth
+        - daily-log
+        - challenge
+        - workout
+        - reading
+        - profile
+        - apple-health
+        - apple-watch
+        - subscriptions
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or business problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      placeholder: |
+        - 
+        - 
+        - 
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Product Phase
+      options:
+        - MVP Core Loop
+        - Private Alpha
+        - Public Beta
+        - Production v1
+        - Apple Health
+        - Apple Watch
+        - Later
+    validations:
+      required: true
