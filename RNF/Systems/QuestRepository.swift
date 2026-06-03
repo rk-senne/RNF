@@ -16,7 +16,8 @@ struct QuestRepository {
             stat_mind: nil,
             stat_spirit: nil,
             xp_reward: 10,
-            difficulty: 1,
+            difficulty: .easy,
+            cadence: .daily,
             category: "discipline"
         ),
 
@@ -32,7 +33,8 @@ struct QuestRepository {
             stat_mind: 1,
             stat_spirit: nil,
             xp_reward: 15,
-            difficulty: 1,
+            difficulty: .medium,
+            cadence: .daily,
             category: "mind"
         ),
 
@@ -48,7 +50,8 @@ struct QuestRepository {
             stat_mind: nil,
             stat_spirit: nil,
             xp_reward: 20,
-            difficulty: 2,
+            difficulty: .hard,
+            cadence: .daily,
             category: "strength"
         ),
 
@@ -64,7 +67,8 @@ struct QuestRepository {
             stat_mind: 1,
             stat_spirit: 1,
             xp_reward: 10,
-            difficulty: 1,
+            difficulty: .easy,
+            cadence: .daily,
             category: "spirit"
         ),
 
@@ -80,7 +84,8 @@ struct QuestRepository {
             stat_mind: 1,
             stat_spirit: nil,
             xp_reward: 15,
-            difficulty: 1,
+            difficulty: .medium,
+            cadence: .daily,
             category: "wisdom"
         ),
 
@@ -96,7 +101,8 @@ struct QuestRepository {
             stat_mind: nil,
             stat_spirit: nil,
             xp_reward: 20,
-            difficulty: 2,
+            difficulty: .hard,
+            cadence: .daily,
             category: "discipline"
         ),
 
@@ -112,7 +118,8 @@ struct QuestRepository {
             stat_mind: nil,
             stat_spirit: nil,
             xp_reward: 10,
-            difficulty: 1,
+            difficulty: .easy,
+            cadence: .daily,
             category: "energy"
         )
     ]

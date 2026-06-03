@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
+- [ ] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
 Depends on:
-- P12-ARCH-03
+- P12-SVC-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -607,19 +607,19 @@ Depends on:
 
 ### Dynamic Quest System
 
-- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
+- [x] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
 Depends on:
 - P12-ARCH-03
 
-- [ ] P12-SYS-01 Add weak-stat quest selection helper in `QuestGenerator`
+- [x] P12-SYS-01 Add weak-stat quest selection helper in `QuestGenerator`
 Depends on:
 - P12-MDL-01
 
-- [ ] P12-SYS-02 Add weekly habit unlock selection helper
+- [x] P12-SYS-02 Add weekly habit unlock selection helper
 Depends on:
 - P12-MDL-01
 
-- [ ] P12-SVC-01 Update `QuestService` to expose dynamic daily and weekly quest plans
+- [x] P12-SVC-01 Update `QuestService` to expose dynamic daily and weekly quest plans
 Depends on:
 - P12-SYS-01
 - P12-SYS-02
