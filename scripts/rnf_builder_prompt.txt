@@ -10,15 +10,16 @@ Required process:
 1. Read `AGENTS.md`.
 2. Read `RNF/Docs/task_graph.md`.
 3. Read only the RNF documentation and source files needed to understand the next task.
-4. Identify the next task whose dependencies are complete.
-5. If no task is dependency-free, or dependencies are unclear, stop without editing app code and explain why.
-6. Implement only the selected task.
-7. Do not implement adjacent tasks.
-8. Do not refactor architecture unless the selected task explicitly requires it.
-9. Preserve existing SwiftUI patterns and project conventions.
-10. Update `RNF/Docs/task_graph.md` only for the selected task's status.
-11. Run the project build using the repository's existing build command.
-12. If the build fails, stop and report the failure.
+4. If the task touches auth, Supabase, services, user-owned data, GameState, dates, migrations, tests, performance, or production readiness, read `RNF/Docs/RNF_PRODUCTION_READINESS_SPEC.md`.
+5. Identify the next task whose dependencies are complete.
+6. If no task is dependency-free, or dependencies are unclear, stop without editing app code and explain why.
+7. Implement only the selected task.
+8. Do not implement adjacent tasks.
+9. Do not refactor architecture unless the selected task explicitly requires it.
+10. Preserve existing SwiftUI patterns and project conventions.
+11. Update `RNF/Docs/task_graph.md` only for the selected task's status.
+12. Run the project build using the repository's existing build command.
+13. If the build fails, stop and report the failure.
 
 Output:
 
@@ -34,3 +35,11 @@ Hard limits:
 - No architecture drift.
 - No app feature work outside the selected task.
 - No changes outside the selected task's required scope.
+
+Production-readiness guardrails:
+
+- Do not add authenticated persistence without user scoping.
+- Do not add non-idempotent daily progress writes.
+- Do not broaden `GameState` unless the selected task explicitly requires shared state.
+- Do not swallow critical authenticated persistence failures.
+- Do not add unbounded history queries.

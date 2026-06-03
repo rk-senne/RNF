@@ -9,19 +9,20 @@ Required process:
 
 1. Read `AGENTS.md`.
 2. Inspect the current git diff for the last Builder change.
-3. Review only changed files.
-4. Verify the change matches exactly one task from `RNF/Docs/task_graph.md`.
-5. Verify the task graph update is consistent with the implemented task.
-6. Check correctness.
-7. Check build expectations and reported build result.
-8. Check architecture adherence.
-9. Check that no unrelated app features or refactors were introduced.
+3. If changed code touches auth, Supabase, services, user-owned data, GameState, dates, migrations, tests, performance, or production readiness, read `RNF/Docs/RNF_PRODUCTION_READINESS_SPEC.md`.
+4. Review only changed files.
+5. Verify the change matches exactly one task from `RNF/Docs/task_graph.md`.
+6. Verify the task graph update is consistent with the implemented task.
+7. Check correctness.
+8. Check build expectations and reported build result.
+9. Check architecture adherence.
+10. Check that no unrelated app features or refactors were introduced.
 
 Risk rules:
 
 - LOW: Change is correct, scoped to one task, architecture-preserving, and build status is acceptable.
 - MEDIUM: Change may be correct but has uncertainty, unclear dependencies, missing verification, minor architecture drift, or incomplete task graph consistency.
-- HIGH: Build failure, incorrect implementation, blocked dependency, broad unrelated change, significant architecture drift, data-loss risk, or unsafe behavior.
+- HIGH: Build failure, incorrect implementation, blocked dependency, broad unrelated change, significant architecture drift, missing authenticated user scoping, missing production RLS for user data, non-idempotent daily progress writes, data-loss risk, or unsafe behavior.
 
 Output format:
 
@@ -38,3 +39,12 @@ Allowed values:
 - Risk Level: HIGH
 
 Do not output more than one `Risk Level:` line.
+
+Production-readiness checks:
+
+- Missing user scoping in authenticated persistence is HIGH risk.
+- Missing or contradicted RLS for production user data is HIGH risk.
+- Non-idempotent daily progress writes are HIGH risk.
+- Silent failure on critical authenticated writes is at least MEDIUM risk.
+- Unbounded history queries are at least MEDIUM risk.
+- Broad `GameState` growth without justification is at least MEDIUM risk.

@@ -1,5 +1,11 @@
 # RNF State Management
 
+Production-readiness reference:
+
+See `RNF_PRODUCTION_READINESS_SPEC.md` for GameState boundaries, feature state ownership, and SwiftUI performance guardrails. State tasks must satisfy both documents.
+
+---
+
 This document defines how application state flows through the RNF iOS application.
 
 The goal is to keep the system predictable, scalable, and easy to debug.

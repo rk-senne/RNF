@@ -18,6 +18,7 @@ LAST_VERIFIER_LOG_FILE="$STATE_DIR/last_verifier_log"
 BUILDER_PROMPT="$ROOT_DIR/scripts/rnf_builder_prompt.txt"
 VERIFIER_PROMPT="$ROOT_DIR/scripts/rnf_verifier_prompt.txt"
 TASK_GRAPH="$ROOT_DIR/RNF/Docs/task_graph.md"
+PRODUCTION_SPEC="$ROOT_DIR/RNF/Docs/RNF_PRODUCTION_READINESS_SPEC.md"
 
 CODEX_BIN="${CODEX_BIN:-/Users/regosenne/.npm-global/bin/codex}"
 CODEX_MODEL="${CODEX_MODEL:-}"
@@ -229,7 +230,7 @@ prompt_with_context() {
   local pre_existing_dirty="$7"
   local verifier_log="$8"
 
-  printf '%s\n\nContext:\n- Last risk: %s\n- Last failure: %s\n- Current task: %s\n- Fix attempt: %s of %s\n- Pre-existing dirty files before this cycle: %s\n- Last verifier log: %s\n\nSystem loop instructions:\n- Each Builder and Verifier execution is a fresh Codex session. Continue from this context, not from chat history.\n- If Last risk is MEDIUM or HIGH, Builder must fix only the verifier findings for the Current task.\n- Verifier must review the Builder task change and ignore files listed as pre-existing dirty files unless the current Builder changed them for this task.\n- Continue correction until Verifier returns Risk Level: LOW or the system safety cap stops the loop.\n' \
+  printf '%s\n\nContext:\n- Last risk: %s\n- Last failure: %s\n- Current task: %s\n- Fix attempt: %s of %s\n- Pre-existing dirty files before this cycle: %s\n- Last verifier log: %s\n- Production spec: %s\n\nSystem loop instructions:\n- Each Builder and Verifier execution is a fresh Codex session. Continue from this context, not from chat history.\n- If Last risk is MEDIUM or HIGH, Builder must fix only the verifier findings for the Current task.\n- Verifier must review the Builder task change and ignore files listed as pre-existing dirty files unless the current Builder changed them for this task.\n- Continue correction until Verifier returns Risk Level: LOW or the system safety cap stops the loop.\n' \
     "$(cat "$base_prompt_file")" \
     "$last_risk" \
     "$last_failure" \
@@ -237,7 +238,8 @@ prompt_with_context() {
     "$fix_attempt" \
     "$max_fix_attempts" \
     "${pre_existing_dirty:-none}" \
-    "${verifier_log:-none}"
+    "${verifier_log:-none}" \
+    "$PRODUCTION_SPEC"
 }
 
 write_prompt_file() {
@@ -314,6 +316,7 @@ write_handoff() {
     echo "Fix attempt: $fix_attempt of $RNF_MAX_FIX_ATTEMPTS"
     echo "Pre-existing dirty files: ${pre_existing_dirty:-none}"
     echo "Task graph: $TASK_GRAPH"
+    echo "Production spec: $PRODUCTION_SPEC"
     echo "Instruction: start a fresh Builder or Verifier session using the generated prompt files in $PROMPT_DIR, then continue until Verifier returns LOW or a safety cap stops the loop."
   } > "$HANDOFF_FILE"
 }
@@ -355,6 +358,7 @@ cycle_summary() {
 require_file "$BUILDER_PROMPT"
 require_file "$VERIFIER_PROMPT"
 require_file "$TASK_GRAPH"
+require_file "$PRODUCTION_SPEC"
 require_file "$CODEX_BIN"
 
 require_int "RNF_MAX_CYCLES" "$RNF_MAX_CYCLES"
