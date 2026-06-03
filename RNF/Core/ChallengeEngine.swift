@@ -100,7 +100,10 @@ final class ChallengeEngine {
             forgivenLog.forgiveness_used = true
             forgivenLog.status = evaluation.status
 
-            await dailyLogService.saveDailyLog(forgivenLog)
+            let saveResult = await dailyLogService.saveDailyLog(forgivenLog)
+            guard saveResult.savedRemotely else {
+                return nil
+            }
 
             await analyticsService.trackEvent(
                 usesStoredToken ? .forgivenessUsed : .streakProtectionApplied,

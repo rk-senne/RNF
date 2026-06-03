@@ -248,6 +248,70 @@ final class DailyLogServiceTests: XCTestCase {
         XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
     }
 
+    func testSaveDailyLogSurfacesLocalOnlyResultWhenRemoteSaveFails() async throws {
+        let userId = UUID()
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 500,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData(#"{"message":"daily log save failed"}"#))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        let dailyLog = DailyLog(
+            id: UUID(),
+            user_id: userId,
+            date: Date(timeIntervalSince1970: 1_772_582_400),
+            habits_completed: 1,
+            habits_required: 2,
+            workout_completed: false,
+            reading_completed: false,
+            forgiveness_used: false,
+            xp_earned: 25,
+            status: .partial,
+            created_at: nil
+        )
+
+        let result = await service.saveDailyLog(dailyLog)
+
+        XCTAssertEqual(result.saveState, .savedLocallyOnly)
+        XCTAssertEqual(result.error, .unknown)
+        XCTAssertEqual(result.value?.id, dailyLog.id)
+        XCTAssertEqual(requests.map(\.httpMethod), ["POST"])
+        XCTAssertTrue(requests[0].url?.absoluteString.contains("daily_logs") ?? false)
+    }
+
+    func testSaveDailyLogReturnsLocalOnlyWithoutBackendForPlaceholderLog() async throws {
+        var requestCount = 0
+
+        MockURLProtocol.requestHandler = { request in
+            requestCount += 1
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData("{}"))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        let dailyLog = DailyLog.today(goal: 2)
+
+        let result = await service.saveDailyLog(dailyLog)
+
+        XCTAssertEqual(result.saveState, .savedLocallyOnly)
+        XCTAssertEqual(result.error, .unauthenticated)
+        XCTAssertEqual(result.value?.id, dailyLog.id)
+        XCTAssertEqual(requestCount, 0)
+    }
+
     private func makeSupabaseService() -> SupabaseService {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]

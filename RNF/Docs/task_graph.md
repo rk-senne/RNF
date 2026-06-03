@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
+- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
 Depends on:
-- P14-SVC-01
+- P14-MIG-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -844,7 +844,7 @@ Depends on:
 Depends on:
 - P14-SVC-02
 
-- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
+- [x] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
 Depends on:
 - P14-SVC-01
 

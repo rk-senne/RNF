@@ -12,12 +12,12 @@ final class DailyLogService {
     init(
         supabase: SupabaseService = .shared,
         habitService: HabitService = HabitService(),
-        userService: UserService = UserService(),
+        userService: UserService? = nil,
         authProvider: AuthProviding? = nil
     ) {
         self.supabase = supabase
         self.habitService = habitService
-        self.userService = userService
+        self.userService = userService ?? UserService(supabase: supabase)
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
@@ -252,10 +252,10 @@ final class DailyLogService {
         return try await updateStatus(userId: userId, date: date)
     }
 
-    func saveDailyLog(_ dailyLog: DailyLog) async {
+    func saveDailyLog(_ dailyLog: DailyLog) async -> RNFServiceWriteResult<DailyLog> {
 
         guard dailyLog.user_id != nil else {
-            return
+            return .savedLocallyOnly(dailyLog, error: .unauthenticated)
         }
 
         let normalizedDailyLog = DailyLog(
@@ -277,13 +277,15 @@ final class DailyLogService {
                 .from("daily_logs")
                 .upsert(normalizedDailyLog)
                 .execute()
+
+            return .savedRemotely(normalizedDailyLog)
         } catch {
-            // Local state stays consistent even if the backend call fails.
+            return .savedLocallyOnly(normalizedDailyLog, error: .from(error))
         }
 
     }
 
-    func saveProfile(_ profile: Profile) async {
+    func saveProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
         await userService.saveProfile(profile)
     }
 

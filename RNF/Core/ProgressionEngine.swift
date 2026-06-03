@@ -142,7 +142,10 @@ final class ProgressionEngine {
         updatedDailyLog.xp_earned += awardedXP
         updatedDailyLog.status = missionCompleted ? .complete : .partial
 
-        await dailyLogService.saveDailyLog(updatedDailyLog)
+        let dailyLogSaveResult = await dailyLogService.saveDailyLog(updatedDailyLog)
+        if !updatedProfile.isPlaceholder, !dailyLogSaveResult.savedRemotely {
+            return nil
+        }
 
         if !updatedProfile.isPlaceholder {
             do {
@@ -157,7 +160,10 @@ final class ProgressionEngine {
             }
         }
 
-        await dailyLogService.saveProfile(updatedProfile)
+        let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
+        if !updatedProfile.isPlaceholder, !profileSaveResult.savedRemotely {
+            return nil
+        }
 
         let questPlan = questService.updateQuestProgress(
             for: updatedProfile,

@@ -92,10 +92,10 @@ final class UserService {
         return try await decrementForgivenessTokens(userId: userId)
     }
 
-    func saveProfile(_ profile: Profile) async {
+    func saveProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
 
         guard !profile.isPlaceholder else {
-            return
+            return .savedLocallyOnly(profile, error: .unauthenticated)
         }
 
         do {
@@ -103,8 +103,10 @@ final class UserService {
                 .from("users")
                 .upsert(profile)
                 .execute()
+
+            return .savedRemotely(profile)
         } catch {
-            // The local game state remains authoritative until auth is added.
+            return .savedLocallyOnly(profile, error: .from(error))
         }
 
     }

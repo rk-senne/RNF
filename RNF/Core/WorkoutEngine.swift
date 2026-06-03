@@ -91,8 +91,12 @@ final class WorkoutEngine {
             updatedProfile.level = levelState.level
             completedLog.xp_earned += awardedXP
 
-            await dailyLogService.saveDailyLog(completedLog)
-            await dailyLogService.saveProfile(updatedProfile)
+            let dailyLogSaveResult = await dailyLogService.saveDailyLog(completedLog)
+            let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
+
+            guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
+                return nil
+            }
 
             gameState.apply(
                 profile: updatedProfile,
