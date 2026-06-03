@@ -1,0 +1,62 @@
+name: Documentation Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: docs-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: Check required docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required documentation exists
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_docs=(
+            "RNF/Docs/RNF_PRODUCTION_READINESS_SPEC.md"
+            "RNF/Docs/RNF_SECURITY.md"
+            "RNF/Docs/RNF_SERVICE_LAYER_SPEC.md"
+            "RNF/Docs/RNF_STATE_MANAGEMENT.md"
+            "RNF/Docs/RNF_APPLE_HEALTH_INTEGRATION_SPEC.md"
+            "RNF/Docs/RNF_APPLE_WATCH_SPEC.md"
+            "RNF/Docs/RNF_ARCHITECTURE_FIX_PLAN.md"
+            "RNF/Docs/RNF_FEATURE_ROADMAP.md"
+            "RNF/Docs/task_graph.md"
+            "AGENTS.md"
+          )
+
+          missing=0
+          for doc in "${required_docs[@]}"; do
+            if [[ ! -s "$doc" ]]; then
+              echo "Missing or empty required doc: $doc"
+              missing=1
+            fi
+          done
+
+          exit "$missing"
+
+      - name: Reject committed local noise
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git ls-files | grep -E '(^|/)(\.DS_Store|\.rnf/)' ; then
+            echo "Local machine or automation state files are tracked. Remove them from Git."
+            exit 1
+          fi

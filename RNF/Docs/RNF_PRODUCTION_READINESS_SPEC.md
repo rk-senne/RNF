@@ -299,6 +299,29 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 
 Build failures caused by environment setup must be fixed or documented before trusting LOW-risk automation results.
 
+### Repository Hygiene
+
+Tracked local IDE/user files must be cleaned up before enforcing stricter CI hygiene gates.
+
+Known cleanup item:
+
+```text
+RNF.xcodeproj/xcuserdata/
+```
+
+Current CI intentionally blocks newly tracked `.DS_Store` and `.rnf/` files, but does not yet fail on `xcuserdata` because that state already exists in the repository history. Create a dedicated cleanup branch before enabling the stricter rule:
+
+```text
+chore/remove-xcode-userdata
+```
+
+Target outcome:
+
+- remove tracked `xcuserdata`
+- add or confirm `.gitignore` coverage for `xcuserdata/`
+- update the documentation workflow to reject future tracked `xcuserdata`
+- verify Xcode still opens and builds the shared scheme
+
 Minimum test order:
 
 1. `XPSystem`

@@ -1,0 +1,81 @@
+name: Supabase Migration Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: migrations-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrations:
+    name: Check migration ordering
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify migration filenames are ordered and unique
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          migrations=(supabase/migrations/*.sql)
+
+          if [[ "${#migrations[@]}" -eq 0 ]]; then
+            echo "No Supabase migrations found."
+            exit 1
+          fi
+
+          previous=-1
+          seen=""
+
+          for migration in "${migrations[@]}"; do
+            name="$(basename "$migration")"
+
+            if [[ ! "$name" =~ ^[0-9]{3}_[a-z0-9_]+\.sql$ ]]; then
+              echo "Invalid migration filename: $name"
+              echo "Expected format: 000_descriptive_name.sql"
+              exit 1
+            fi
+
+            number="${name%%_*}"
+            number_value="$((10#$number))"
+
+            if grep -q "^$number$" <<< "$seen"; then
+              echo "Duplicate migration number: $number"
+              exit 1
+            fi
+
+            if [[ "$number_value" -le "$previous" ]]; then
+              echo "Migration order is not strictly increasing at: $name"
+              exit 1
+            fi
+
+            seen="${seen}${number}"$'\n'
+            previous="$number_value"
+          done
+
+      - name: Verify production database guardrails are present
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! grep -Riq "enable row level security" supabase/migrations; then
+            echo "Expected RLS enablement in Supabase migrations."
+            exit 1
+          fi
+
+          if ! grep -Riq "create index" supabase/migrations; then
+            echo "Expected production indexes in Supabase migrations."
+            exit 1
+          fi

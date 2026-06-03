@@ -120,4 +120,4 @@ Before production promotion:
 - Confirm no migration contains demo-only users, plaintext secrets, or environment-specific credentials.
 - Confirm rollback SQL is reviewed and tested locally.
 - Run the iOS build after migration documentation or migration files change.
-
+- Confirm repository hygiene cleanup is complete before tightening CI gates, especially removal of tracked `RNF.xcodeproj/xcuserdata/`.
