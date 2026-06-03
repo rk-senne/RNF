@@ -74,6 +74,8 @@ struct AscensionView: View {
 
                 EvolutionView()
 
+                engagementEntryPoints
+
                 calendarSummary
 
                 VStack(alignment: .leading, spacing: 18) {
@@ -156,6 +158,92 @@ struct AscensionView: View {
             await loadChallengeSummary()
             await loadCalendarSummary()
         }
+
+    }
+
+    private var engagementEntryPoints: some View {
+
+        VStack(alignment: .leading, spacing: 14) {
+            Text("ENGAGEMENT")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .tracking(1.2)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 12) {
+                engagementLink(
+                    title: "Quests",
+                    subtitle: "Daily and weekly focus",
+                    icon: "checkmark.circle.fill",
+                    tint: Color(red: 0.3, green: 0.43, blue: 0.86)
+                ) {
+                    ContentView()
+                }
+
+                engagementLink(
+                    title: "Skill Tree",
+                    subtitle: "Mastery paths",
+                    icon: "point.3.connected.trianglepath.dotted",
+                    tint: viewModel.levelColor(for: game.level)
+                ) {
+                    SkillTreeView()
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background { surfaceFill }
+        .overlay(surfaceBorder)
+
+    }
+
+    private func engagementLink<Destination: View>(
+        title: String,
+        subtitle: String,
+        icon: String,
+        tint: Color,
+        @ViewBuilder destination: () -> Destination
+    ) -> some View {
+
+        NavigationLink(destination: destination()) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: icon)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(tint)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .black))
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 17, weight: .black, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.82)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(tint.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(tint.opacity(0.22), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
 
     }
 

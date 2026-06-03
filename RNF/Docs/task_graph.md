@@ -26,10 +26,10 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P12-UI-04 Add quest and skill tree navigation entry points
+- [ ] P13-SVC-01 Add active perk derivation path to `SkillTreeService`
 Depends on:
-- P12-UI-01
-- P12-UI-02
+- P13-SYS-01
+- P12-SVC-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -680,17 +680,122 @@ Depends on:
 
 ### Navigation and Retention
 
-- [ ] P12-UI-04 Add quest and skill tree navigation entry points
+- [x] P12-UI-04 Add quest and skill tree navigation entry points
 Depends on:
 - P12-UI-01
 - P12-UI-02
 
-- [ ] P12-SVC-04 Add engagement analytics events for weekly quest, skill tree, and evolution milestones
+- [x] P12-SVC-04 Add engagement analytics events for weekly quest, skill tree, and evolution milestones
 Depends on:
 - P12-UI-04
 - P12-UI-03
 - P11-SVC-06
 
-- [ ] P12-TST-04 Add navigation smoke tests for engagement screens
+- [x] P12-TST-04 Add navigation smoke tests for engagement screens
 Depends on:
 - P12-UI-04
+
+## Phase 13 – Perk System
+
+### Models
+
+- [x] P13-MDL-01 Create perk effect models for XP multipliers, stat bonuses, quest rewards, and streak protection
+Depends on:
+- P12-MDL-02
+
+- [x] P13-MDL-02 Add active perk summary state for unlocked skill tree bonuses
+Depends on:
+- P13-MDL-01
+
+### Perk Engine
+
+- [x] P13-SYS-01 Create `PerkSystem` active perk aggregation helper
+Depends on:
+- P13-MDL-02
+- P12-SYS-03
+
+- [x] P13-SYS-02 Add XP reward modifier calculation with daily cap safety
+Depends on:
+- P13-SYS-01
+
+- [x] P13-SYS-03 Add stat bonus and quest reward modifier helpers
+Depends on:
+- P13-SYS-01
+
+- [x] P13-SYS-04 Add streak protection eligibility helper
+Depends on:
+- P13-SYS-01
+- P9-SYS-02
+
+### Service Layer
+
+- [ ] P13-SVC-01 Add active perk derivation path to `SkillTreeService`
+Depends on:
+- P13-SYS-01
+- P12-SVC-02
+
+- [ ] P13-SVC-02 Add perk analytics events for applied bonuses and streak protection
+Depends on:
+- P13-SVC-01
+- P12-SVC-04
+
+### Engine Integration
+
+- [ ] P13-ENG-01 Apply XP perk modifiers to habit completion rewards
+Depends on:
+- P13-SYS-02
+- P13-SVC-01
+- P7-ENG-01
+
+- [ ] P13-ENG-02 Apply XP perk modifiers to workout and reading rewards
+Depends on:
+- P13-SYS-02
+- P8-ENG-02
+- P8-ENG-05
+
+- [ ] P13-ENG-03 Apply stat bonus perk modifiers to progression updates
+Depends on:
+- P13-SYS-03
+- P7-ENG-01
+
+- [ ] P13-ENG-04 Apply quest reward perk modifiers to generated quest rewards
+Depends on:
+- P13-SYS-03
+- P12-SVC-01
+
+- [ ] P13-ENG-05 Connect streak protection perks to forgiveness evaluation
+Depends on:
+- P13-SYS-04
+- P9-ENG-01
+
+### UI
+
+- [ ] P13-UI-01 Surface active perks in `SkillTreeView`
+Depends on:
+- P13-SVC-01
+- P12-UI-02
+
+- [ ] P13-UI-02 Add active perk summary to the ascension surface
+Depends on:
+- P13-UI-01
+- P12-UI-04
+
+### Tests
+
+- [ ] P13-TST-01 Add perk aggregation and modifier unit tests
+Depends on:
+- P13-SYS-01
+- P13-SYS-02
+- P13-SYS-03
+
+- [ ] P13-TST-02 Add perk integration tests for XP, stats, quests, and streak protection
+Depends on:
+- P13-ENG-01
+- P13-ENG-02
+- P13-ENG-03
+- P13-ENG-04
+- P13-ENG-05
+
+- [ ] P13-TST-03 Add active perk UI smoke tests
+Depends on:
+- P13-UI-02
