@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-AUTH-01 Create `AuthProviding` boundary for current authenticated user identity
+- [ ] P14-AUTH-02 Wire authenticated user resolution into production user-owned services
 Depends on:
-- P14-MIG-02
+- P14-AUTH-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -817,7 +817,7 @@ Depends on:
 
 ### Auth Boundary
 
-- [ ] P14-AUTH-01 Create `AuthProviding` boundary for current authenticated user identity
+- [x] P14-AUTH-01 Create `AuthProviding` boundary for current authenticated user identity
 Depends on:
 - P14-MIG-02
 
