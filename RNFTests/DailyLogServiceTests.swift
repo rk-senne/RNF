@@ -65,6 +65,67 @@ final class DailyLogServiceTests: XCTestCase {
         XCTAssertTrue(requests[0].url?.absoluteString.contains("limit=1") ?? false)
     }
 
+    func testRecordHabitCompletionRefetchesExistingCompletionAfterDuplicateInsertFailure() async throws {
+        let userId = UUID()
+        let habitId = UUID()
+        let existingCompletionId = UUID()
+        let completionDate = Date(timeIntervalSince1970: 1_772_582_400)
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let url = request.url!
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: request.httpMethod == "POST" ? 409 : 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+
+            if request.httpMethod == "POST" {
+                return (
+                    response,
+                    Self.jsonData(#"{"code":"23505","message":"duplicate key value violates unique constraint"}"#)
+                )
+            }
+
+            let body = requests.count == 1
+                ? "[]"
+                : """
+                  [
+                    {
+                      "id": "\(existingCompletionId.uuidString)",
+                      "user_id": "\(userId.uuidString)",
+                      "habit_id": "\(habitId.uuidString)",
+                      "completed_at": "2026-03-10T09:00:00Z",
+                      "date": "2026-03-10T00:00:00Z",
+                      "xp_awarded": 25,
+                      "created_at": null
+                    }
+                  ]
+                  """
+
+            return (response, Self.jsonData(body))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        let result = try await service.recordHabitCompletion(
+            HabitCompletion(
+                id: UUID(),
+                user_id: userId,
+                habit_id: habitId,
+                completed_at: completionDate,
+                date: completionDate,
+                xp_awarded: 25
+            )
+        )
+
+        XCTAssertEqual(result?.id, existingCompletionId)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET", "POST", "GET"])
+        XCTAssertTrue(requests[2].url?.absoluteString.contains("habit_completions") ?? false)
+    }
+
     func testRecordHabitCompletionWithoutUserIdDoesNotCallBackend() async throws {
         var requestCount = 0
 

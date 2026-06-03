@@ -121,17 +121,11 @@ final class DailyLogService {
 
         let normalizedDate = normalizedDay(completion.date)
 
-        let completions: [HabitCompletion] = try await supabase.client
-            .from("habit_completions")
-            .select()
-            .eq("user_id", value: userId.uuidString)
-            .eq("habit_id", value: completion.habit_id.uuidString)
-            .eq("date", value: normalizedDate)
-            .limit(1)
-            .execute()
-            .value
-
-        if let existingCompletion = completions.first {
+        if let existingCompletion = try await fetchHabitCompletion(
+            userId: userId,
+            habitId: completion.habit_id,
+            date: normalizedDate
+        ) {
             return existingCompletion
         }
 
@@ -145,15 +139,48 @@ final class DailyLogService {
             created_at: completion.created_at
         )
 
-        let createdCompletion: HabitCompletion = try await supabase.client
+        let createdCompletion: HabitCompletion
+
+        do {
+            createdCompletion = try await supabase.client
+                .from("habit_completions")
+                .insert(normalizedCompletion)
+                .select()
+                .single()
+                .execute()
+                .value
+        } catch {
+            if let existingCompletion = try await fetchHabitCompletion(
+                userId: userId,
+                habitId: completion.habit_id,
+                date: normalizedDate
+            ) {
+                return existingCompletion
+            }
+
+            throw error
+        }
+
+        return createdCompletion
+    }
+
+    private func fetchHabitCompletion(
+        userId: UUID,
+        habitId: UUID,
+        date: Date
+    ) async throws -> HabitCompletion? {
+
+        let completions: [HabitCompletion] = try await supabase.client
             .from("habit_completions")
-            .insert(normalizedCompletion)
             .select()
-            .single()
+            .eq("user_id", value: userId.uuidString)
+            .eq("habit_id", value: habitId.uuidString)
+            .eq("date", value: normalizedDay(date))
+            .limit(1)
             .execute()
             .value
 
-        return createdCompletion
+        return completions.first
     }
 
     func recordHabitCompletion(

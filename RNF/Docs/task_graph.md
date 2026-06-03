@@ -26,10 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-SVC-02 Harden habit completion retries against duplicate XP and duplicate writes
+- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
 Depends on:
-- P14-SVC-01
-- P14-MIG-01
+- P14-SVC-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -836,7 +835,7 @@ Depends on:
 Depends on:
 - P14-AUTH-02
 
-- [ ] P14-SVC-02 Harden habit completion retries against duplicate XP and duplicate writes
+- [x] P14-SVC-02 Harden habit completion retries against duplicate XP and duplicate writes
 Depends on:
 - P14-SVC-01
 - P14-MIG-01
