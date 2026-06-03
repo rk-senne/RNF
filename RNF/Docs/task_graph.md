@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-TIME-02 Document timezone policy in service and state docs
+- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
 Depends on:
-- P14-TIME-01
+- P14-SVC-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -854,7 +854,7 @@ Depends on:
 Depends on:
 - P14-MIG-01
 
-- [ ] P14-TIME-02 Document timezone policy in service and state docs
+- [x] P14-TIME-02 Document timezone policy in service and state docs
 Depends on:
 - P14-TIME-01
 
