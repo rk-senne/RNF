@@ -21,6 +21,7 @@ final class ProgressionEngine {
     private let dailyLogService: DailyLogService
     private let xpService: XPService
     private let questService: QuestService
+    private let skillTreeService: SkillTreeService
     private let analyticsService: AnalyticsService
     private weak var gameState: GameState?
 
@@ -28,11 +29,13 @@ final class ProgressionEngine {
         dailyLogService: DailyLogService = DailyLogService(),
         xpService: XPService = XPService(),
         questService: QuestService = QuestService(),
+        skillTreeService: SkillTreeService = SkillTreeService(),
         analyticsService: AnalyticsService = AnalyticsService()
     ) {
         self.dailyLogService = dailyLogService
         self.xpService = xpService
         self.questService = questService
+        self.skillTreeService = skillTreeService
         self.analyticsService = analyticsService
     }
 
@@ -57,13 +60,35 @@ final class ProgressionEngine {
 
         var updatedProfile = gameState.profile
         let previousStreak = updatedProfile.streak
+
+        let todayLog: DailyLog
+        do {
+            todayLog = try await dailyLogService.getTodayLog(
+                for: updatedProfile,
+                dailyGoal: dailyGoal
+            )
+        } catch {
+            return nil
+        }
+
+        let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
         var updatedStats = updatedProfile.stats
-        StatSystem.applyReward(stats: &updatedStats, for: habit.name)
+        StatSystem.applyReward(
+            stats: &updatedStats,
+            for: habit.name,
+            activePerks: activePerks
+        )
         updatedProfile.stats = updatedStats
+
+        let awardedXP = PerkSystem.modifiedXPReward(
+            baseXP: habit.xpReward,
+            activePerks: activePerks,
+            currentDailyXP: todayLog.xp_earned
+        )
 
         let xpState = xpService.awardXP(
             currentTotal: updatedProfile.xp_total,
-            gainedXP: habit.xpReward
+            gainedXP: awardedXP
         )
 
         updatedProfile.xp_total = xpState.totalXP
@@ -92,18 +117,8 @@ final class ProgressionEngine {
             habit_id: habit.id,
             completed_at: completionDate,
             date: completionDate.startOfDay,
-            xp_awarded: habit.xpReward
+            xp_awarded: awardedXP
         )
-
-        let todayLog: DailyLog
-        do {
-            todayLog = try await dailyLogService.getTodayLog(
-                for: updatedProfile,
-                dailyGoal: dailyGoal
-            )
-        } catch {
-            return nil
-        }
 
         if !updatedProfile.isPlaceholder {
             do {
@@ -124,7 +139,7 @@ final class ProgressionEngine {
         updatedDailyLog.date = completionDate.startOfDay
         updatedDailyLog.habits_completed = updatedDailyCompleted
         updatedDailyLog.habits_required = dailyGoal
-        updatedDailyLog.xp_earned += habit.xpReward
+        updatedDailyLog.xp_earned += awardedXP
         updatedDailyLog.status = missionCompleted ? .complete : .partial
 
         await dailyLogService.saveDailyLog(updatedDailyLog)
@@ -144,7 +159,10 @@ final class ProgressionEngine {
 
         await dailyLogService.saveProfile(updatedProfile)
 
-        let questPlan = questService.updateQuestProgress(for: updatedProfile)
+        let questPlan = questService.updateQuestProgress(
+            for: updatedProfile,
+            activePerks: activePerks
+        )
         updatedDailyLog.habits_required = questPlan.dailyGoal
         let levelState = xpService.levelState(for: updatedProfile.xp_total)
 
@@ -155,7 +173,7 @@ final class ProgressionEngine {
                     "user_id": updatedProfile.id.uuidString,
                     "habit_id": habit.id.uuidString,
                     "habit_name": habit.name,
-                    "xp_awarded": "\(habit.xpReward)",
+                    "xp_awarded": "\(awardedXP)",
                     "timestamp": Self.analyticsTimestamp(for: completionDate)
                 ]
             )
@@ -202,7 +220,7 @@ final class ProgressionEngine {
             updatedDailyLog: updatedDailyLog,
             questPlan: questPlan,
             completedHabitIDs: updatedCompletedHabitIDs,
-            xpGained: habit.xpReward,
+            xpGained: awardedXP,
             levelState: levelState,
             leveledUp: xpState.leveledUp,
             missionCompleted: missionCompleted,

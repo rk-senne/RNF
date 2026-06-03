@@ -7,15 +7,18 @@ final class DailyLogService {
     private let supabase: SupabaseService
     private let habitService: HabitService
     private let userService: UserService
+    private let authProvider: AuthProviding
 
     init(
         supabase: SupabaseService = .shared,
         habitService: HabitService = HabitService(),
-        userService: UserService = UserService()
+        userService: UserService = UserService(),
+        authProvider: AuthProviding? = nil
     ) {
         self.supabase = supabase
         self.habitService = habitService
         self.userService = userService
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     private func normalizedDay(_ date: Date) -> Date {
@@ -36,6 +39,11 @@ final class DailyLogService {
             .value
 
         return logs.first
+    }
+
+    func fetchTodayLog(date: Date) async throws -> DailyLog? {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await fetchTodayLog(userId: userId, date: date)
     }
 
     func createDailyLog(userId: UUID, date: Date) async throws -> DailyLog {
@@ -75,6 +83,11 @@ final class DailyLogService {
         }
     }
 
+    func createDailyLog(date: Date) async throws -> DailyLog {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await createDailyLog(userId: userId, date: date)
+    }
+
     func getTodayLog(for profile: Profile, dailyGoal: Int) async throws -> DailyLog {
 
         guard !profile.isPlaceholder else {
@@ -108,17 +121,11 @@ final class DailyLogService {
 
         let normalizedDate = normalizedDay(completion.date)
 
-        let completions: [HabitCompletion] = try await supabase.client
-            .from("habit_completions")
-            .select()
-            .eq("user_id", value: userId.uuidString)
-            .eq("habit_id", value: completion.habit_id.uuidString)
-            .eq("date", value: normalizedDate)
-            .limit(1)
-            .execute()
-            .value
-
-        if let existingCompletion = completions.first {
+        if let existingCompletion = try await fetchHabitCompletion(
+            userId: userId,
+            habitId: completion.habit_id,
+            date: normalizedDate
+        ) {
             return existingCompletion
         }
 
@@ -132,15 +139,69 @@ final class DailyLogService {
             created_at: completion.created_at
         )
 
-        let createdCompletion: HabitCompletion = try await supabase.client
+        let createdCompletion: HabitCompletion
+
+        do {
+            createdCompletion = try await supabase.client
+                .from("habit_completions")
+                .insert(normalizedCompletion)
+                .select()
+                .single()
+                .execute()
+                .value
+        } catch {
+            if let existingCompletion = try await fetchHabitCompletion(
+                userId: userId,
+                habitId: completion.habit_id,
+                date: normalizedDate
+            ) {
+                return existingCompletion
+            }
+
+            throw error
+        }
+
+        return createdCompletion
+    }
+
+    private func fetchHabitCompletion(
+        userId: UUID,
+        habitId: UUID,
+        date: Date
+    ) async throws -> HabitCompletion? {
+
+        let completions: [HabitCompletion] = try await supabase.client
             .from("habit_completions")
-            .insert(normalizedCompletion)
             .select()
-            .single()
+            .eq("user_id", value: userId.uuidString)
+            .eq("habit_id", value: habitId.uuidString)
+            .eq("date", value: normalizedDay(date))
+            .limit(1)
             .execute()
             .value
 
-        return createdCompletion
+        return completions.first
+    }
+
+    func recordHabitCompletion(
+        habitId: UUID,
+        xpAwarded: Int,
+        date: Date = Date(),
+        completedAt: Date = Date()
+    ) async throws -> HabitCompletion? {
+
+        let userId = try await authProvider.requireCurrentUserID()
+        let completion = HabitCompletion(
+            id: UUID(),
+            user_id: userId,
+            habit_id: habitId,
+            completed_at: completedAt,
+            date: date,
+            xp_awarded: xpAwarded,
+            created_at: nil
+        )
+
+        return try await recordHabitCompletion(completion)
     }
 
     func calculateStatus(for dailyLog: DailyLog) -> DailyLog.Status {
@@ -184,6 +245,11 @@ final class DailyLogService {
             .value
 
         return updatedLog
+    }
+
+    func updateStatus(date: Date) async throws -> DailyLog? {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await updateStatus(userId: userId, date: date)
     }
 
     func saveDailyLog(_ dailyLog: DailyLog) async {

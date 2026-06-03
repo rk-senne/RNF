@@ -189,6 +189,33 @@ Smart habit suggestions
 
 ---
 
+---
+
+# Phase 6 — Apple Platform Expansion
+
+Goal:
+
+Extend RNF into Apple ecosystem surfaces only after the iPhone core loop is stable.
+
+Reference specs:
+
+- `RNF_APPLE_HEALTH_INTEGRATION_SPEC.md`
+- `RNF_APPLE_WATCH_SPEC.md`
+
+Priority order:
+
+1. Complete iPhone MVP.
+2. Stabilize auth, sync, daily logs, challenge lifecycle, workouts, and reading.
+3. Add HealthKit integration if product validation supports it.
+4. Add Apple Watch as a companion client.
+
+Rules:
+
+- Apple Watch is a companion client, not the source of truth.
+- HealthKit data is evidence, not automatic XP.
+- Neither integration may bypass RNF service, engine, idempotency, or privacy rules.
+
+
 # Product Philosophy
 
 RNF should evolve gradually.

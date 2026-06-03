@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
+- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
 Depends on:
-- P12-ARCH-03
+- P14-SVC-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -607,89 +607,281 @@ Depends on:
 
 ### Dynamic Quest System
 
-- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
+- [x] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
 Depends on:
 - P12-ARCH-03
 
-- [ ] P12-SYS-01 Add weak-stat quest selection helper in `QuestGenerator`
+- [x] P12-SYS-01 Add weak-stat quest selection helper in `QuestGenerator`
 Depends on:
 - P12-MDL-01
 
-- [ ] P12-SYS-02 Add weekly habit unlock selection helper
+- [x] P12-SYS-02 Add weekly habit unlock selection helper
 Depends on:
 - P12-MDL-01
 
-- [ ] P12-SVC-01 Update `QuestService` to expose dynamic daily and weekly quest plans
+- [x] P12-SVC-01 Update `QuestService` to expose dynamic daily and weekly quest plans
 Depends on:
 - P12-SYS-01
 - P12-SYS-02
 
-- [ ] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
+- [x] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
 Depends on:
 - P12-SVC-01
 
-- [ ] P12-TST-01 Add quest generation and weekly unlock tests
+- [x] P12-TST-01 Add quest generation and weekly unlock tests
 Depends on:
 - P12-SVC-01
 
 ### Skill Trees
 
-- [ ] P12-MDL-02 Create skill tree models for paths, nodes, tiers, and unlock state
+- [x] P12-MDL-02 Create skill tree models for paths, nodes, tiers, and unlock state
 Depends on:
 - P12-ARCH-03
 
-- [ ] P12-SYS-03 Create `SkillTreeSystem` unlock and point calculation helpers
+- [x] P12-SYS-03 Create `SkillTreeSystem` unlock and point calculation helpers
 Depends on:
 - P12-MDL-02
 
-- [ ] P12-SVC-02 Create skill tree persistence shell
+- [x] P12-SVC-02 Create skill tree persistence shell
 Depends on:
 - P12-SYS-03
 
-- [ ] P12-UI-02 Build skill tree screen shell
+- [x] P12-UI-02 Build skill tree screen shell
 Depends on:
 - P12-SVC-02
 
-- [ ] P12-TST-02 Add skill tree unlock and skill point tests
+- [x] P12-TST-02 Add skill tree unlock and skill point tests
 Depends on:
 - P12-SYS-03
 
 ### Evolution Milestones
 
-- [ ] P12-MDL-03 Create evolution tier model
+- [x] P12-MDL-03 Create evolution tier model
 Depends on:
 - P12-ARCH-03
 
-- [ ] P12-SYS-04 Create `EvolutionSystem` milestone evaluation helper
+- [x] P12-SYS-04 Create `EvolutionSystem` milestone evaluation helper
 Depends on:
 - P12-MDL-03
 - P12-SYS-03
 
-- [ ] P12-SVC-03 Add evolution state derivation path
+- [x] P12-SVC-03 Add evolution state derivation path
 Depends on:
 - P12-SYS-04
 
-- [ ] P12-UI-03 Expand profile evolution surface with derived milestones
+- [x] P12-UI-03 Expand profile evolution surface with derived milestones
 Depends on:
 - P12-SVC-03
 
-- [ ] P12-TST-03 Add evolution milestone tests
+- [x] P12-TST-03 Add evolution milestone tests
 Depends on:
 - P12-SYS-04
 
 ### Navigation and Retention
 
-- [ ] P12-UI-04 Add quest and skill tree navigation entry points
+- [x] P12-UI-04 Add quest and skill tree navigation entry points
 Depends on:
 - P12-UI-01
 - P12-UI-02
 
-- [ ] P12-SVC-04 Add engagement analytics events for weekly quest, skill tree, and evolution milestones
+- [x] P12-SVC-04 Add engagement analytics events for weekly quest, skill tree, and evolution milestones
 Depends on:
 - P12-UI-04
 - P12-UI-03
 - P11-SVC-06
 
-- [ ] P12-TST-04 Add navigation smoke tests for engagement screens
+- [x] P12-TST-04 Add navigation smoke tests for engagement screens
 Depends on:
 - P12-UI-04
+
+## Phase 13 – Perk System
+
+### Models
+
+- [x] P13-MDL-01 Create perk effect models for XP multipliers, stat bonuses, quest rewards, and streak protection
+Depends on:
+- P12-MDL-02
+
+- [x] P13-MDL-02 Add active perk summary state for unlocked skill tree bonuses
+Depends on:
+- P13-MDL-01
+
+### Perk Engine
+
+- [x] P13-SYS-01 Create `PerkSystem` active perk aggregation helper
+Depends on:
+- P13-MDL-02
+- P12-SYS-03
+
+- [x] P13-SYS-02 Add XP reward modifier calculation with daily cap safety
+Depends on:
+- P13-SYS-01
+
+- [x] P13-SYS-03 Add stat bonus and quest reward modifier helpers
+Depends on:
+- P13-SYS-01
+
+- [x] P13-SYS-04 Add streak protection eligibility helper
+Depends on:
+- P13-SYS-01
+- P9-SYS-02
+
+### Service Layer
+
+- [x] P13-SVC-01 Add active perk derivation path to `SkillTreeService`
+Depends on:
+- P13-SYS-01
+- P12-SVC-02
+
+- [x] P13-SVC-02 Add perk analytics events for applied bonuses and streak protection
+Depends on:
+- P13-SVC-01
+- P12-SVC-04
+
+### Engine Integration
+
+- [x] P13-ENG-01 Apply XP perk modifiers to habit completion rewards
+Depends on:
+- P13-SYS-02
+- P13-SVC-01
+- P7-ENG-01
+
+- [x] P13-ENG-02 Apply XP perk modifiers to workout and reading rewards
+Depends on:
+- P13-SYS-02
+- P8-ENG-02
+- P8-ENG-05
+
+- [x] P13-ENG-03 Apply stat bonus perk modifiers to progression updates
+Depends on:
+- P13-SYS-03
+- P7-ENG-01
+
+- [x] P13-ENG-04 Apply quest reward perk modifiers to generated quest rewards
+Depends on:
+- P13-SYS-03
+- P12-SVC-01
+
+- [x] P13-ENG-05 Connect streak protection perks to forgiveness evaluation
+Depends on:
+- P13-SYS-04
+- P9-ENG-01
+
+### UI
+
+- [x] P13-UI-01 Surface active perks in `SkillTreeView`
+Depends on:
+- P13-SVC-01
+- P12-UI-02
+
+- [x] P13-UI-02 Add active perk summary to the ascension surface
+Depends on:
+- P13-UI-01
+- P12-UI-04
+
+### Tests
+
+- [x] P13-TST-01 Add perk aggregation and modifier unit tests
+Depends on:
+- P13-SYS-01
+- P13-SYS-02
+- P13-SYS-03
+
+- [x] P13-TST-02 Add perk integration tests for XP, stats, quests, and streak protection
+Depends on:
+- P13-ENG-01
+- P13-ENG-02
+- P13-ENG-03
+- P13-ENG-04
+- P13-ENG-05
+
+- [x] P13-TST-03 Add active perk UI smoke tests
+Depends on:
+- P13-UI-02
+
+## Phase 14 – Production Readiness Guardrails
+
+### Database Guardrails
+
+- [x] P14-MIG-01 Add production uniqueness constraints and query indexes
+Depends on:
+- P13-TST-03
+
+- [x] P14-MIG-02 Add Supabase RLS policies for user-owned tables
+Depends on:
+- P14-MIG-01
+
+- [x] P14-MIG-03 Document migration rollback and verification commands
+Depends on:
+- P14-MIG-02
+
+### Auth Boundary
+
+- [x] P14-AUTH-01 Create `AuthProviding` boundary for current authenticated user identity
+Depends on:
+- P14-MIG-02
+
+- [x] P14-AUTH-02 Wire authenticated user resolution into production user-owned services
+Depends on:
+- P14-AUTH-01
+
+- [x] P14-AUTH-03 Replace global first-profile reads in production launch paths
+Depends on:
+- P14-AUTH-02
+
+### Idempotency And Error Contracts
+
+- [x] P14-SVC-01 Add typed service result/error contract for critical authenticated writes
+Depends on:
+- P14-AUTH-02
+
+- [x] P14-SVC-02 Harden habit completion retries against duplicate XP and duplicate writes
+Depends on:
+- P14-SVC-01
+- P14-MIG-01
+
+- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+Depends on:
+- P14-SVC-02
+
+- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
+Depends on:
+- P14-SVC-01
+
+### Date And Time Safety
+
+- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
+Depends on:
+- P14-MIG-01
+
+- [ ] P14-TIME-02 Document timezone policy in service and state docs
+Depends on:
+- P14-TIME-01
+
+### Observability
+
+- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
+Depends on:
+- P14-SVC-01
+
+- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
+Depends on:
+- P14-OBS-01
+
+### Production Tests
+
+- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
+Depends on:
+- P14-MIG-03
+
+- [ ] P14-TST-02 Add auth user-scoping service tests
+Depends on:
+- P14-AUTH-03
+
+- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
+Depends on:
+- P14-SVC-03
+
+- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+Depends on:
+- P14-SVC-04

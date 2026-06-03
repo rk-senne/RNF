@@ -13,25 +13,38 @@ final class UserService {
     }
 
     private let supabase: SupabaseService
+    private let authProvider: AuthProviding
 
-    init(supabase: SupabaseService = .shared) {
+    init(
+        supabase: SupabaseService = .shared,
+        authProvider: AuthProviding? = nil
+    ) {
         self.supabase = supabase
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     func loadProfile() async -> Profile {
 
         do {
-            let profiles: [Profile] = try await supabase.client
-                .from("users")
-                .select()
-                .limit(1)
-                .execute()
-                .value
-
-            return profiles.first ?? .placeholder
+            let userId = try await authProvider.requireCurrentUserID()
+            return try await loadProfile(userId: userId) ?? .placeholder
         } catch {
             return .placeholder
         }
+
+    }
+
+    func loadProfile(userId: UUID) async throws -> Profile? {
+
+        let profiles: [Profile] = try await supabase.client
+            .from("users")
+            .select()
+            .eq("id", value: userId.uuidString)
+            .limit(1)
+            .execute()
+            .value
+
+        return profiles.first
 
     }
 
@@ -46,6 +59,11 @@ final class UserService {
             .value
 
         return rows.first?.forgiveness_tokens ?? 0
+    }
+
+    func fetchForgivenessTokens() async throws -> Int {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await fetchForgivenessTokens(userId: userId)
     }
 
     func decrementForgivenessTokens(userId: UUID) async throws -> Int {
@@ -67,6 +85,11 @@ final class UserService {
             .value
 
         return updatedRow.forgiveness_tokens
+    }
+
+    func decrementForgivenessTokens() async throws -> Int {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await decrementForgivenessTokens(userId: userId)
     }
 
     func saveProfile(_ profile: Profile) async {

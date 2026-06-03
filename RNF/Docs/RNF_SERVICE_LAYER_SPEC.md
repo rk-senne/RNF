@@ -1,5 +1,11 @@
 # RNF Service Layer Specification
 
+Production-readiness reference:
+
+See `RNF_PRODUCTION_READINESS_SPEC.md` for service error contracts, user scoping, idempotency, retry behavior, and persistence guardrails. Service tasks must satisfy both documents.
+
+---
+
 This document defines the responsibilities of each service in the RNF application.
 
 Services act as the bridge between:

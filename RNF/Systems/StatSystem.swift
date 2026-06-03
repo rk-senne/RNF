@@ -4,46 +4,115 @@ struct StatSystem {
 
     static func applyReward(
         stats: inout Stats,
-        for habitName: String
+        for habitName: String,
+        activePerks: ActivePerkSummary = .empty
     ) {
 
         switch habitName {
 
         case "Workout":
-            stats.strength += 1
-            stats.energy += 1
+            applyStatReward(.strength, to: &stats, activePerks: activePerks)
+            applyStatReward(.energy, to: &stats, activePerks: activePerks)
 
         case "Read 10 Pages":
-            stats.focus += 1
-            stats.mind += 1
+            applyStatReward(.focus, to: &stats, activePerks: activePerks)
+            applyStatReward(.mind, to: &stats, activePerks: activePerks)
 
         case "Meditate":
-            stats.wisdom += 1
-            stats.spirit += 1
+            applyStatReward(.wisdom, to: &stats, activePerks: activePerks)
+            applyStatReward(.spirit, to: &stats, activePerks: activePerks)
 
         case "Cold Shower":
-            stats.discipline += 1
-            stats.energy += 1
+            applyStatReward(.discipline, to: &stats, activePerks: activePerks)
+            applyStatReward(.energy, to: &stats, activePerks: activePerks)
 
         case "Drink Water":
-            stats.energy += 1
+            applyStatReward(.energy, to: &stats, activePerks: activePerks)
 
         case "Stretch":
-            stats.energy += 1
-            stats.spirit += 1
+            applyStatReward(.energy, to: &stats, activePerks: activePerks)
+            applyStatReward(.spirit, to: &stats, activePerks: activePerks)
 
         case "Journal":
-            stats.wisdom += 1
-            stats.mind += 1
+            applyStatReward(.wisdom, to: &stats, activePerks: activePerks)
+            applyStatReward(.mind, to: &stats, activePerks: activePerks)
 
         case "Walk 10 Minutes":
-            stats.energy += 1
-            stats.strength += 1
+            applyStatReward(.energy, to: &stats, activePerks: activePerks)
+            applyStatReward(.strength, to: &stats, activePerks: activePerks)
 
         default:
             break
         }
 
+    }
+
+    private static func applyStatReward(
+        _ statType: SkillTreePath,
+        to stats: inout Stats,
+        activePerks: ActivePerkSummary
+    ) {
+
+        let reward = PerkSystem.modifiedStatReward(
+            baseStatGain: 1,
+            statType: statType,
+            activePerks: activePerks,
+            currentStatValue: statValue(statType, in: stats)
+        )
+
+        switch statType {
+
+        case .strength:
+            stats.strength += reward
+
+        case .discipline:
+            stats.discipline += reward
+
+        case .focus:
+            stats.focus += reward
+
+        case .energy:
+            stats.energy += reward
+
+        case .wisdom:
+            stats.wisdom += reward
+
+        case .mind:
+            stats.mind += reward
+
+        case .spirit:
+            stats.spirit += reward
+        }
+    }
+
+    private static func statValue(
+        _ statType: SkillTreePath,
+        in stats: Stats
+    ) -> Int {
+
+        switch statType {
+
+        case .strength:
+            return stats.strength
+
+        case .discipline:
+            return stats.discipline
+
+        case .focus:
+            return stats.focus
+
+        case .energy:
+            return stats.energy
+
+        case .wisdom:
+            return stats.wisdom
+
+        case .mind:
+            return stats.mind
+
+        case .spirit:
+            return stats.spirit
+        }
     }
 
 }

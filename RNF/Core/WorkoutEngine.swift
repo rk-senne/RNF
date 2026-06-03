@@ -19,6 +19,7 @@ final class WorkoutEngine {
     private let dailyLogService: DailyLogService
     private let xpService: XPService
     private let challengeEngine: ChallengeEngine
+    private let skillTreeService: SkillTreeService
     private let analyticsService: AnalyticsService
     private weak var gameState: GameState?
 
@@ -27,12 +28,14 @@ final class WorkoutEngine {
         dailyLogService: DailyLogService = DailyLogService(),
         xpService: XPService = XPService(),
         challengeEngine: ChallengeEngine? = nil,
+        skillTreeService: SkillTreeService = SkillTreeService(),
         analyticsService: AnalyticsService = AnalyticsService()
     ) {
         self.workoutService = workoutService
         self.dailyLogService = dailyLogService
         self.xpService = xpService
         self.challengeEngine = challengeEngine ?? ChallengeEngine()
+        self.skillTreeService = skillTreeService
         self.analyticsService = analyticsService
     }
 
@@ -73,14 +76,20 @@ final class WorkoutEngine {
             )
 
             var updatedProfile = gameState.profile
+            let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+            let awardedXP = PerkSystem.modifiedXPReward(
+                baseXP: Self.workoutXP,
+                activePerks: activePerks,
+                currentDailyXP: completedLog.xp_earned
+            )
             let levelState = xpService.awardXP(
                 currentTotal: updatedProfile.xp_total,
-                gainedXP: Self.workoutXP
+                gainedXP: awardedXP
             )
 
             updatedProfile.xp_total = levelState.totalXP
             updatedProfile.level = levelState.level
-            completedLog.xp_earned += Self.workoutXP
+            completedLog.xp_earned += awardedXP
 
             await dailyLogService.saveDailyLog(completedLog)
             await dailyLogService.saveProfile(updatedProfile)
@@ -106,7 +115,7 @@ final class WorkoutEngine {
                 properties: [
                     "user_id": updatedProfile.id.uuidString,
                     "duration": "\(durationSeconds)",
-                    "xp_awarded": "\(Self.workoutXP)",
+                    "xp_awarded": "\(awardedXP)",
                     "timestamp": Self.analyticsTimestamp(for: date)
                 ]
             )
@@ -126,7 +135,7 @@ final class WorkoutEngine {
             return WorkoutCompletionResult(
                 dailyLog: completedLog,
                 profile: updatedProfile,
-                xpAwarded: Self.workoutXP,
+                xpAwarded: awardedXP,
                 levelState: levelState,
                 advancedChallenge: advancedChallenge
             )

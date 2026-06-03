@@ -1,5 +1,11 @@
 # RNF Security Specification
 
+Production-readiness reference:
+
+See `RNF_PRODUCTION_READINESS_SPEC.md` for required auth, RLS, secret handling, and user-isolation rules. If the two documents conflict, the stricter security rule applies.
+
+---
+
 Security ensures users cannot access or modify other users' data.
 
 ---
