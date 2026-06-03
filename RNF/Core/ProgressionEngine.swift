@@ -3,6 +3,12 @@ import Foundation
 struct ProgressionResult {
 
     let habit: Habit
+    let updatedProfile: Profile
+    let updatedDailyLog: DailyLog
+    let questPlan: DailyQuestPlan
+    let completedHabitIDs: Set<UUID>
+    let xpGained: Int
+    let levelState: XPSystem.LevelState
     let leveledUp: Bool
     let missionCompleted: Bool
     let unlockedBadge: String?
@@ -140,17 +146,7 @@ final class ProgressionEngine {
 
         let questPlan = questService.updateQuestProgress(for: updatedProfile)
         updatedDailyLog.habits_required = questPlan.dailyGoal
-
-        gameState.apply(
-            profile: updatedProfile,
-            levelState: xpService.levelState(for: updatedProfile.xp_total),
-            titles: BadgeSystem.titles(for: updatedProfile.streak),
-            quests: questPlan.habits,
-            dailyGoal: questPlan.dailyGoal,
-            dailyCompleted: updatedDailyCompleted,
-            completedHabitIDs: updatedCompletedHabitIDs,
-            dailyLog: updatedDailyLog
-        )
+        let levelState = xpService.levelState(for: updatedProfile.xp_total)
 
         if !updatedProfile.isPlaceholder {
             await analyticsService.trackEvent(
@@ -202,6 +198,12 @@ final class ProgressionEngine {
 
         return ProgressionResult(
             habit: habit,
+            updatedProfile: updatedProfile,
+            updatedDailyLog: updatedDailyLog,
+            questPlan: questPlan,
+            completedHabitIDs: updatedCompletedHabitIDs,
+            xpGained: habit.xpReward,
+            levelState: levelState,
             leveledUp: xpState.leveledUp,
             missionCompleted: missionCompleted,
             unlockedBadge: unlockedBadge

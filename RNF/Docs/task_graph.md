@@ -26,12 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [x] P11-OPS-02 Validate performance of habit completion, reading upload, workout completion, and month log fetch
+- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
 Depends on:
-- P6-ENG-03
-- P8-ENG-03
-- P8-ENG-06
-- P9-SVC-02
+- P12-ARCH-03
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -587,3 +584,112 @@ Depends on:
 - P8-ENG-03
 - P8-ENG-06
 - P9-SVC-02
+
+## Phase 12 – Engagement Expansion
+
+### Architecture Stabilization
+
+- [x] P12-ARCH-01 Expand `ProgressionResult` into a full state transition payload
+Depends on:
+- P11-OPS-02
+
+- [x] P12-ARCH-02 Move habit `GameState.apply(...)` responsibility from `ProgressionEngine` to `HabitsViewModel`
+Depends on:
+- P12-ARCH-01
+
+- [x] P12-ARCH-03 Add regression tests for the progression transition payload
+Depends on:
+- P12-ARCH-02
+
+- [x] P12-ARCH-04 Classify `DailyLogService` methods by persistence responsibility in docs
+Depends on:
+- P11-OPS-02
+
+### Dynamic Quest System
+
+- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
+Depends on:
+- P12-ARCH-03
+
+- [ ] P12-SYS-01 Add weak-stat quest selection helper in `QuestGenerator`
+Depends on:
+- P12-MDL-01
+
+- [ ] P12-SYS-02 Add weekly habit unlock selection helper
+Depends on:
+- P12-MDL-01
+
+- [ ] P12-SVC-01 Update `QuestService` to expose dynamic daily and weekly quest plans
+Depends on:
+- P12-SYS-01
+- P12-SYS-02
+
+- [ ] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
+Depends on:
+- P12-SVC-01
+
+- [ ] P12-TST-01 Add quest generation and weekly unlock tests
+Depends on:
+- P12-SVC-01
+
+### Skill Trees
+
+- [ ] P12-MDL-02 Create skill tree models for paths, nodes, tiers, and unlock state
+Depends on:
+- P12-ARCH-03
+
+- [ ] P12-SYS-03 Create `SkillTreeSystem` unlock and point calculation helpers
+Depends on:
+- P12-MDL-02
+
+- [ ] P12-SVC-02 Create skill tree persistence shell
+Depends on:
+- P12-SYS-03
+
+- [ ] P12-UI-02 Build skill tree screen shell
+Depends on:
+- P12-SVC-02
+
+- [ ] P12-TST-02 Add skill tree unlock and skill point tests
+Depends on:
+- P12-SYS-03
+
+### Evolution Milestones
+
+- [ ] P12-MDL-03 Create evolution tier model
+Depends on:
+- P12-ARCH-03
+
+- [ ] P12-SYS-04 Create `EvolutionSystem` milestone evaluation helper
+Depends on:
+- P12-MDL-03
+- P12-SYS-03
+
+- [ ] P12-SVC-03 Add evolution state derivation path
+Depends on:
+- P12-SYS-04
+
+- [ ] P12-UI-03 Expand profile evolution surface with derived milestones
+Depends on:
+- P12-SVC-03
+
+- [ ] P12-TST-03 Add evolution milestone tests
+Depends on:
+- P12-SYS-04
+
+### Navigation and Retention
+
+- [ ] P12-UI-04 Add quest and skill tree navigation entry points
+Depends on:
+- P12-UI-01
+- P12-UI-02
+
+- [ ] P12-SVC-04 Add engagement analytics events for weekly quest, skill tree, and evolution milestones
+Depends on:
+- P12-UI-04
+- P12-UI-03
+- P11-SVC-06
+
+- [ ] P12-TST-04 Add navigation smoke tests for engagement screens
+Depends on:
+- P12-UI-04
