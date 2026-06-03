@@ -15,6 +15,22 @@ struct RootView: View {
             }
 
             NavigationStack {
+                WorkoutListView()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .tabItem {
+                Label("Workouts", systemImage: "figure.strengthtraining.traditional")
+            }
+
+            NavigationStack {
+                ReadView()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .tabItem {
+                Label("Read", systemImage: "book.closed.fill")
+            }
+
+            NavigationStack {
                 AscensionView()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

@@ -15,16 +15,19 @@ final class ProgressionEngine {
     private let dailyLogService: DailyLogService
     private let xpService: XPService
     private let questService: QuestService
+    private let analyticsService: AnalyticsService
     private weak var gameState: GameState?
 
     init(
         dailyLogService: DailyLogService = DailyLogService(),
         xpService: XPService = XPService(),
-        questService: QuestService = QuestService()
+        questService: QuestService = QuestService(),
+        analyticsService: AnalyticsService = AnalyticsService()
     ) {
         self.dailyLogService = dailyLogService
         self.xpService = xpService
         self.questService = questService
+        self.analyticsService = analyticsService
     }
 
     func configure(gameState: GameState) {
@@ -42,10 +45,12 @@ final class ProgressionEngine {
         }
 
         let completionDate = Date()
+        let dailyGoal = gameState.dailyGoal
         var updatedCompletedHabitIDs = gameState.completedHabitIDs
         updatedCompletedHabitIDs.insert(habit.id)
 
         var updatedProfile = gameState.profile
+        let previousStreak = updatedProfile.streak
         var updatedStats = updatedProfile.stats
         StatSystem.applyReward(stats: &updatedStats, for: habit.name)
         updatedProfile.stats = updatedStats
@@ -60,14 +65,14 @@ final class ProgressionEngine {
 
         let updatedDailyCompleted = gameState.dailyCompleted + 1
         let missionCompleted =
-            gameState.dailyCompleted < gameState.dailyGoal &&
-            updatedDailyCompleted >= gameState.dailyGoal
+            gameState.dailyCompleted < dailyGoal &&
+            updatedDailyCompleted >= dailyGoal
 
         if missionCompleted {
             updatedProfile.streak = StreakSystem.updateStreak(
                 currentStreak: updatedProfile.streak,
                 dailyCompleted: updatedDailyCompleted,
-                dailyGoal: gameState.dailyGoal
+                dailyGoal: dailyGoal
             )
         }
 
@@ -84,17 +89,53 @@ final class ProgressionEngine {
             xp_awarded: habit.xpReward
         )
 
-        await dailyLogService.recordCompletion(completion)
+        let todayLog: DailyLog
+        do {
+            todayLog = try await dailyLogService.getTodayLog(
+                for: updatedProfile,
+                dailyGoal: dailyGoal
+            )
+        } catch {
+            return nil
+        }
 
-        var updatedDailyLog = gameState.dailyLog
+        if !updatedProfile.isPlaceholder {
+            do {
+                guard let recordedCompletion = try await dailyLogService.recordHabitCompletion(completion) else {
+                    return nil
+                }
+
+                guard recordedCompletion.id == completion.id else {
+                    return nil
+                }
+            } catch {
+                return nil
+            }
+        }
+
+        var updatedDailyLog = todayLog
         updatedDailyLog.user_id = updatedProfile.isPlaceholder ? nil : updatedProfile.id
         updatedDailyLog.date = completionDate.startOfDay
         updatedDailyLog.habits_completed = updatedDailyCompleted
-        updatedDailyLog.habits_required = gameState.dailyGoal
+        updatedDailyLog.habits_required = dailyGoal
         updatedDailyLog.xp_earned += habit.xpReward
         updatedDailyLog.status = missionCompleted ? .complete : .partial
 
         await dailyLogService.saveDailyLog(updatedDailyLog)
+
+        if !updatedProfile.isPlaceholder {
+            do {
+                if let persistedDailyLog = try await dailyLogService.updateStatus(
+                    userId: updatedProfile.id,
+                    date: completionDate
+                ) {
+                    updatedDailyLog = persistedDailyLog
+                }
+            } catch {
+                return nil
+            }
+        }
+
         await dailyLogService.saveProfile(updatedProfile)
 
         let questPlan = questService.updateQuestProgress(for: updatedProfile)
@@ -111,6 +152,54 @@ final class ProgressionEngine {
             dailyLog: updatedDailyLog
         )
 
+        if !updatedProfile.isPlaceholder {
+            await analyticsService.trackEvent(
+                .habitCompleted,
+                properties: [
+                    "user_id": updatedProfile.id.uuidString,
+                    "habit_id": habit.id.uuidString,
+                    "habit_name": habit.name,
+                    "xp_awarded": "\(habit.xpReward)",
+                    "timestamp": Self.analyticsTimestamp(for: completionDate)
+                ]
+            )
+
+            if missionCompleted {
+                await analyticsService.trackEvent(
+                    .dailyGoalCompleted,
+                    properties: [
+                        "user_id": updatedProfile.id.uuidString,
+                        "habits_completed": "\(updatedDailyCompleted)",
+                        "daily_goal": "\(dailyGoal)",
+                        "timestamp": Self.analyticsTimestamp(for: completionDate)
+                    ]
+                )
+            }
+
+            if updatedProfile.streak > previousStreak {
+                await analyticsService.trackEvent(
+                    .streakIncreased,
+                    properties: [
+                        "user_id": updatedProfile.id.uuidString,
+                        "new_streak_length": "\(updatedProfile.streak)",
+                        "timestamp": Self.analyticsTimestamp(for: completionDate)
+                    ]
+                )
+            }
+
+            if xpState.leveledUp {
+                await analyticsService.trackEvent(
+                    .levelUp,
+                    properties: [
+                        "user_id": updatedProfile.id.uuidString,
+                        "new_level": "\(updatedProfile.level)",
+                        "xp_total": "\(updatedProfile.xp_total)",
+                        "timestamp": Self.analyticsTimestamp(for: completionDate)
+                    ]
+                )
+            }
+        }
+
         return ProgressionResult(
             habit: habit,
             leveledUp: xpState.leveledUp,
@@ -118,6 +207,10 @@ final class ProgressionEngine {
             unlockedBadge: unlockedBadge
         )
 
+    }
+
+    private static func analyticsTimestamp(for date: Date) -> String {
+        ISO8601DateFormatter().string(from: date)
     }
 
 }

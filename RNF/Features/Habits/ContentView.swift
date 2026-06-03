@@ -4,6 +4,8 @@ struct ContentView: View {
 
     @EnvironmentObject private var game: GameState
     @StateObject private var viewModel = HabitsViewModel()
+    @State private var activeChallenge: Challenge?
+    private let challengeEngine = ChallengeEngine()
 
     var body: some View {
 
@@ -69,6 +71,8 @@ struct ContentView: View {
                 )
                 .shadow(color: Color.black.opacity(0.06), radius: 24, x: 0, y: 12)
 
+                challengeSummary
+
                 Text("Today's Quests")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.primary)
@@ -108,6 +112,7 @@ struct ContentView: View {
 
         .task {
             await viewModel.load(gameState: game)
+            await loadChallengeSummary()
         }
 
         .onReceive(NotificationCenter.default.publisher(
@@ -118,6 +123,72 @@ struct ContentView: View {
 
         }
 
+    }
+
+    private var challengeSummary: some View {
+
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("90 DAY CHALLENGE")
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.secondary)
+
+                Spacer(minLength: 12)
+
+                Text(challengeDayText)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.3, green: 0.43, blue: 0.86))
+            }
+
+            ProgressView(value: challengeProgress)
+                .tint(Color(red: 0.3, green: 0.43, blue: 0.86))
+                .scaleEffect(x: 1, y: 1.5, anchor: .center)
+
+            Text(challengeStatusText)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+        )
+
+    }
+
+    private var challengeDayText: String {
+        guard let activeChallenge else {
+            return "Not started"
+        }
+
+        return "Day \(activeChallenge.normalizedCurrentDay) / \(Challenge.totalDays)"
+    }
+
+    private var challengeProgress: Double {
+        activeChallenge?.progress ?? 0
+    }
+
+    private var challengeStatusText: String {
+        guard activeChallenge != nil else {
+            return "Commit to the 90-day path to begin tracking challenge progress."
+        }
+
+        return "Complete today's habits, workout, and reading proof to advance."
+    }
+
+    private func loadChallengeSummary() async {
+        guard !game.profile.isPlaceholder else {
+            activeChallenge = nil
+            return
+        }
+
+        activeChallenge = await challengeEngine.loadActiveChallenge(userId: game.profile.id)
     }
 
     private func statPill(title: String, value: String, tint: Color) -> some View {

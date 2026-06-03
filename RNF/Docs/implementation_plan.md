@@ -81,7 +81,7 @@ Why this phase comes after Phase 7:
 
 Ordered work:
 
-1. Implement workout persistence and timing rules.
+1. Implement workout daily-log persistence and timing rules.
 2. Implement reading proof storage and completion logic.
 3. Build the Workout and Read user flows.
 4. Connect both systems into challenge-day completion.
