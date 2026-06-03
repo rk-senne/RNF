@@ -26,7 +26,7 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-AUTH-03 Replace global first-profile reads in production launch paths
+- [ ] P14-SVC-01 Add typed service result/error contract for critical authenticated writes
 Depends on:
 - P14-AUTH-02
 
@@ -825,7 +825,7 @@ Depends on:
 Depends on:
 - P14-AUTH-01
 
-- [ ] P14-AUTH-03 Replace global first-profile reads in production launch paths
+- [x] P14-AUTH-03 Replace global first-profile reads in production launch paths
 Depends on:
 - P14-AUTH-02
 

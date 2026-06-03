@@ -26,17 +26,25 @@ final class UserService {
     func loadProfile() async -> Profile {
 
         do {
-            let profiles: [Profile] = try await supabase.client
-                .from("users")
-                .select()
-                .limit(1)
-                .execute()
-                .value
-
-            return profiles.first ?? .placeholder
+            let userId = try await authProvider.requireCurrentUserID()
+            return try await loadProfile(userId: userId) ?? .placeholder
         } catch {
             return .placeholder
         }
+
+    }
+
+    func loadProfile(userId: UUID) async throws -> Profile? {
+
+        let profiles: [Profile] = try await supabase.client
+            .from("users")
+            .select()
+            .eq("id", value: userId.uuidString)
+            .limit(1)
+            .execute()
+            .value
+
+        return profiles.first
 
     }
 
