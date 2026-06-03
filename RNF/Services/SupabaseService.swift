@@ -16,4 +16,8 @@ final class SupabaseService {
 
     }
 
+    init(client: SupabaseClient) {
+        self.client = client
+    }
+
 }

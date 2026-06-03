@@ -356,6 +356,8 @@ Workouts use the daily_logs table.
 
 No separate table required for Phase 1.
 
+Phase 1 does not insert a workout session record. Completing a workout persists only to the daily log for the completion date.
+
 ---
 
 ## Complete Workout
@@ -366,7 +368,11 @@ WorkoutService.completeWorkout()
 
 Update
 
+Fetch or create the user's daily log for the completion date.
+
 daily_logs.workout_completed = true
+
+Refresh daily log status.
 
 XP reward
 

@@ -237,6 +237,21 @@ Review each method in `DailyLogService` and classify it as:
 - status calculation
 - profile persistence passthrough
 
+Current method classification:
+
+| Method | Responsibility | Boundary note |
+| --- | --- | --- |
+| `normalizedDay(_:)` | date normalization helper | Keep private to persistence methods unless shared date normalization becomes explicit. |
+| `fetchTodayLog(userId:date:)` | daily log persistence | Reads one `daily_logs` record for a user and normalized day. |
+| `createDailyLog(userId:date:)` | daily log persistence | Inserts one `daily_logs` record and falls back to the existing record on duplicate creation. |
+| `getTodayLog(for:dailyGoal:)` | daily log persistence | Fetch-or-create convenience for the current daily log; returns a local placeholder log for placeholder profiles. |
+| `saveDailyLog(_:)` | daily log persistence | Upserts one `daily_logs` record and intentionally ignores backend failure to preserve local state. |
+| `recordCompletion(_:)` | habit completion persistence passthrough | Delegates directly to `HabitService`; should be removed or renamed once habit-completion ownership is narrowed. |
+| `recordHabitCompletion(_:)` | habit completion persistence | Performs duplicate-safe `habit_completions` lookup and insert. |
+| `calculateStatus(for:)` | status calculation | Pure daily-log status derivation; safe to test independently or extract later. |
+| `updateStatus(userId:date:)` | daily log persistence plus status calculation | Reads a daily log, derives status with `calculateStatus(for:)`, then persists only the status field. |
+| `saveProfile(_:)` | profile persistence passthrough | Delegates to `UserService`; should stay only if a future task defines a daily-log transaction boundary. |
+
 Only move code when a task explicitly calls for it. The goal is controlled narrowing, not churn.
 
 ### Step 3: Define Feature State Boundaries

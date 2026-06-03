@@ -92,7 +92,17 @@ final class HabitsViewModel: ObservableObject {
             return
         }
 
-        xpGained = result.habit.xpReward
+        applyState(
+            profile: result.updatedProfile,
+            levelState: result.levelState,
+            quests: result.questPlan.habits,
+            dailyGoal: result.questPlan.dailyGoal,
+            dailyCompleted: result.updatedDailyLog.habits_completed,
+            completedHabitIDs: result.completedHabitIDs,
+            dailyLog: result.updatedDailyLog
+        )
+
+        xpGained = result.xpGained
         showLevelUp = result.leveledUp
         showMissionComplete = result.missionCompleted
 
@@ -107,6 +117,7 @@ final class HabitsViewModel: ObservableObject {
 
     private func applyState(
         profile: Profile,
+        levelState: XPSystem.LevelState? = nil,
         quests: [Habit],
         dailyGoal: Int,
         dailyCompleted: Int,
@@ -118,7 +129,7 @@ final class HabitsViewModel: ObservableObject {
             return
         }
 
-        let levelState = xpService.levelState(for: profile.xp_total)
+        let levelState = levelState ?? xpService.levelState(for: profile.xp_total)
 
         gameState.apply(
             profile: profile,

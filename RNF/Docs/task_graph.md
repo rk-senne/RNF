@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [x] P6-SVC-04 Add duplicate completion lookup in `DailyLogService.recordHabitCompletion(...)`
+- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
 Depends on:
-- P6-SVC-01
+- P12-ARCH-03
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -85,92 +85,92 @@ Depends on:
 Depends on:
 - P6-MDL-02
 
-- [ ] P6-SVC-09 Add `ChallengeService.startChallenge(...)`
+- [x] P6-SVC-09 Add `ChallengeService.startChallenge(...)`
 Depends on:
 - P6-SVC-08
 
-- [ ] P6-SVC-10 Add `ChallengeService.getActiveChallenge(...)`
+- [x] P6-SVC-10 Add `ChallengeService.getActiveChallenge(...)`
 Depends on:
 - P6-SVC-08
 
-- [ ] P6-SVC-11 Add `ChallengeService.completeChallenge(...)`
+- [x] P6-SVC-11 Add `ChallengeService.completeChallenge(...)`
 Depends on:
 - P6-SVC-08
 
 ### Calendar Service
 
-- [ ] P6-SVC-12 Create `CalendarService.swift` shell in `Services/`
+- [x] P6-SVC-12 Create `CalendarService.swift` shell in `Services/`
 Depends on:
 - P6-MDL-03
 
-- [ ] P6-SVC-13 Add `CalendarService.getMonthLogs(userId:month:)`
+- [x] P6-SVC-13 Add `CalendarService.getMonthLogs(userId:month:)`
 Depends on:
 - P6-SVC-03
 - P6-SVC-12
 
-- [ ] P6-SVC-14 Add `CalendarService.mapLogToCalendarStatus(...)`
+- [x] P6-SVC-14 Add `CalendarService.mapLogToCalendarStatus(...)`
 Depends on:
 - P6-MDL-03
 - P6-SVC-13
 
 ### Engine and ViewModel Integration
 
-- [ ] P6-ENG-01 Update `ProgressionEngine` to create-or-fetch today’s log before progression writes
+- [x] P6-ENG-01 Update `ProgressionEngine` to create-or-fetch today’s log before progression writes
 Depends on:
 - P6-SVC-03
 
-- [ ] P6-ENG-02 Update `ProgressionEngine` to use duplicate-safe habit completion persistence
+- [x] P6-ENG-02 Update `ProgressionEngine` to use duplicate-safe habit completion persistence
 Depends on:
 - P6-SVC-05
 - P6-ENG-01
 
-- [ ] P6-ENG-03 Update `ProgressionEngine` to call `DailyLogService.updateStatus(...)`
+- [x] P6-ENG-03 Update `ProgressionEngine` to call `DailyLogService.updateStatus(...)`
 Depends on:
 - P6-SVC-07
 - P6-ENG-02
 
-- [ ] P6-VM-01 Remove any remaining direct progression mutations from `HabitsViewModel.swift`
+- [x] P6-VM-01 Remove any remaining direct progression mutations from `HabitsViewModel.swift`
 Depends on:
 - P6-ENG-03
 
 ### UI Shell
 
-- [ ] P6-UI-01 Create `WorkoutListView.swift` placeholder screen in `Features/`
+- [x] P6-UI-01 Create `WorkoutListView.swift` placeholder screen in `Features/`
 Depends on:
 - none
 
-- [ ] P6-UI-02 Create `ReadView.swift` placeholder screen in `Features/`
+- [x] P6-UI-02 Create `ReadView.swift` placeholder screen in `Features/`
 Depends on:
 - none
 
-- [ ] P6-UI-03 Create `WorkoutViewModel.swift` placeholder in `ViewModels/`
+- [x] P6-UI-03 Create `WorkoutViewModel.swift` placeholder in `ViewModels/`
 Depends on:
 - P6-UI-01
 
-- [ ] P6-UI-04 Create `ReadViewModel.swift` placeholder in `ViewModels/`
+- [x] P6-UI-04 Create `ReadViewModel.swift` placeholder in `ViewModels/`
 Depends on:
 - P6-UI-02
 
-- [ ] P6-UI-05 Expand `RootView.swift` with Workouts and Read tabs
+- [x] P6-UI-05 Expand `RootView.swift` with Workouts and Read tabs
 Depends on:
 - P6-UI-01
 - P6-UI-02
 
 ### Tests
 
-- [ ] P6-TST-01 Add `XPSystem` threshold and carry-over tests
+- [x] P6-TST-01 Add `XPSystem` threshold and carry-over tests
 Depends on:
 - none
 
-- [ ] P6-TST-02 Add `DailyLogService` duplicate completion tests
+- [x] P6-TST-02 Add `DailyLogService` duplicate completion tests
 Depends on:
 - P6-SVC-05
 
-- [ ] P6-TST-03 Add `DailyLogService` status update tests
+- [x] P6-TST-03 Add `DailyLogService` status update tests
 Depends on:
 - P6-SVC-07
 
-- [ ] P6-TST-04 Add `ProgressionEngine` quest refresh tests
+- [x] P6-TST-04 Add `ProgressionEngine` quest refresh tests
 Depends on:
 - P6-ENG-03
 
@@ -178,99 +178,99 @@ Depends on:
 
 ### Model and Service Expansion
 
-- [ ] P7-MDL-01 Add challenge mapping helpers to `Challenge.swift`
+- [x] P7-MDL-01 Add challenge mapping helpers to `Challenge.swift`
 Depends on:
 - P6-MDL-02
 
-- [ ] P7-SVC-01 Add `ChallengeService.advanceDay(...)`
+- [x] P7-SVC-01 Add `ChallengeService.advanceDay(...)`
 Depends on:
 - P6-SVC-10
 
-- [ ] P7-SVC-02 Add `ChallengeService.restartChallenge(...)`
+- [x] P7-SVC-02 Add `ChallengeService.restartChallenge(...)`
 Depends on:
 - P6-SVC-11
 
 ### Challenge Engine
 
-- [ ] P7-ENG-01 Create `ChallengeEngine.swift` shell in `Core/`
+- [x] P7-ENG-01 Create `ChallengeEngine.swift` shell in `Core/`
 Depends on:
 - P6-SVC-10
 - P6-SVC-11
 - P6-SVC-07
 
-- [ ] P7-ENG-02 Add active challenge loading in `ChallengeEngine`
+- [x] P7-ENG-02 Add active challenge loading in `ChallengeEngine`
 Depends on:
 - P7-ENG-01
 
-- [ ] P7-ENG-03 Add day progression logic in `ChallengeEngine.advanceIfDayComplete(...)`
+- [x] P7-ENG-03 Add day progression logic in `ChallengeEngine.advanceIfDayComplete(...)`
 Depends on:
 - P7-SVC-01
 - P7-ENG-02
 
-- [ ] P7-ENG-04 Add day-90 completion detection in `ChallengeEngine`
+- [x] P7-ENG-04 Add day-90 completion detection in `ChallengeEngine`
 Depends on:
 - P7-ENG-03
 
-- [ ] P7-ENG-05 Add restart flow orchestration in `ChallengeEngine`
+- [x] P7-ENG-05 Add restart flow orchestration in `ChallengeEngine`
 Depends on:
 - P7-SVC-02
 - P7-ENG-04
 
 ### App State Manager
 
-- [ ] P7-CORE-01 Create `AppState.swift` enum for app routes
+- [x] P7-CORE-01 Create `AppState.swift` enum for app routes
 Depends on:
 - none
 
-- [ ] P7-CORE-02 Create `AppStateManager.swift` shell in `Core/`
+- [x] P7-CORE-02 Create `AppStateManager.swift` shell in `Core/`
 Depends on:
 - P7-CORE-01
 
-- [ ] P7-CORE-03 Add launch resolution using session state, today log, and active challenge
+- [x] P7-CORE-03 Add launch resolution using session state, today log, and active challenge
 Depends on:
 - P6-SVC-03
 - P6-SVC-10
 - P7-CORE-02
 
-- [ ] P7-CORE-04 Add challenge-related route transitions
+- [x] P7-CORE-04 Add challenge-related route transitions
 Depends on:
 - P7-ENG-04
 - P7-CORE-03
 
 ### Screens
 
-- [ ] P7-UI-01 Create `CommitmentView.swift`
+- [x] P7-UI-01 Create `CommitmentView.swift`
 Depends on:
 - P7-CORE-02
 
-- [ ] P7-UI-02 Add challenge summary surface to `ContentView.swift`
+- [x] P7-UI-02 Add challenge summary surface to `ContentView.swift`
 Depends on:
 - P7-ENG-03
 
-- [ ] P7-UI-03 Add challenge summary surface to `AscensionView.swift`
+- [x] P7-UI-03 Add challenge summary surface to `AscensionView.swift`
 Depends on:
 - P7-ENG-03
 
-- [ ] P7-UI-04 Create challenge completion screen
+- [x] P7-UI-04 Create challenge completion screen
 Depends on:
 - P7-ENG-04
 
-- [ ] P7-UI-05 Add challenge restart action UI
+- [x] P7-UI-05 Add challenge restart action UI
 Depends on:
 - P7-ENG-05
 
 ### Tests
 
-- [ ] P7-TST-01 Add `ChallengeService.advanceDay(...)` tests
+- [x] P7-TST-01 Add `ChallengeService.advanceDay(...)` tests
 Depends on:
 - P7-SVC-01
 
-- [ ] P7-TST-02 Add `ChallengeEngine` completion and restart tests
+- [x] P7-TST-02 Add `ChallengeEngine` completion and restart tests
 Depends on:
 - P7-ENG-04
 - P7-ENG-05
 
-- [ ] P7-TST-03 Add `AppStateManager` launch routing tests
+- [x] P7-TST-03 Add `AppStateManager` launch routing tests
 Depends on:
 - P7-CORE-04
 
@@ -278,99 +278,99 @@ Depends on:
 
 ### Workout Path
 
-- [ ] P8-MDL-01 Create `WorkoutSession.swift` model
+- [x] P8-MDL-01 Create `WorkoutSession.swift` model
 Depends on:
 - none
 
-- [ ] P8-SYS-01 Add workout duration validation helper in `Systems/`
+- [x] P8-SYS-01 Add workout duration validation helper in `Systems/`
 Depends on:
 - P8-MDL-01
 
-- [ ] P8-SVC-01 Create `WorkoutService.swift` shell
+- [x] P8-SVC-01 Create `WorkoutService.swift` shell
 Depends on:
 - P8-MDL-01
 - P6-SVC-03
 
-- [ ] P8-SVC-02 Add workout completion persistence in `WorkoutService`
+- [x] P8-SVC-02 Add workout daily-log fetch/create path in `WorkoutService`
 Depends on:
 - P8-SVC-01
 
-- [ ] P8-SVC-03 Add daily log workout-flag update in `WorkoutService`
+- [x] P8-SVC-03 Add daily log workout-flag update in `WorkoutService`
 Depends on:
 - P6-SVC-07
 - P8-SVC-02
 
-- [ ] P8-ENG-01 Create `WorkoutEngine.swift` shell
+- [x] P8-ENG-01 Create `WorkoutEngine.swift` shell
 Depends on:
 - P8-SVC-03
 
-- [ ] P8-ENG-02 Add XP award path in `WorkoutEngine.completeWorkout(...)`
+- [x] P8-ENG-02 Add XP award path in `WorkoutEngine.completeWorkout(...)`
 Depends on:
 - P8-SYS-01
 - P8-ENG-01
 
-- [ ] P8-ENG-03 Add challenge day evaluation hook for workouts
+- [x] P8-ENG-03 Add challenge day evaluation hook for workouts
 Depends on:
 - P7-ENG-03
 - P8-ENG-02
 
-- [ ] P8-UI-01 Build workout list screen content
+- [x] P8-UI-01 Build workout list screen content
 Depends on:
 - P8-SVC-01
 - P6-UI-01
 
-- [ ] P8-UI-02 Build active workout timer screen
+- [x] P8-UI-02 Build active workout timer screen
 Depends on:
 - P8-ENG-02
 - P8-UI-01
 
-- [ ] P8-TST-01 Add workout validation and reward tests
+- [x] P8-TST-01 Add workout validation and reward tests
 Depends on:
 - P8-ENG-02
 
 ### Reading Path
 
-- [ ] P8-MDL-02 Create `ReadingUpload.swift` model
+- [x] P8-MDL-02 Create `ReadingUpload.swift` model
 Depends on:
 - none
 
-- [ ] P8-SVC-04 Add proof file upload path in `ReadingService.swift`
+- [x] P8-SVC-04 Add proof file upload path in `ReadingService.swift`
 Depends on:
 - P8-MDL-02
 
-- [ ] P8-SVC-05 Add `reading_uploads` insert path in `ReadingService.swift`
+- [x] P8-SVC-05 Add `reading_uploads` insert path in `ReadingService.swift`
 Depends on:
 - P8-SVC-04
 
-- [ ] P8-SVC-06 Add daily log reading-flag update in `ReadingService.swift`
+- [x] P8-SVC-06 Add daily log reading-flag update in `ReadingService.swift`
 Depends on:
 - P6-SVC-07
 - P8-SVC-05
 
-- [ ] P8-ENG-04 Create `ReadingEngine.swift` shell
+- [x] P8-ENG-04 Create `ReadingEngine.swift` shell
 Depends on:
 - P8-SVC-06
 
-- [ ] P8-ENG-05 Add XP award path in `ReadingEngine.completeReading(...)`
+- [x] P8-ENG-05 Add XP award path in `ReadingEngine.completeReading(...)`
 Depends on:
 - P8-ENG-04
 
-- [ ] P8-ENG-06 Add challenge day evaluation hook for reading
+- [x] P8-ENG-06 Add challenge day evaluation hook for reading
 Depends on:
 - P7-ENG-03
 - P8-ENG-05
 
-- [ ] P8-UI-03 Build read screen content
+- [x] P8-UI-03 Build read screen content
 Depends on:
 - P8-SVC-04
 - P6-UI-02
 
-- [ ] P8-UI-04 Build reading proof upload flow
+- [x] P8-UI-04 Build reading proof upload flow
 Depends on:
 - P8-SVC-05
 - P8-UI-03
 
-- [ ] P8-TST-02 Add reading upload and daily-log update tests
+- [x] P8-TST-02 Add reading upload and daily-log update tests
 Depends on:
 - P8-SVC-06
 
@@ -378,61 +378,61 @@ Depends on:
 
 ### Calendar
 
-- [ ] P9-SVC-01 Add month grouping helper in `CalendarService.swift`
+- [x] P9-SVC-01 Add month grouping helper in `CalendarService.swift`
 Depends on:
 - P6-SVC-13
 
-- [ ] P9-SVC-02 Add calendar cell status mapping in `CalendarService.swift`
+- [x] P9-SVC-02 Add calendar cell status mapping in `CalendarService.swift`
 Depends on:
 - P6-SVC-14
 - P9-SVC-01
 
-- [ ] P9-UI-01 Create calendar grid component
+- [x] P9-UI-01 Create calendar grid component
 Depends on:
 - P9-SVC-02
 
-- [ ] P9-UI-02 Add calendar section to profile-facing UI
+- [x] P9-UI-02 Add calendar section to profile-facing UI
 Depends on:
 - P9-UI-01
 
 ### Forgiveness
 
-- [ ] P9-SVC-03 Add forgiveness token fetch path in `UserService.swift`
+- [x] P9-SVC-03 Add forgiveness token fetch path in `UserService.swift`
 Depends on:
 - P6-MDL-01
 
-- [ ] P9-SVC-04 Add forgiveness token decrement path in `UserService.swift`
+- [x] P9-SVC-04 Add forgiveness token decrement path in `UserService.swift`
 Depends on:
 - P9-SVC-03
 
-- [ ] P9-SYS-01 Create `ForgivenessSystem.swift` shell
+- [x] P9-SYS-01 Create `ForgivenessSystem.swift` shell
 Depends on:
 - none
 
-- [ ] P9-SYS-02 Add pure forgiveness rule evaluation
+- [x] P9-SYS-02 Add pure forgiveness rule evaluation
 Depends on:
 - P9-SYS-01
 
-- [ ] P9-ENG-01 Add forgiveness handling in `ChallengeEngine`
+- [x] P9-ENG-01 Add forgiveness handling in `ChallengeEngine`
 Depends on:
 - P7-ENG-03
 - P9-SVC-04
 - P9-SYS-02
 
-- [ ] P9-ENG-02 Add forgiven status handling in `DailyLogService`
+- [x] P9-ENG-02 Add forgiven status handling in `DailyLogService`
 Depends on:
 - P6-SVC-07
 - P9-ENG-01
 
-- [ ] P9-UI-03 Add forgiveness recovery action UI
+- [x] P9-UI-03 Add forgiveness recovery action UI
 Depends on:
 - P9-ENG-01
 
-- [ ] P9-TST-01 Add calendar status mapping tests
+- [x] P9-TST-01 Add calendar status mapping tests
 Depends on:
 - P9-SVC-02
 
-- [ ] P9-TST-02 Add forgiveness token and streak preservation tests
+- [x] P9-TST-02 Add forgiveness token and streak preservation tests
 Depends on:
 - P9-ENG-02
 
@@ -440,79 +440,79 @@ Depends on:
 
 ### Auth Service
 
-- [ ] P10-SVC-01 Create `AuthService.swift` shell
+- [x] P10-SVC-01 Create `AuthService.swift` shell
 Depends on:
 - none
 
-- [ ] P10-SVC-02 Add sign-up path in `AuthService`
+- [x] P10-SVC-02 Add sign-up path in `AuthService`
 Depends on:
 - P10-SVC-01
 
-- [ ] P10-SVC-03 Add sign-in path in `AuthService`
+- [x] P10-SVC-03 Add sign-in path in `AuthService`
 Depends on:
 - P10-SVC-01
 
-- [ ] P10-SVC-04 Add sign-out path in `AuthService`
+- [x] P10-SVC-04 Add sign-out path in `AuthService`
 Depends on:
 - P10-SVC-01
 
-- [ ] P10-SVC-05 Add restore-session path in `AuthService`
+- [x] P10-SVC-05 Add restore-session path in `AuthService`
 Depends on:
 - P10-SVC-01
 
-- [ ] P10-SVC-06 Add post-sign-up user bootstrap in `AuthService`
+- [x] P10-SVC-06 Add post-sign-up user bootstrap in `AuthService`
 Depends on:
 - P10-SVC-02
 - P6-MDL-01
 
 ### Notifications
 
-- [ ] P10-SVC-07 Create `NotificationScheduler.swift` shell
+- [x] P10-SVC-07 Create `NotificationScheduler.swift` shell
 Depends on:
 - none
 
-- [ ] P10-SVC-08 Add notification permission request
+- [x] P10-SVC-08 Add notification permission request
 Depends on:
 - P10-SVC-07
 
-- [ ] P10-SVC-09 Add morning schedule path
+- [x] P10-SVC-09 Add morning schedule path
 Depends on:
 - P10-SVC-08
 
-- [ ] P10-SVC-10 Add evening schedule path
+- [x] P10-SVC-10 Add evening schedule path
 Depends on:
 - P10-SVC-08
 
 ### Screens and Routing
 
-- [ ] P10-UI-01 Create splash screen
+- [x] P10-UI-01 Create splash screen
 Depends on:
 - none
 
-- [ ] P10-UI-02 Create login screen
+- [x] P10-UI-02 Create login screen
 Depends on:
 - P10-SVC-03
 
-- [ ] P10-UI-03 Create sign-up screen
+- [x] P10-UI-03 Create sign-up screen
 Depends on:
 - P10-SVC-02
 
-- [ ] P10-UI-04 Create notification setup screen
+- [x] P10-UI-04 Create notification setup screen
 Depends on:
 - P10-SVC-08
 
-- [ ] P10-CORE-01 Add auth states to `AppStateManager`
+- [x] P10-CORE-01 Add auth states to `AppStateManager`
 Depends on:
 - P7-CORE-04
 - P10-SVC-05
 
-- [ ] P10-CORE-02 Add onboarding states to `AppStateManager`
+- [x] P10-CORE-02 Add onboarding states to `AppStateManager`
 Depends on:
 - P10-CORE-01
 - P10-UI-04
 - P7-UI-01
 
-- [ ] P10-TST-01 Add auth restore and onboarding routing tests
+- [x] P10-TST-01 Add auth restore and onboarding routing tests
 Depends on:
 - P10-CORE-02
 
@@ -520,51 +520,51 @@ Depends on:
 
 ### Subscription
 
-- [ ] P11-SVC-01 Create `SubscriptionService` StoreKit shell
+- [x] P11-SVC-01 Create `SubscriptionService` StoreKit shell
 Depends on:
 - P10-SVC-05
 
-- [ ] P11-SVC-02 Add product fetch path in `SubscriptionService`
+- [x] P11-SVC-02 Add product fetch path in `SubscriptionService`
 Depends on:
 - P11-SVC-01
 
-- [ ] P11-SVC-03 Add entitlement validation path in `SubscriptionService`
+- [x] P11-SVC-03 Add entitlement validation path in `SubscriptionService`
 Depends on:
 - P11-SVC-01
 
-- [ ] P11-SVC-04 Add Supabase subscription sync path
+- [x] P11-SVC-04 Add Supabase subscription sync path
 Depends on:
 - P11-SVC-03
 
-- [ ] P11-UI-01 Build subscription management screen
+- [x] P11-UI-01 Build subscription management screen
 Depends on:
 - P11-SVC-02
 - P11-SVC-03
 
 ### Analytics
 
-- [ ] P11-SVC-05 Create `AnalyticsService.swift` shell
+- [x] P11-SVC-05 Create `AnalyticsService.swift` shell
 Depends on:
 - P10-SVC-05
 
-- [ ] P11-SVC-06 Define typed event names in `AnalyticsService`
+- [x] P11-SVC-06 Define typed event names in `AnalyticsService`
 Depends on:
 - P11-SVC-05
 
-- [ ] P11-SVC-07 Add funnel tracking hooks
+- [x] P11-SVC-07 Add funnel tracking hooks
 Depends on:
 - P11-SVC-06
 - P10-CORE-02
 - P7-ENG-03
 
-- [ ] P11-SVC-08 Add engagement tracking hooks
+- [x] P11-SVC-08 Add engagement tracking hooks
 Depends on:
 - P11-SVC-06
 - P8-ENG-03
 - P8-ENG-06
 - P9-ENG-01
 
-- [ ] P11-SVC-09 Add monetization and notification tracking hooks
+- [x] P11-SVC-09 Add monetization and notification tracking hooks
 Depends on:
 - P11-SVC-06
 - P11-SVC-04
@@ -573,14 +573,123 @@ Depends on:
 
 ### Hardening
 
-- [ ] P11-OPS-01 Validate RLS, user scoping, and storage path assumptions
+- [x] P11-OPS-01 Validate RLS, user scoping, and storage path assumptions
 Depends on:
 - P10-SVC-06
 - P11-SVC-04
 
-- [ ] P11-OPS-02 Validate performance of habit completion, reading upload, workout completion, and month log fetch
+- [x] P11-OPS-02 Validate performance of habit completion, reading upload, workout completion, and month log fetch
 Depends on:
 - P6-ENG-03
 - P8-ENG-03
 - P8-ENG-06
 - P9-SVC-02
+
+## Phase 12 – Engagement Expansion
+
+### Architecture Stabilization
+
+- [x] P12-ARCH-01 Expand `ProgressionResult` into a full state transition payload
+Depends on:
+- P11-OPS-02
+
+- [x] P12-ARCH-02 Move habit `GameState.apply(...)` responsibility from `ProgressionEngine` to `HabitsViewModel`
+Depends on:
+- P12-ARCH-01
+
+- [x] P12-ARCH-03 Add regression tests for the progression transition payload
+Depends on:
+- P12-ARCH-02
+
+- [x] P12-ARCH-04 Classify `DailyLogService` methods by persistence responsibility in docs
+Depends on:
+- P11-OPS-02
+
+### Dynamic Quest System
+
+- [ ] P12-MDL-01 Add quest difficulty and cadence metadata to `Quest`
+Depends on:
+- P12-ARCH-03
+
+- [ ] P12-SYS-01 Add weak-stat quest selection helper in `QuestGenerator`
+Depends on:
+- P12-MDL-01
+
+- [ ] P12-SYS-02 Add weekly habit unlock selection helper
+Depends on:
+- P12-MDL-01
+
+- [ ] P12-SVC-01 Update `QuestService` to expose dynamic daily and weekly quest plans
+Depends on:
+- P12-SYS-01
+- P12-SYS-02
+
+- [ ] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
+Depends on:
+- P12-SVC-01
+
+- [ ] P12-TST-01 Add quest generation and weekly unlock tests
+Depends on:
+- P12-SVC-01
+
+### Skill Trees
+
+- [ ] P12-MDL-02 Create skill tree models for paths, nodes, tiers, and unlock state
+Depends on:
+- P12-ARCH-03
+
+- [ ] P12-SYS-03 Create `SkillTreeSystem` unlock and point calculation helpers
+Depends on:
+- P12-MDL-02
+
+- [ ] P12-SVC-02 Create skill tree persistence shell
+Depends on:
+- P12-SYS-03
+
+- [ ] P12-UI-02 Build skill tree screen shell
+Depends on:
+- P12-SVC-02
+
+- [ ] P12-TST-02 Add skill tree unlock and skill point tests
+Depends on:
+- P12-SYS-03
+
+### Evolution Milestones
+
+- [ ] P12-MDL-03 Create evolution tier model
+Depends on:
+- P12-ARCH-03
+
+- [ ] P12-SYS-04 Create `EvolutionSystem` milestone evaluation helper
+Depends on:
+- P12-MDL-03
+- P12-SYS-03
+
+- [ ] P12-SVC-03 Add evolution state derivation path
+Depends on:
+- P12-SYS-04
+
+- [ ] P12-UI-03 Expand profile evolution surface with derived milestones
+Depends on:
+- P12-SVC-03
+
+- [ ] P12-TST-03 Add evolution milestone tests
+Depends on:
+- P12-SYS-04
+
+### Navigation and Retention
+
+- [ ] P12-UI-04 Add quest and skill tree navigation entry points
+Depends on:
+- P12-UI-01
+- P12-UI-02
+
+- [ ] P12-SVC-04 Add engagement analytics events for weekly quest, skill tree, and evolution milestones
+Depends on:
+- P12-UI-04
+- P12-UI-03
+- P11-SVC-06
+
+- [ ] P12-TST-04 Add navigation smoke tests for engagement screens
+Depends on:
+- P12-UI-04

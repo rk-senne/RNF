@@ -4,11 +4,16 @@ set -euo pipefail
 ROOT_DIR="/Users/regosenne/Desktop/Dev/RNF"
 STATE_DIR="$ROOT_DIR/.rnf"
 LOG_DIR="$STATE_DIR/logs"
+PROMPT_DIR="$STATE_DIR/prompts"
 TRUST_FILE="$STATE_DIR/trust_score"
 HIGH_COUNT_FILE="$STATE_DIR/high_count"
 LAST_RISK_FILE="$STATE_DIR/last_risk"
 LAST_FAILURE_FILE="$STATE_DIR/last_failure"
 LOW_STREAK_FILE="$STATE_DIR/low_streak"
+HANDOFF_FILE="$STATE_DIR/session_handoff"
+ROLLOVER_COUNT_FILE="$STATE_DIR/rollover_count"
+ACTIVE_TASK_FILE="$STATE_DIR/active_task"
+LAST_VERIFIER_LOG_FILE="$STATE_DIR/last_verifier_log"
 
 BUILDER_PROMPT="$ROOT_DIR/scripts/rnf_builder_prompt.txt"
 VERIFIER_PROMPT="$ROOT_DIR/scripts/rnf_verifier_prompt.txt"
@@ -22,8 +27,12 @@ RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES="${RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES:-10}"
 TRUST_MAX="${TRUST_MAX:-100}"
 HIGH_LIMIT="${HIGH_LIMIT:-3}"
 LOW_STREAK_PAUSE_LIMIT="${LOW_STREAK_PAUSE_LIMIT:-3}"
+RNF_CONTEXT_RETRY_LIMIT="${RNF_CONTEXT_RETRY_LIMIT:-1}"
+RNF_FIX_UNTIL_LOW="${RNF_FIX_UNTIL_LOW:-1}"
+RNF_MAX_FIX_ATTEMPTS="${RNF_MAX_FIX_ATTEMPTS:-3}"
 
 mkdir -p "$LOG_DIR"
+mkdir -p "$PROMPT_DIR"
 
 require_file() {
   local path="$1"
@@ -92,13 +101,13 @@ write_text() {
 }
 
 codex_exec() {
-  local prompt_text="$1"
+  local prompt_file="$1"
   local output_file="$2"
 
   if [[ -n "$CODEX_MODEL" ]]; then
-    printf '%s\n' "$prompt_text" | "$CODEX_BIN" exec --cd "$ROOT_DIR" --model "$CODEX_MODEL" --sandbox workspace-write | tee "$output_file"
+    "$CODEX_BIN" exec --cd "$ROOT_DIR" --model "$CODEX_MODEL" --sandbox workspace-write < "$prompt_file" | tee "$output_file"
   else
-    printf '%s\n' "$prompt_text" | "$CODEX_BIN" exec --cd "$ROOT_DIR" --sandbox workspace-write | tee "$output_file"
+    "$CODEX_BIN" exec --cd "$ROOT_DIR" --sandbox workspace-write < "$prompt_file" | tee "$output_file"
   fi
 }
 
@@ -112,6 +121,14 @@ current_task() {
   fi
 
   echo "none"
+}
+
+dirty_files() {
+  git -C "$ROOT_DIR" status --short \
+    | awk '{print $2}' \
+    | sed '/^$/d' \
+    | sort \
+    | paste -sd ', ' -
 }
 
 latest_log() {
@@ -207,12 +224,98 @@ prompt_with_context() {
   local last_risk="$2"
   local last_failure="$3"
   local task="$4"
+  local fix_attempt="$5"
+  local max_fix_attempts="$6"
+  local pre_existing_dirty="$7"
+  local verifier_log="$8"
 
-  printf '%s\n\nContext:\n- Last risk: %s\n- Last failure: %s\n- Current task: %s\n' \
+  printf '%s\n\nContext:\n- Last risk: %s\n- Last failure: %s\n- Current task: %s\n- Fix attempt: %s of %s\n- Pre-existing dirty files before this cycle: %s\n- Last verifier log: %s\n\nSystem loop instructions:\n- Each Builder and Verifier execution is a fresh Codex session. Continue from this context, not from chat history.\n- If Last risk is MEDIUM or HIGH, Builder must fix only the verifier findings for the Current task.\n- Verifier must review the Builder task change and ignore files listed as pre-existing dirty files unless the current Builder changed them for this task.\n- Continue correction until Verifier returns Risk Level: LOW or the system safety cap stops the loop.\n' \
     "$(cat "$base_prompt_file")" \
     "$last_risk" \
     "$last_failure" \
-    "$task"
+    "$task" \
+    "$fix_attempt" \
+    "$max_fix_attempts" \
+    "${pre_existing_dirty:-none}" \
+    "${verifier_log:-none}"
+}
+
+write_prompt_file() {
+  local path="$1"
+  local prompt_text="$2"
+
+  printf '%s\n' "$prompt_text" > "$path"
+}
+
+context_limit_reason() {
+  local output_file="$1"
+
+  if [[ ! -f "$output_file" ]]; then
+    echo ""
+    return
+  fi
+
+  if grep -Eiq 'context (window|length|limit|full)|maximum context|token limit|too many tokens|prompt is too long|conversation is too long|chat is full' "$output_file"; then
+    echo "context limit reached"
+    return
+  fi
+
+  echo ""
+}
+
+run_agent() {
+  local role="$1"
+  local prompt_file="$2"
+  local output_file="$3"
+  local attempts=0
+  local max_attempts="$((RNF_CONTEXT_RETRY_LIMIT + 1))"
+
+  while [[ "$attempts" -lt "$max_attempts" ]]; do
+    attempts="$((attempts + 1))"
+
+    if [[ "$attempts" -gt 1 ]]; then
+      echo "$role context limit detected. Starting a fresh Codex session from persisted handoff context."
+      write_number "$ROLLOVER_COUNT_FILE" "$(( $(read_number "$ROLLOVER_COUNT_FILE" 0) + 1 ))"
+    fi
+
+    if codex_exec "$prompt_file" "$output_file"; then
+      return 0
+    fi
+
+    local context_reason
+    context_reason="$(context_limit_reason "$output_file")"
+    if [[ "$context_reason" != "context limit reached" ]]; then
+      return 1
+    fi
+  done
+
+  return 1
+}
+
+write_handoff() {
+  local cycle_number="$1"
+  local task="$2"
+  local last_risk="$3"
+  local last_failure="$4"
+  local trust_value="$5"
+  local low_streak_value="$6"
+  local fix_attempt="$7"
+  local pre_existing_dirty="$8"
+
+  {
+    echo "RNF automation handoff"
+    echo "Root: $ROOT_DIR"
+    echo "Cycle: $cycle_number"
+    echo "Current task: $task"
+    echo "Last risk: $last_risk"
+    echo "Last failure: $last_failure"
+    echo "Trust score: $trust_value"
+    echo "LOW-risk streak: $low_streak_value"
+    echo "Fix attempt: $fix_attempt of $RNF_MAX_FIX_ATTEMPTS"
+    echo "Pre-existing dirty files: ${pre_existing_dirty:-none}"
+    echo "Task graph: $TASK_GRAPH"
+    echo "Instruction: start a fresh Builder or Verifier session using the generated prompt files in $PROMPT_DIR, then continue until Verifier returns LOW or a safety cap stops the loop."
+  } > "$HANDOFF_FILE"
 }
 
 extract_risk() {
@@ -260,18 +363,26 @@ require_int "RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES" "$RNF_RUN_UNTIL_BLOCKED_MAX_CYCLE
 require_int "TRUST_MAX" "$TRUST_MAX"
 require_int "HIGH_LIMIT" "$HIGH_LIMIT"
 require_int "LOW_STREAK_PAUSE_LIMIT" "$LOW_STREAK_PAUSE_LIMIT"
+require_int "RNF_CONTEXT_RETRY_LIMIT" "$RNF_CONTEXT_RETRY_LIMIT"
+require_bool "RNF_FIX_UNTIL_LOW" "$RNF_FIX_UNTIL_LOW"
+require_int "RNF_MAX_FIX_ATTEMPTS" "$RNF_MAX_FIX_ATTEMPTS"
 
 trust="$(read_number "$TRUST_FILE" 0)"
 high_count="$(read_number "$HIGH_COUNT_FILE" 0)"
 low_streak="$(read_number "$LOW_STREAK_FILE" 0)"
+rollover_count="$(read_number "$ROLLOVER_COUNT_FILE" 0)"
 
 write_number "$TRUST_FILE" "$trust"
 write_number "$HIGH_COUNT_FILE" "$high_count"
 write_number "$LOW_STREAK_FILE" "$low_streak"
+write_number "$ROLLOVER_COUNT_FILE" "$rollover_count"
 write_text "$LAST_RISK_FILE" "$(last_risk_from_logs)"
 write_text "$LAST_FAILURE_FILE" "$(last_failure_from_logs)"
 
 cycle=1
+fix_attempt=1
+active_task="$(read_text "$ACTIVE_TASK_FILE" "")"
+pre_existing_dirty="$(dirty_files)"
 
 while :; do
   if [[ "$RNF_RUN_UNTIL_BLOCKED" != "1" && "$cycle" -gt "$RNF_MAX_CYCLES" ]]; then
@@ -287,11 +398,24 @@ while :; do
   stamp="$(date -u '+%Y%m%dT%H%M%SZ')"
   builder_log="$LOG_DIR/${stamp}_cycle_${cycle}_builder.log"
   verifier_log="$LOG_DIR/${stamp}_cycle_${cycle}_verifier.log"
-  current_task="$(current_task)"
+  if [[ -n "$active_task" ]]; then
+    current_task="$active_task"
+  else
+    current_task="$(current_task)"
+    write_text "$ACTIVE_TASK_FILE" "$current_task"
+    active_task="$current_task"
+  fi
   last_risk="$(last_risk_from_logs)"
   last_failure="$(last_failure_from_logs)"
-  builder_prompt="$(prompt_with_context "$BUILDER_PROMPT" "$last_risk" "$last_failure" "$current_task")"
-  verifier_prompt="$(prompt_with_context "$VERIFIER_PROMPT" "$last_risk" "$last_failure" "$current_task")"
+  last_verifier_log="$(read_text "$LAST_VERIFIER_LOG_FILE" "none")"
+  builder_prompt="$(prompt_with_context "$BUILDER_PROMPT" "$last_risk" "$last_failure" "$current_task" "$fix_attempt" "$RNF_MAX_FIX_ATTEMPTS" "$pre_existing_dirty" "$last_verifier_log")"
+  verifier_prompt="$(prompt_with_context "$VERIFIER_PROMPT" "$last_risk" "$last_failure" "$current_task" "$fix_attempt" "$RNF_MAX_FIX_ATTEMPTS" "$pre_existing_dirty" "$last_verifier_log")"
+  builder_prompt_file="$PROMPT_DIR/${stamp}_cycle_${cycle}_builder_prompt.txt"
+  verifier_prompt_file="$PROMPT_DIR/${stamp}_cycle_${cycle}_verifier_prompt.txt"
+
+  write_handoff "$cycle" "$current_task" "$last_risk" "$last_failure" "$trust" "$low_streak" "$fix_attempt" "$pre_existing_dirty"
+  write_prompt_file "$builder_prompt_file" "$builder_prompt"
+  write_prompt_file "$verifier_prompt_file" "$verifier_prompt"
 
   if [[ "$RNF_RUN_UNTIL_BLOCKED" == "1" ]]; then
     echo "RNF cycle $cycle/$RNF_RUN_UNTIL_BLOCKED_MAX_CYCLES (run until blocked)"
@@ -301,17 +425,30 @@ while :; do
   echo "Trust score: $trust"
   echo "High-risk count: $high_count"
   echo "LOW-risk streak: $low_streak"
+  echo "Session rollover count: $(read_number "$ROLLOVER_COUNT_FILE" 0)"
+  echo "Fix attempt: $fix_attempt/$RNF_MAX_FIX_ATTEMPTS"
   echo "Decision context:"
   echo "- Last risk: $last_risk"
   echo "- Last failure: $last_failure"
   echo "- Current task: $current_task"
+  echo "- Pre-existing dirty files: ${pre_existing_dirty:-none}"
+  echo "- Builder prompt: $builder_prompt_file"
+  echo "- Verifier prompt: $verifier_prompt_file"
+  echo "Chain reaction: Builder -> Verifier -> LOW advances to next task; MEDIUM/HIGH returns to Builder for the same task."
 
-  if ! codex_exec "$builder_prompt" "$builder_log"; then
+  if ! run_agent "Builder" "$builder_prompt_file" "$builder_log"; then
     echo "Builder failed. Stopping and resetting trust."
     write_number "$TRUST_FILE" 0
-    write_text "$LAST_FAILURE_FILE" "Builder fails"
+    context_reason="$(context_limit_reason "$builder_log")"
+    if [[ "$context_reason" == "context limit reached" ]]; then
+      write_text "$LAST_FAILURE_FILE" "Builder context limit reached"
+      echo "Builder context limit reached after retry limit."
+      cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Builder context limit reached"
+    else
+      write_text "$LAST_FAILURE_FILE" "Builder fails"
+      cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Builder fails"
+    fi
     echo "Builder log: $builder_log"
-    cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Builder fails"
     exit 1
   fi
 
@@ -324,17 +461,25 @@ while :; do
     exit 0
   fi
 
-  if ! codex_exec "$verifier_prompt" "$verifier_log"; then
+  if ! run_agent "Verifier" "$verifier_prompt_file" "$verifier_log"; then
     echo "Verifier failed. Stopping and resetting trust."
     write_number "$TRUST_FILE" 0
-    write_text "$LAST_FAILURE_FILE" "Verifier fails"
+    context_reason="$(context_limit_reason "$verifier_log")"
+    if [[ "$context_reason" == "context limit reached" ]]; then
+      write_text "$LAST_FAILURE_FILE" "Verifier context limit reached"
+      echo "Verifier context limit reached after retry limit."
+      cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Verifier context limit reached"
+    else
+      write_text "$LAST_FAILURE_FILE" "Verifier fails"
+      cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Verifier fails"
+    fi
     echo "Verifier log: $verifier_log"
-    cycle_summary "$cycle" "N/A" "$(read_number "$TRUST_FILE" 0)" "Verifier fails"
     exit 1
   fi
 
   risk="$(extract_risk "$verifier_log")"
   write_text "$LAST_RISK_FILE" "$risk"
+  write_text "$LAST_VERIFIER_LOG_FILE" "$verifier_log"
   echo "Verifier risk: $risk"
 
   case "$risk" in
@@ -350,8 +495,13 @@ while :; do
 
       write_number "$TRUST_FILE" "$trust"
       write_text "$LAST_FAILURE_FILE" "none"
+      write_text "$ACTIVE_TASK_FILE" ""
+      write_text "$LAST_VERIFIER_LOG_FILE" ""
+      active_task=""
+      fix_attempt=1
       echo "Trust score updated: $trust"
       echo "LOW-risk streak updated: $low_streak"
+      echo "Chain reaction: Verifier returned LOW. Current task accepted; next cycle will select the next dependency-free task."
       cycle_summary "$cycle" "$risk" "$trust" ""
 
       if [[ "$low_streak" -ge "$LOW_STREAK_PAUSE_LIMIT" ]]; then
@@ -368,6 +518,13 @@ while :; do
       write_text "$LAST_FAILURE_FILE" "Verifier returns MEDIUM"
       echo "Verifier log: $verifier_log"
       cycle_summary "$cycle" "$risk" "$trust" "Verifier returns MEDIUM"
+      if [[ "$RNF_FIX_UNTIL_LOW" == "1" && "$fix_attempt" -lt "$RNF_MAX_FIX_ATTEMPTS" ]]; then
+        fix_attempt="$((fix_attempt + 1))"
+        echo "Chain reaction: Verifier returned MEDIUM. Starting a fresh Builder session for the same task."
+        cycle="$((cycle + 1))"
+        continue
+      fi
+      echo "Correction safety cap reached or disabled. Pausing for human verification."
       exit 0
       ;;
 
@@ -384,10 +541,17 @@ while :; do
       echo "Verifier log: $verifier_log"
 
       if [[ "$high_count" -ge "$HIGH_LIMIT" ]]; then
-        echo "High-risk limit reached. Stopping hard."
+        echo "High-risk limit reached."
       fi
 
       cycle_summary "$cycle" "$risk" "$(read_number "$TRUST_FILE" 0)" "Verifier returns HIGH"
+      if [[ "$RNF_FIX_UNTIL_LOW" == "1" && "$fix_attempt" -lt "$RNF_MAX_FIX_ATTEMPTS" ]]; then
+        fix_attempt="$((fix_attempt + 1))"
+        echo "Chain reaction: Verifier returned HIGH. Starting a fresh Builder session for the same task."
+        cycle="$((cycle + 1))"
+        continue
+      fi
+      echo "Correction safety cap reached. Pausing for human verification."
       exit 1
       ;;
 

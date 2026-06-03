@@ -250,8 +250,8 @@ Handles workout completion and timers.
 
 Responsibilities:
 
-Track workout completion  
-Update daily logs  
+Ensure the daily log exists for workout completion  
+Update daily log workout completion  
 Return XP reward
 
 Functions:
@@ -264,9 +264,13 @@ cancelWorkout()
 
 No dedicated database table required for Phase 1.
 
-Completion updates:
+Phase 1 does not persist individual workout sessions. Workout completion persistence means updating the user's `daily_logs` row for the completion date.
 
-daily_logs
+Completion sequence:
+
+1. Fetch or create the target `daily_logs` row.
+2. Set `daily_logs.workout_completed = true`.
+3. Refresh daily log status.
 
 ---
 
@@ -408,6 +412,42 @@ Daily log fetch < 200ms
 Reading upload < 2 seconds
 
 Calendar fetch < 300ms
+
+## Local Performance Validation
+
+Validated against the current service-layer call graph.
+
+Habit completion:
+
+Current path fetches or creates the daily log, checks duplicate habit completion, inserts the completion, saves the daily log, refreshes daily-log status, saves the profile, and then updates local state.
+
+Result:
+
+The current implementation prioritizes persistence correctness. It is not expected to meet the `< 100ms` response target on real networked Supabase calls until offline queueing or optimistic local completion is introduced.
+
+Workout completion:
+
+Current path fetches or creates the daily log, updates the workout flag, refreshes daily-log status, saves the daily log, saves the profile, and evaluates challenge advancement.
+
+Result:
+
+The path is bounded and has no unbounded loops, but it still awaits multiple backend operations.
+
+Reading upload:
+
+Current path uploads one image to `reading-proof`, inserts one `reading_uploads` row, updates the daily-log reading flag, refreshes status, saves the daily log, saves the profile, and evaluates challenge advancement.
+
+Result:
+
+The upload target depends on image size and network conditions. The storage path is deterministic and does not add extra listing or lookup calls.
+
+Month log fetch:
+
+Current path performs a single `daily_logs` query filtered by `user_id` and month date range, ordered by date.
+
+Result:
+
+This path is structurally aligned with the `< 300ms` calendar fetch target, assuming an index on `(user_id, date)`.
 
 ---
 
