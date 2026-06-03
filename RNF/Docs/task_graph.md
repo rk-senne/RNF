@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [x] P13-TST-03 Add active perk UI smoke tests
+- [ ] P14-AUTH-01 Create `AuthProviding` boundary for current authenticated user identity
 Depends on:
-- P13-UI-02
+- P14-MIG-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -798,3 +798,90 @@ Depends on:
 - [x] P13-TST-03 Add active perk UI smoke tests
 Depends on:
 - P13-UI-02
+
+## Phase 14 – Production Readiness Guardrails
+
+### Database Guardrails
+
+- [x] P14-MIG-01 Add production uniqueness constraints and query indexes
+Depends on:
+- P13-TST-03
+
+- [x] P14-MIG-02 Add Supabase RLS policies for user-owned tables
+Depends on:
+- P14-MIG-01
+
+- [x] P14-MIG-03 Document migration rollback and verification commands
+Depends on:
+- P14-MIG-02
+
+### Auth Boundary
+
+- [ ] P14-AUTH-01 Create `AuthProviding` boundary for current authenticated user identity
+Depends on:
+- P14-MIG-02
+
+- [ ] P14-AUTH-02 Wire authenticated user resolution into production user-owned services
+Depends on:
+- P14-AUTH-01
+
+- [ ] P14-AUTH-03 Replace global first-profile reads in production launch paths
+Depends on:
+- P14-AUTH-02
+
+### Idempotency And Error Contracts
+
+- [ ] P14-SVC-01 Add typed service result/error contract for critical authenticated writes
+Depends on:
+- P14-AUTH-02
+
+- [ ] P14-SVC-02 Harden habit completion retries against duplicate XP and duplicate writes
+Depends on:
+- P14-SVC-01
+- P14-MIG-01
+
+- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+Depends on:
+- P14-SVC-02
+
+- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
+Depends on:
+- P14-SVC-01
+
+### Date And Time Safety
+
+- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
+Depends on:
+- P14-MIG-01
+
+- [ ] P14-TIME-02 Document timezone policy in service and state docs
+Depends on:
+- P14-TIME-01
+
+### Observability
+
+- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
+Depends on:
+- P14-SVC-01
+
+- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
+Depends on:
+- P14-OBS-01
+
+### Production Tests
+
+- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
+Depends on:
+- P14-MIG-03
+
+- [ ] P14-TST-02 Add auth user-scoping service tests
+Depends on:
+- P14-AUTH-03
+
+- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
+Depends on:
+- P14-SVC-03
+
+- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+Depends on:
+- P14-SVC-04
