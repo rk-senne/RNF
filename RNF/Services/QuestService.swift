@@ -28,13 +28,22 @@ final class QuestService {
         self.supabase = supabase
     }
 
-    func generateDailyHabits(for profile: Profile) -> DailyQuestPlan {
+    func generateDailyHabits(
+        for profile: Profile,
+        activePerks: ActivePerkSummary = .empty
+    ) -> DailyQuestPlan {
 
-        generateQuestPlan(for: profile).daily
+        generateQuestPlan(
+            for: profile,
+            activePerks: activePerks
+        ).daily
 
     }
 
-    func generateQuestPlan(for profile: Profile) -> DynamicQuestPlan {
+    func generateQuestPlan(
+        for profile: Profile,
+        activePerks: ActivePerkSummary = .empty
+    ) -> DynamicQuestPlan {
 
         _ = supabase
 
@@ -56,18 +65,32 @@ final class QuestService {
 
         return DynamicQuestPlan(
             daily: DailyQuestPlan(
-                habits: QuestMapper.toHabits(quests),
+                habits: QuestMapper.toHabits(
+                    quests,
+                    activePerks: activePerks
+                ),
                 dailyGoal: QuestDifficultySystem.questsPerDay(for: effectiveLevel)
             ),
             weekly: WeeklyQuestPlan(
-                habit: weeklyQuest.map { QuestMapper.toHabit($0) }
+                habit: weeklyQuest.map {
+                    QuestMapper.toHabit(
+                        $0,
+                        activePerks: activePerks
+                    )
+                }
             )
         )
 
     }
 
-    func updateQuestProgress(for profile: Profile) -> DailyQuestPlan {
-        generateDailyHabits(for: profile)
+    func updateQuestProgress(
+        for profile: Profile,
+        activePerks: ActivePerkSummary = .empty
+    ) -> DailyQuestPlan {
+        generateDailyHabits(
+            for: profile,
+            activePerks: activePerks
+        )
     }
 
 }

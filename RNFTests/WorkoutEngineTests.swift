@@ -96,7 +96,8 @@ final class WorkoutEngineTests: XCTestCase {
             challengeEngine: ChallengeEngine(
                 challengeService: ChallengeService(supabase: supabase),
                 dailyLogService: dailyLogService
-            )
+            ),
+            skillTreeService: SkillTreeService(supabase: supabase)
         )
         let gameState = GameState()
         gameState.profile = Profile(

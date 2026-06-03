@@ -26,10 +26,10 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P13-SVC-01 Add active perk derivation path to `SkillTreeService`
+- [ ] P13-UI-01 Surface active perks in `SkillTreeView`
 Depends on:
-- P13-SYS-01
-- P12-SVC-02
+- P13-SVC-01
+- P12-UI-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -729,41 +729,41 @@ Depends on:
 
 ### Service Layer
 
-- [ ] P13-SVC-01 Add active perk derivation path to `SkillTreeService`
+- [x] P13-SVC-01 Add active perk derivation path to `SkillTreeService`
 Depends on:
 - P13-SYS-01
 - P12-SVC-02
 
-- [ ] P13-SVC-02 Add perk analytics events for applied bonuses and streak protection
+- [x] P13-SVC-02 Add perk analytics events for applied bonuses and streak protection
 Depends on:
 - P13-SVC-01
 - P12-SVC-04
 
 ### Engine Integration
 
-- [ ] P13-ENG-01 Apply XP perk modifiers to habit completion rewards
+- [x] P13-ENG-01 Apply XP perk modifiers to habit completion rewards
 Depends on:
 - P13-SYS-02
 - P13-SVC-01
 - P7-ENG-01
 
-- [ ] P13-ENG-02 Apply XP perk modifiers to workout and reading rewards
+- [x] P13-ENG-02 Apply XP perk modifiers to workout and reading rewards
 Depends on:
 - P13-SYS-02
 - P8-ENG-02
 - P8-ENG-05
 
-- [ ] P13-ENG-03 Apply stat bonus perk modifiers to progression updates
+- [x] P13-ENG-03 Apply stat bonus perk modifiers to progression updates
 Depends on:
 - P13-SYS-03
 - P7-ENG-01
 
-- [ ] P13-ENG-04 Apply quest reward perk modifiers to generated quest rewards
+- [x] P13-ENG-04 Apply quest reward perk modifiers to generated quest rewards
 Depends on:
 - P13-SYS-03
 - P12-SVC-01
 
-- [ ] P13-ENG-05 Connect streak protection perks to forgiveness evaluation
+- [x] P13-ENG-05 Connect streak protection perks to forgiveness evaluation
 Depends on:
 - P13-SYS-04
 - P9-ENG-01

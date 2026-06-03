@@ -17,6 +17,8 @@ final class AnalyticsService {
         case skillTreeOpened = "skill_tree_opened"
         case skillTreeNodeUnlocked = "skill_tree_node_unlocked"
         case evolutionMilestoneReached = "evolution_milestone_reached"
+        case perkBonusApplied = "perk_bonus_applied"
+        case streakProtectionApplied = "streak_protection_applied"
         case notificationOpened = "notification_opened"
         case trialStarted = "trial_started"
         case subscriptionStarted = "subscription_started"

@@ -12,6 +12,7 @@ final class ChallengeEngine {
     private let challengeService: ChallengeService
     private let dailyLogService: DailyLogService
     private let userService: UserService
+    private let skillTreeService: SkillTreeService
     private let calendar: Calendar
     private let analyticsService: AnalyticsService
 
@@ -19,12 +20,14 @@ final class ChallengeEngine {
         challengeService: ChallengeService = ChallengeService(),
         dailyLogService: DailyLogService = DailyLogService(),
         userService: UserService = UserService(),
+        skillTreeService: SkillTreeService = SkillTreeService(),
         calendar: Calendar = .current,
         analyticsService: AnalyticsService = AnalyticsService()
     ) {
         self.challengeService = challengeService
         self.dailyLogService = dailyLogService
         self.userService = userService
+        self.skillTreeService = skillTreeService
         self.calendar = calendar
         self.analyticsService = analyticsService
     }
@@ -75,9 +78,13 @@ final class ChallengeEngine {
             }
 
             let tokens = try await userService.fetchForgivenessTokens(userId: userId)
+            let activePerks = tokens > 0
+                ? .empty
+                : await activePerksForForgiveness(userId: userId)
+            let availableProtection = tokens + activePerks.streakProtectionCount
             let evaluation = ForgivenessSystem.evaluate(
                 dailyLog: dailyLog,
-                forgivenessTokens: tokens,
+                forgivenessTokens: availableProtection,
                 currentStreak: currentStreak
             )
 
@@ -85,7 +92,10 @@ final class ChallengeEngine {
                 return nil
             }
 
-            let remainingTokens = try await userService.decrementForgivenessTokens(userId: userId)
+            let usesStoredToken = tokens > 0
+            let remainingTokens = usesStoredToken
+                ? try await userService.decrementForgivenessTokens(userId: userId)
+                : tokens
             var forgivenLog = dailyLog
             forgivenLog.forgiveness_used = true
             forgivenLog.status = evaluation.status
@@ -93,7 +103,7 @@ final class ChallengeEngine {
             await dailyLogService.saveDailyLog(forgivenLog)
 
             await analyticsService.trackEvent(
-                .forgivenessUsed,
+                usesStoredToken ? .forgivenessUsed : .streakProtectionApplied,
                 properties: [
                     "user_id": userId.uuidString,
                     "streak_length": "\(evaluation.preservedStreak)",
@@ -108,6 +118,20 @@ final class ChallengeEngine {
             )
         } catch {
             return nil
+        }
+    }
+
+    private func activePerksForForgiveness(userId: UUID) async -> ActivePerkSummary {
+        do {
+            async let skillNodes = skillTreeService.fetchSkillNodes()
+            async let unlockedSkills = skillTreeService.fetchUserUnlocks(userId: userId)
+
+            return try await PerkSystem.activePerks(
+                skillNodes: skillNodes,
+                unlockedSkills: unlockedSkills
+            )
+        } catch {
+            return .empty
         }
     }
 

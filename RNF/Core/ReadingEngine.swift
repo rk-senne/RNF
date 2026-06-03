@@ -20,6 +20,7 @@ final class ReadingEngine {
     private let dailyLogService: DailyLogService
     private let xpService: XPService
     private let challengeEngine: ChallengeEngine
+    private let skillTreeService: SkillTreeService
     private let analyticsService: AnalyticsService
     private weak var gameState: GameState?
 
@@ -28,12 +29,14 @@ final class ReadingEngine {
         dailyLogService: DailyLogService = DailyLogService(),
         xpService: XPService = XPService(),
         challengeEngine: ChallengeEngine? = nil,
+        skillTreeService: SkillTreeService = SkillTreeService(),
         analyticsService: AnalyticsService = AnalyticsService()
     ) {
         self.readingService = readingService
         self.dailyLogService = dailyLogService
         self.xpService = xpService
         self.challengeEngine = challengeEngine ?? ChallengeEngine()
+        self.skillTreeService = skillTreeService
         self.analyticsService = analyticsService
     }
 
@@ -72,14 +75,20 @@ final class ReadingEngine {
             )
 
             var updatedProfile = gameState.profile
+            let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+            let awardedXP = PerkSystem.modifiedXPReward(
+                baseXP: Self.readingXP,
+                activePerks: activePerks,
+                currentDailyXP: completedLog.xp_earned
+            )
             let levelState = xpService.awardXP(
                 currentTotal: updatedProfile.xp_total,
-                gainedXP: Self.readingXP
+                gainedXP: awardedXP
             )
 
             updatedProfile.xp_total = levelState.totalXP
             updatedProfile.level = levelState.level
-            completedLog.xp_earned += Self.readingXP
+            completedLog.xp_earned += awardedXP
 
             await dailyLogService.saveDailyLog(completedLog)
             await dailyLogService.saveProfile(updatedProfile)
@@ -105,7 +114,7 @@ final class ReadingEngine {
                 properties: [
                     "user_id": updatedProfile.id.uuidString,
                     "proof_uploaded": "true",
-                    "xp_awarded": "\(Self.readingXP)",
+                    "xp_awarded": "\(awardedXP)",
                     "timestamp": Self.analyticsTimestamp(for: date)
                 ]
             )
@@ -126,7 +135,7 @@ final class ReadingEngine {
                 upload: upload,
                 dailyLog: completedLog,
                 profile: updatedProfile,
-                xpAwarded: Self.readingXP,
+                xpAwarded: awardedXP,
                 levelState: levelState,
                 advancedChallenge: advancedChallenge
             )

@@ -68,4 +68,19 @@ final class SkillTreeService {
         )
     }
 
+    func activePerks(for profile: Profile) async throws -> ActivePerkSummary {
+
+        guard !profile.isPlaceholder else {
+            return .empty
+        }
+
+        async let skillNodes = fetchSkillNodes()
+        async let unlockedSkills = fetchUserUnlocks(userId: profile.id)
+
+        return try await PerkSystem.activePerks(
+            skillNodes: skillNodes,
+            unlockedSkills: unlockedSkills
+        )
+    }
+
 }
