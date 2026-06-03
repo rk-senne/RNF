@@ -11,6 +11,7 @@ final class HabitsViewModel: ObservableObject {
     @Published var unlockedBadge = ""
     @Published var animatedHabit: UUID?
     @Published var loadErrorMessage: String?
+    @Published var weeklyHabit: Habit?
 
     private let userService: UserService
     private let questService: QuestService
@@ -42,13 +43,13 @@ final class HabitsViewModel: ObservableObject {
         }
 
         let profile = await userService.loadProfile()
-        let questPlan = questService.generateDailyHabits(for: profile)
+        let questPlan = questService.generateQuestPlan(for: profile)
         let dailyLog: DailyLog
 
         do {
             dailyLog = try await DailyLogService().getTodayLog(
                 for: profile,
-                dailyGoal: questPlan.dailyGoal
+                dailyGoal: questPlan.daily.dailyGoal
             )
             loadErrorMessage = nil
         } catch {
@@ -58,12 +59,13 @@ final class HabitsViewModel: ObservableObject {
 
         applyState(
             profile: profile,
-            quests: questPlan.habits,
-            dailyGoal: questPlan.dailyGoal,
+            quests: questPlan.daily.habits,
+            dailyGoal: questPlan.daily.dailyGoal,
             dailyCompleted: dailyLog.habits_completed,
             completedHabitIDs: [],
             dailyLog: dailyLog
         )
+        weeklyHabit = questPlan.weekly.habit
 
         isLoaded = true
         resetDailyStateIfNeeded()
@@ -160,17 +162,18 @@ final class HabitsViewModel: ObservableObject {
 
         defaults.set(today, forKey: "lastResetDate")
 
-        let questPlan = questService.generateDailyHabits(for: gameState.profile)
+        let questPlan = questService.generateQuestPlan(for: gameState.profile)
+        weeklyHabit = questPlan.weekly.habit
 
         applyState(
             profile: gameState.profile,
-            quests: questPlan.habits,
-            dailyGoal: questPlan.dailyGoal,
+            quests: questPlan.daily.habits,
+            dailyGoal: questPlan.daily.dailyGoal,
             dailyCompleted: 0,
             completedHabitIDs: [],
             dailyLog: .today(
                 userID: gameState.profile.isPlaceholder ? nil : gameState.profile.id,
-                goal: questPlan.dailyGoal
+                goal: questPlan.daily.dailyGoal
             )
         )
 

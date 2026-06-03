@@ -73,29 +73,17 @@ struct ContentView: View {
 
                 challengeSummary
 
-                Text("Today's Quests")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.primary)
-
-                VStack(spacing: 14) {
-
-                    ForEach(game.quests) { habit in
-
-                        HabitRow(
-                            habit: habit,
-                            completed: game.completedHabitIDs.contains(habit.id),
-                            animated: viewModel.animatedHabit == habit.id,
-                            action: {
-                                Task {
-                                    await viewModel.completeHabit(habit)
-                                }
-                            }
-                        )
-
+                QuestScreenContent(
+                    dailyQuests: game.quests,
+                    weeklyQuest: viewModel.weeklyHabit,
+                    completedHabitIDs: game.completedHabitIDs,
+                    animatedHabit: viewModel.animatedHabit,
+                    completeDailyQuest: { habit in
+                        Task {
+                            await viewModel.completeHabit(habit)
+                        }
                     }
-
-                }
-                .padding(.bottom, 24)
+                )
 
             }
             .padding()

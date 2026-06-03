@@ -72,6 +72,8 @@ struct AscensionView: View {
 
                 challengeSummary
 
+                EvolutionView()
+
                 calendarSummary
 
                 VStack(alignment: .leading, spacing: 18) {

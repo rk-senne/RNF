@@ -26,9 +26,10 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
+- [ ] P12-UI-04 Add quest and skill tree navigation entry points
 Depends on:
-- P12-SVC-01
+- P12-UI-01
+- P12-UI-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -624,56 +625,56 @@ Depends on:
 - P12-SYS-01
 - P12-SYS-02
 
-- [ ] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
+- [x] P12-UI-01 Create dedicated quest screen content for daily and weekly quests
 Depends on:
 - P12-SVC-01
 
-- [ ] P12-TST-01 Add quest generation and weekly unlock tests
+- [x] P12-TST-01 Add quest generation and weekly unlock tests
 Depends on:
 - P12-SVC-01
 
 ### Skill Trees
 
-- [ ] P12-MDL-02 Create skill tree models for paths, nodes, tiers, and unlock state
+- [x] P12-MDL-02 Create skill tree models for paths, nodes, tiers, and unlock state
 Depends on:
 - P12-ARCH-03
 
-- [ ] P12-SYS-03 Create `SkillTreeSystem` unlock and point calculation helpers
+- [x] P12-SYS-03 Create `SkillTreeSystem` unlock and point calculation helpers
 Depends on:
 - P12-MDL-02
 
-- [ ] P12-SVC-02 Create skill tree persistence shell
+- [x] P12-SVC-02 Create skill tree persistence shell
 Depends on:
 - P12-SYS-03
 
-- [ ] P12-UI-02 Build skill tree screen shell
+- [x] P12-UI-02 Build skill tree screen shell
 Depends on:
 - P12-SVC-02
 
-- [ ] P12-TST-02 Add skill tree unlock and skill point tests
+- [x] P12-TST-02 Add skill tree unlock and skill point tests
 Depends on:
 - P12-SYS-03
 
 ### Evolution Milestones
 
-- [ ] P12-MDL-03 Create evolution tier model
+- [x] P12-MDL-03 Create evolution tier model
 Depends on:
 - P12-ARCH-03
 
-- [ ] P12-SYS-04 Create `EvolutionSystem` milestone evaluation helper
+- [x] P12-SYS-04 Create `EvolutionSystem` milestone evaluation helper
 Depends on:
 - P12-MDL-03
 - P12-SYS-03
 
-- [ ] P12-SVC-03 Add evolution state derivation path
+- [x] P12-SVC-03 Add evolution state derivation path
 Depends on:
 - P12-SYS-04
 
-- [ ] P12-UI-03 Expand profile evolution surface with derived milestones
+- [x] P12-UI-03 Expand profile evolution surface with derived milestones
 Depends on:
 - P12-SVC-03
 
-- [ ] P12-TST-03 Add evolution milestone tests
+- [x] P12-TST-03 Add evolution milestone tests
 Depends on:
 - P12-SYS-04
 
