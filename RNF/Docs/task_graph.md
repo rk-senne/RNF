@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-MIG-03 Add reading proof storage bucket and object policy migration
+- [ ] P15-DOC-01 Update database schema and migration runbook for skill tree and storage setup
 Depends on:
-- P15-MIG-02
+- P15-MIG-03
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -898,7 +898,7 @@ Depends on:
 Depends on:
 - P15-MIG-01
 
-- [ ] P15-MIG-03 Add reading proof storage bucket and object policy migration
+- [x] P15-MIG-03 Add reading proof storage bucket and object policy migration
 Depends on:
 - P15-MIG-02
 
