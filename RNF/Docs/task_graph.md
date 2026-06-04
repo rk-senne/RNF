@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-APP-01 Wire `AppStateManager` into the root app shell
+- [ ] P15-VM-01 Move reading proof workflow state into `ReadViewModel`
 Depends on:
-- P15-DOC-01
+- P15-APP-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -908,7 +908,7 @@ Depends on:
 
 ### Launch And Workflow Boundaries
 
-- [ ] P15-APP-01 Wire `AppStateManager` into the root app shell
+- [x] P15-APP-01 Wire `AppStateManager` into the root app shell
 Depends on:
 - P15-DOC-01
 
