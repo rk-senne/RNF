@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-MIG-01 Add skill tree table migrations for reproducible backend setup
+- [ ] P15-MIG-02 Add skill tree RLS policies and verification coverage
 Depends on:
-- P14-TST-04
+- P15-MIG-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -890,7 +890,7 @@ Depends on:
 
 ### Backend Reproducibility
 
-- [ ] P15-MIG-01 Add skill tree table migrations for reproducible backend setup
+- [x] P15-MIG-01 Add skill tree table migrations for reproducible backend setup
 Depends on:
 - P14-TST-04
 
