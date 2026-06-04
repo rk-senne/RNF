@@ -213,6 +213,10 @@ final class PerkIntegrationTests: XCTestCase {
                 return (response, Self.jsonData(#"{"Key":"reading-proof/test.jpg","Id":"storage-id"}"#))
             }
 
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (response, Self.jsonData("[]"))
+            }
+
             if request.httpMethod == "POST", url.contains("reading_uploads") {
                 return (
                     response,
