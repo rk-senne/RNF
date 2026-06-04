@@ -184,6 +184,122 @@ final class WorkoutEngineTests: XCTestCase {
         XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
     }
 
+    func testRetryingCompletedWorkoutDoesNotAwardDuplicateXPOrPatchAgain() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+        var patchBodies: [Data] = []
+        var workoutCompleted = false
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            if let body = Self.requestBodyData(from: request) {
+                patchBodies.append(body)
+            }
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let url = request.url?.absoluteString ?? ""
+
+            if request.httpMethod == "GET", url.contains("daily_logs") {
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(
+                            id: dailyLogId,
+                            userId: userId,
+                            workoutCompleted: workoutCompleted,
+                            wrappedInArray: true
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "PATCH", url.contains("daily_logs") {
+                workoutCompleted = true
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(
+                            id: dailyLogId,
+                            userId: userId,
+                            workoutCompleted: true
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "GET", url.contains("challenges") {
+                return (response, Self.jsonData("[]"))
+            }
+
+            return (response, Self.jsonData("{}"))
+        }
+
+        let supabase = makeSupabaseService()
+        let dailyLogService = DailyLogService(supabase: supabase)
+        let engine = WorkoutEngine(
+            workoutService: WorkoutService(
+                supabase: supabase,
+                dailyLogService: dailyLogService
+            ),
+            dailyLogService: dailyLogService,
+            xpService: XPService(),
+            challengeEngine: ChallengeEngine(
+                challengeService: ChallengeService(supabase: supabase),
+                dailyLogService: dailyLogService
+            ),
+            skillTreeService: SkillTreeService(supabase: supabase)
+        )
+        let gameState = GameState()
+        gameState.profile = Profile(
+            id: userId,
+            email: "test@example.com",
+            xp_total: 195,
+            level: 1,
+            streak: 0,
+            forgiveness_tokens: 0,
+            morning_notification_time: nil,
+            evening_notification_time: nil,
+            strength: 1,
+            discipline: 1,
+            focus: 1,
+            energy: 1,
+            wisdom: 1,
+            mind: 1,
+            spirit: 1,
+            created_at: nil
+        )
+        engine.configure(gameState: gameState)
+
+        let firstResult = await engine.completeWorkout(
+            durationSeconds: 100,
+            elapsedSeconds: 80,
+            date: date
+        )
+        let retryResult = await engine.completeWorkout(
+            durationSeconds: 100,
+            elapsedSeconds: 80,
+            date: date
+        )
+
+        XCTAssertEqual(firstResult?.xpAwarded, 15)
+        XCTAssertNil(retryResult)
+        XCTAssertEqual(gameState.profile.xp_total, 210)
+        XCTAssertEqual(
+            patchBodies
+                .compactMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Bool] }
+                .filter { $0["workout_completed"] == true }
+                .count,
+            1
+        )
+    }
+
     private func makeSupabaseService() -> SupabaseService {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]

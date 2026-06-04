@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
+- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
 Depends on:
-- P14-SVC-03
+- P14-SVC-04
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -878,7 +878,7 @@ Depends on:
 Depends on:
 - P14-AUTH-03
 
-- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
+- [x] P14-TST-03 Add idempotent retry integration tests for daily actions
 Depends on:
 - P14-SVC-03
 
