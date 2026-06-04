@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-VM-01 Move reading proof workflow state into `ReadViewModel`
+- [ ] P15-VM-02 Move workout finalizing state into `WorkoutViewModel`
 Depends on:
-- P15-APP-01
+- P15-VM-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -912,7 +912,7 @@ Depends on:
 Depends on:
 - P15-DOC-01
 
-- [ ] P15-VM-01 Move reading proof workflow state into `ReadViewModel`
+- [x] P15-VM-01 Move reading proof workflow state into `ReadViewModel`
 Depends on:
 - P15-APP-01
 
