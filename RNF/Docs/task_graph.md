@@ -26,7 +26,7 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+- [x] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
 Depends on:
 - P14-SVC-04
 
@@ -882,6 +882,6 @@ Depends on:
 Depends on:
 - P14-SVC-03
 
-- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+- [x] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
 Depends on:
 - P14-SVC-04

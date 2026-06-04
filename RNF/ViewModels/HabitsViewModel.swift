@@ -11,6 +11,7 @@ final class HabitsViewModel: ObservableObject {
     @Published var unlockedBadge = ""
     @Published var animatedHabit: UUID?
     @Published var loadErrorMessage: String?
+    @Published var completionErrorMessage: String?
     @Published var weeklyHabit: Habit?
 
     private let userService: UserService
@@ -85,15 +86,18 @@ final class HabitsViewModel: ObservableObject {
         }
 
         animatedHabit = habit.id
+        completionErrorMessage = nil
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.animatedHabit = nil
         }
 
         guard let result = await progressionEngine.processHabitCompletion(habitId: habit.id) else {
+            completionErrorMessage = "We couldn't save that completion. Please try again."
             return
         }
 
+        completionErrorMessage = nil
         applyState(
             profile: result.updatedProfile,
             levelState: result.levelState,
@@ -178,5 +182,12 @@ final class HabitsViewModel: ObservableObject {
         )
 
     }
+
+#if DEBUG
+    func loadForTesting(gameState: GameState) async {
+        self.gameState = gameState
+        progressionEngine.configure(gameState: gameState)
+    }
+#endif
 
 }
