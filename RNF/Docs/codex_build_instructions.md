@@ -236,18 +236,23 @@ Level aura animation
 
 # Step 12 — Persistence
 
-Save GameState to:
+Use Supabase-backed services for production persistence:
 
-UserDefaults
+UserService
+DailyLogService
+ReadingService
+WorkoutService
 
-Load state when app starts.
+Local demo or preview state is allowed only for explicit unauthenticated fallback flows.
 
 ---
 
-# Step 13 — Future Systems (Do Not Implement Yet)
+# Step 13 — Expanded Systems
 
 Skill Trees  
 Perk System  
 Boss Battles  
 Evolution System  
 AI Quest Generation
+
+These systems are no longer free-form future work. Implement only the next scoped task in `task_graph.md`, and keep workflow state in ViewModels with pure systems or engines returning typed results.

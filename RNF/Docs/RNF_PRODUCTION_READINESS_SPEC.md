@@ -313,26 +313,24 @@ Build failures caused by environment setup must be fixed or documented before tr
 
 ### Repository Hygiene
 
-Tracked local IDE/user files must be cleaned up before enforcing stricter CI hygiene gates.
+Tracked local IDE/user files are not allowed.
 
-Known cleanup item:
+Known local-noise paths:
 
 ```text
 RNF.xcodeproj/xcuserdata/
+.DS_Store
+.rnf/
 ```
 
-Current CI intentionally blocks newly tracked `.DS_Store` and `.rnf/` files, but does not yet fail on `xcuserdata` because that state already exists in the repository history. Create a dedicated cleanup branch before enabling the stricter rule:
+Target outcome for repository hygiene:
 
-```text
-chore/remove-xcode-userdata
-```
-
-Target outcome:
-
-- remove tracked `xcuserdata`
-- add or confirm `.gitignore` coverage for `xcuserdata/`
-- update the documentation workflow to reject future tracked `xcuserdata`
+- keep tracked `xcuserdata` removed
+- keep `.gitignore` coverage for `xcuserdata/`
+- keep documentation checks rejecting committed local-noise files where possible
 - verify Xcode still opens and builds the shared scheme
+
+If tracked `xcuserdata` returns, remove it in a dedicated hygiene task before feature work continues.
 
 Minimum test order:
 

@@ -24,11 +24,11 @@ Status legend:
 - `[x]` complete
 - `[ ]` not started
 
- NEXT TASK TO IMPLEMENT
+NEXT TASK TO IMPLEMENT
 
-- [x] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
+P16-ENG-01 Add a `ProgressionInput` snapshot contract and focused progression-input coverage
 Depends on:
-- P15-CHORE-01
+- P15-CONFIG-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -941,3 +941,75 @@ Depends on:
 - [x] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
 Depends on:
 - P15-CHORE-01
+
+## Phase 16 – Architecture Hardening
+
+### Progression Input Boundary
+
+- [ ] P16-ENG-01 Add a `ProgressionInput` snapshot contract and focused progression-input coverage
+Depends on:
+- P15-CONFIG-01
+
+- [ ] P16-ENG-02 Refactor `ProgressionEngine.processHabitCompletion(...)` to consume `ProgressionInput` instead of reading `GameState`
+Depends on:
+- P16-ENG-01
+
+- [ ] P16-VM-01 Update `HabitsViewModel` to build `ProgressionInput`, apply `ProgressionResult`, and remove `ProgressionEngine.configure(gameState:)`
+Depends on:
+- P16-ENG-02
+
+- [ ] P16-TST-01 Remove remaining `ProgressionEngine.configure(gameState:)` usage from production and test paths
+Depends on:
+- P16-VM-01
+
+### Authenticated Service Boundaries
+
+- [ ] P16-AUTH-01 Inventory production call sites that pass caller-supplied `userId` to authenticated services and document allowed exceptions
+Depends on:
+- P16-TST-01
+
+- [ ] P16-AUTH-02 Add authenticated methods or user-id validation for production service paths that still need owner-scoped access
+Depends on:
+- P16-AUTH-01
+
+- [ ] P16-AUTH-03 Update production ViewModel, engine, and service call sites to prefer authenticated methods over broad `userId` overloads
+Depends on:
+- P16-AUTH-02
+
+- [ ] P16-TST-02 Add regression tests for authenticated service owner scoping and user-id mismatch behavior
+Depends on:
+- P16-AUTH-03
+
+### Daily Log Boundary
+
+- [ ] P16-SVC-01 Replace `DailyLogService.saveProfile(_:)` passthrough usage with explicit `UserService` workflow dependencies
+Depends on:
+- P16-TST-02
+
+- [ ] P16-SVC-02 Move `DailyLogService.calculateStatus(for:)` into a pure `DailyLogStatusPolicy`
+Depends on:
+- P16-SVC-01
+
+- [ ] P16-TST-03 Add focused tests for the daily-log persistence and status-policy boundary
+Depends on:
+- P16-SVC-02
+
+### SwiftUI Surface Cleanup
+
+- [ ] P16-UI-01 Split `AscensionView` into focused private subviews without changing behavior
+Depends on:
+- P16-TST-03
+
+- [ ] P16-UI-02 Split large habit and profile screen subviews only where workflow state already lives in ViewModels
+Depends on:
+- P16-UI-01
+
+- [ ] P16-TST-04 Run the app build and targeted tests after the view splits
+Depends on:
+- P16-UI-02
+
+### Documentation
+
+- [ ] P16-DOC-01 Refresh architecture audit and repository map after Phase 16 hardening
+Depends on:
+- P16-TST-04

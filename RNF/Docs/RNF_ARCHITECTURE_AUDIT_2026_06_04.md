@@ -1,6 +1,6 @@
 # RNF Architecture Audit - 2026-06-04
 
-This document records the current architecture, migration, test, and repo-hygiene status after the Phase 15 cleanup work completed so far.
+This document records the current architecture, migration, test, and repo-hygiene status after the Phase 15 cleanup work.
 
 This is not a feature spec. Use it to prioritize cleanup before broad feature work.
 
@@ -17,8 +17,6 @@ The highest remaining risks are boundary and hygiene issues:
 - `ProgressionEngine` still reads a configured `GameState` snapshot.
 - Authenticated service methods still expose broad caller-supplied `userId` overloads.
 - `DailyLogService` remains broad.
-- Xcode user data is still tracked.
-- The minimum iOS deployment target still needs an explicit MVP decision.
 - Some large SwiftUI views should be split before more feature work piles on top.
 
 ## Current Validation
@@ -120,6 +118,14 @@ Reading and workout engines now return typed result values. ViewModels apply tho
 
 `DayBoundaryPolicy` is the shared day-normalization policy for services, proof paths, and daily reset checks.
 
+### RESOLVED - Xcode User Data Was Tracked
+
+Tracked `xcuserdata` files have been removed. Ignore coverage should remain in place so user-specific Xcode state does not return.
+
+### RESOLVED - Minimum iOS Deployment Target Needed A Decision
+
+The MVP iPhone deployment target is documented as iOS 18.0, and the app, unit test, and UI test targets now use `IPHONEOS_DEPLOYMENT_TARGET = 18.0`.
+
 ## Current Findings
 
 ### MEDIUM - `ProgressionEngine` Still Reads `GameState`
@@ -174,38 +180,6 @@ Fix direction:
 - Extract pure status calculation only if it grows or needs reuse.
 - Remove profile-save passthrough unless a future transaction boundary requires it.
 
-### LOW - Xcode User Data Is Still Tracked
-
-Tracked files:
-
-- `RNF.xcodeproj/xcuserdata/regosenne.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist`
-- `RNF.xcodeproj/xcuserdata/regosenne.xcuserdatad/xcschemes/xcschememanagement.plist`
-
-Why this matters:
-
-User-specific project state creates noisy diffs and should not be committed.
-
-Fix direction:
-
-- Remove tracked `xcuserdata`.
-- Confirm ignore coverage prevents future user-data files from being tracked.
-
-### LOW - Minimum iOS Deployment Target Needs A Decision
-
-Evidence:
-
-- `RNF.xcodeproj/project.pbxproj` sets `IPHONEOS_DEPLOYMENT_TARGET = 26.2`.
-
-Why this matters:
-
-This may be intentional for a future-facing prototype, but it sharply limits device support for an MVP.
-
-Fix direction:
-
-- Decide the MVP minimum iOS version.
-- Document the decision in production readiness or release docs.
-- Adjust the Xcode project only in a dedicated configuration task.
-
 ### LOW - Large SwiftUI Views Should Be Split Before More Feature Work
 
 Evidence:
@@ -224,12 +198,10 @@ Fix direction:
 
 ## Recommended Fix Order
 
-1. Remove tracked Xcode user data and confirm ignore coverage.
-2. Confirm and document the MVP minimum iOS deployment target.
-3. Move `ProgressionEngine` toward explicit input snapshots.
-4. Narrow authenticated service contracts around caller-supplied `userId`.
-5. Narrow `DailyLogService` responsibilities when a concrete workflow calls for it.
-6. Split large SwiftUI views only after workflow state is safely in ViewModels.
+1. Move `ProgressionEngine` toward explicit input snapshots.
+2. Narrow authenticated service contracts around caller-supplied `userId`.
+3. Narrow `DailyLogService` responsibilities when a concrete workflow calls for it.
+4. Split large SwiftUI views only after workflow state is safely in ViewModels.
 
 ## Builder Guidance
 

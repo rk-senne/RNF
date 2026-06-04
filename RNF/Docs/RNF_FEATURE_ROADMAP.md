@@ -6,6 +6,10 @@ The roadmap ensures features are built in the correct order and prevents feature
 
 Each phase must be completed before moving to the next.
 
+Completion gates:
+
+Use `RNF_MILESTONE_COMPLETION_PLAN.md` to determine what "100% complete" means for each milestone before declaring a phase ready for alpha, beta, production, team scale, HealthKit, or Apple Watch work.
+
 ---
 
 # Phase 1 — MVP (Core Discipline Loop)
