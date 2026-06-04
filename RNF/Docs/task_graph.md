@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-DOC-01 Update database schema and migration runbook for skill tree and storage setup
+- [ ] P15-APP-01 Wire `AppStateManager` into the root app shell
 Depends on:
-- P15-MIG-03
+- P15-DOC-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -902,7 +902,7 @@ Depends on:
 Depends on:
 - P15-MIG-02
 
-- [ ] P15-DOC-01 Update database schema and migration runbook for skill tree and storage setup
+- [x] P15-DOC-01 Update database schema and migration runbook for skill tree and storage setup
 Depends on:
 - P15-MIG-03
 
