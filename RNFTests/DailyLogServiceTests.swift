@@ -277,6 +277,40 @@ final class DailyLogServiceTests: XCTestCase {
         XCTAssertEqual(queriedDate, Calendar.current.startOfDay(for: inputDate))
     }
 
+    func testFetchTodayLogUsesInjectedDayBoundaryCalendar() async throws {
+        let userId = UUID()
+        let inputDate = Self.date("2026-03-10T22:30:00Z")
+        let calendar = Self.calendar(timeZoneOffset: 7_200)
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData("[]"))
+        }
+
+        let service = DailyLogService(
+            supabase: makeSupabaseService(),
+            calendar: calendar
+        )
+        _ = try await service.fetchTodayLog(userId: userId, date: inputDate)
+
+        let request = try XCTUnwrap(requests.first)
+        let dateFilter = try XCTUnwrap(Self.queryValue(named: "date", in: request))
+        let normalizedDateString = String(dateFilter.dropFirst("eq.".count))
+        let queriedDate = try XCTUnwrap(Self.date(from: normalizedDateString))
+
+        XCTAssertEqual(
+            queriedDate,
+            DayBoundaryPolicy.normalizedDay(for: inputDate, calendar: calendar)
+        )
+    }
+
     func testSaveDailyLogSurfacesLocalOnlyResultWhenRemoteSaveFails() async throws {
         let userId = UUID()
         var requests: [URLRequest] = []
@@ -375,6 +409,12 @@ final class DailyLogServiceTests: XCTestCase {
         }
 
         return ISO8601DateFormatter().date(from: string)
+    }
+
+    private static func calendar(timeZoneOffset: Int) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: timeZoneOffset) ?? .current
+        return calendar
     }
 
     private static func queryValue(named name: String, in request: URLRequest) -> String? {

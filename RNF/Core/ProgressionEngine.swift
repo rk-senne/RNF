@@ -24,6 +24,7 @@ final class ProgressionEngine {
     private let questService: QuestService
     private let skillTreeService: SkillTreeService
     private let analyticsService: AnalyticsService
+    private let calendar: Calendar
     private weak var gameState: GameState?
 
     init(
@@ -31,13 +32,15 @@ final class ProgressionEngine {
         xpService: XPService = XPService(),
         questService: QuestService = QuestService(),
         skillTreeService: SkillTreeService = SkillTreeService(),
-        analyticsService: AnalyticsService = AnalyticsService()
+        analyticsService: AnalyticsService = AnalyticsService(),
+        calendar: Calendar = .current
     ) {
         self.dailyLogService = dailyLogService
         self.xpService = xpService
         self.questService = questService
         self.skillTreeService = skillTreeService
         self.analyticsService = analyticsService
+        self.calendar = calendar
     }
 
     func configure(gameState: GameState) {
@@ -119,7 +122,10 @@ final class ProgressionEngine {
             user_id: updatedProfile.isPlaceholder ? nil : updatedProfile.id,
             habit_id: habit.id,
             completed_at: completionDate,
-            date: completionDate.startOfDay,
+            date: DayBoundaryPolicy.normalizedDay(
+                for: completionDate,
+                calendar: calendar
+            ),
             xp_awarded: awardedXP
         )
 
@@ -142,7 +148,10 @@ final class ProgressionEngine {
 
         var updatedDailyLog = todayLog
         updatedDailyLog.user_id = updatedProfile.isPlaceholder ? nil : updatedProfile.id
-        updatedDailyLog.date = completionDate.startOfDay
+        updatedDailyLog.date = DayBoundaryPolicy.normalizedDay(
+            for: completionDate,
+            calendar: calendar
+        )
         updatedDailyLog.habits_completed = updatedDailyCompleted
         updatedDailyLog.habits_required = dailyGoal
         updatedDailyLog.xp_earned += awardedXP

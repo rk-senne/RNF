@@ -18,6 +18,7 @@ final class HabitsViewModel: ObservableObject {
     private let questService: QuestService
     private let xpService: XPService
     private let progressionEngine: ProgressionEngine
+    private let calendar: Calendar
     private weak var gameState: GameState?
     private var isLoaded = false
 
@@ -25,12 +26,14 @@ final class HabitsViewModel: ObservableObject {
         userService: UserService? = nil,
         questService: QuestService? = nil,
         xpService: XPService? = nil,
-        progressionEngine: ProgressionEngine? = nil
+        progressionEngine: ProgressionEngine? = nil,
+        calendar: Calendar = .current
     ) {
         self.userService = userService ?? UserService()
         self.questService = questService ?? QuestService()
         self.xpService = xpService ?? XPService()
         self.progressionEngine = progressionEngine ?? ProgressionEngine()
+        self.calendar = calendar
     }
 
     func load(gameState: GameState) async {
@@ -156,7 +159,7 @@ final class HabitsViewModel: ObservableObject {
             return
         }
 
-        let today = Date().formatted("yyyy-MM-dd")
+        let today = DayBoundaryPolicy.dayIdentifier(for: Date(), calendar: calendar)
         let defaults = UserDefaults.standard
         let lastResetDate = defaults.string(forKey: "lastResetDate")
 
@@ -177,7 +180,8 @@ final class HabitsViewModel: ObservableObject {
             completedHabitIDs: [],
             dailyLog: .today(
                 userID: gameState.profile.isPlaceholder ? nil : gameState.profile.id,
-                goal: questPlan.daily.dailyGoal
+                goal: questPlan.daily.dailyGoal,
+                calendar: calendar
             )
         )
 

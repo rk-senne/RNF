@@ -166,8 +166,14 @@ final class ChallengeEngine {
     }
 
     private func canAdvance(_ challenge: Challenge, on date: Date) -> Bool {
-        let startDate = calendar.startOfDay(for: challenge.start_date)
-        let targetDate = calendar.startOfDay(for: date)
+        let startDate = DayBoundaryPolicy.normalizedDay(
+            for: challenge.start_date,
+            calendar: calendar
+        )
+        let targetDate = DayBoundaryPolicy.normalizedDay(
+            for: date,
+            calendar: calendar
+        )
         let elapsedDays = calendar.dateComponents([.day], from: startDate, to: targetDate).day ?? 0
         let expectedDay = min(max(elapsedDays + 1, 1), Challenge.totalDays)
         return challenge.normalizedCurrentDay <= expectedDay

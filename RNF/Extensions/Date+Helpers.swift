@@ -5,7 +5,7 @@ extension Date {
     // MARK: Start of Day
 
     var startOfDay: Date {
-        Calendar.current.startOfDay(for: self)
+        DayBoundaryPolicy.normalizedDay(for: self)
     }
 
     // MARK: End of Day
@@ -35,8 +35,8 @@ extension Date {
 
         let calendar = Calendar.current
 
-        let start = calendar.startOfDay(for: self)
-        let end = calendar.startOfDay(for: date)
+        let start = DayBoundaryPolicy.normalizedDay(for: self, calendar: calendar)
+        let end = DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar)
 
         let components = calendar.dateComponents(
             [.day],

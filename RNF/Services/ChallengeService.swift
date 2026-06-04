@@ -8,19 +8,22 @@ final class ChallengeService {
     private let supabase: SupabaseService
     private let analyticsService: AnalyticsService
     private let authProvider: AuthProviding
+    private let calendar: Calendar
 
     init(
         supabase: SupabaseService = .shared,
         analyticsService: AnalyticsService = AnalyticsService(),
-        authProvider: AuthProviding? = nil
+        authProvider: AuthProviding? = nil,
+        calendar: Calendar = .current
     ) {
         self.supabase = supabase
         self.analyticsService = analyticsService
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
+        self.calendar = calendar
     }
 
     private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
+        DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar)
     }
 
     func startChallenge(userId: UUID, startDate: Date = Date()) async throws -> Challenge {
@@ -28,11 +31,7 @@ final class ChallengeService {
         RNFLogger.challenge.info("operation=start_challenge result=started")
 
         let normalizedStartDate = normalizedDay(startDate)
-        let endDate = Calendar.current.date(
-            byAdding: .day,
-            value: 89,
-            to: normalizedStartDate
-        ) ?? normalizedStartDate
+        let endDate = Challenge.endDate(for: normalizedStartDate, calendar: calendar)
 
         let challenge = Challenge(
             id: UUID(),

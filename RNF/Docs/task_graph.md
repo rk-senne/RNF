@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-TIME-01 Centralize day boundary handling for services and daily reset logic
+- [ ] P15-DOC-02 Refresh stale repository map and architecture docs
 Depends on:
-- P15-ENG-01
+- P15-TIME-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -926,7 +926,7 @@ Depends on:
 
 ### Date, Docs, And Hygiene
 
-- [ ] P15-TIME-01 Centralize day boundary handling for services and daily reset logic
+- [x] P15-TIME-01 Centralize day boundary handling for services and daily reset logic
 Depends on:
 - P15-ENG-01
 

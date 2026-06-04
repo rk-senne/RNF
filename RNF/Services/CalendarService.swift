@@ -5,21 +5,25 @@ import PostgREST
 final class CalendarService {
 
     private let supabase: SupabaseService
+    private let calendar: Calendar
 
-    init(supabase: SupabaseService = .shared) {
+    init(
+        supabase: SupabaseService = .shared,
+        calendar: Calendar = .current
+    ) {
         self.supabase = supabase
+        self.calendar = calendar
     }
 
     private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
+        DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar)
     }
 
     func getMonthLogs(userId: UUID, month: Date) async throws -> [DailyLog] {
 
-        let calendar = Calendar.current
         let startOfMonth = calendar.date(
             from: calendar.dateComponents([.year, .month], from: month)
-        ) ?? calendar.startOfDay(for: month)
+        ) ?? DayBoundaryPolicy.normalizedDay(for: month, calendar: calendar)
         let startOfNextMonth = calendar.date(
             byAdding: .month,
             value: 1,

@@ -30,7 +30,10 @@ extension Challenge {
         startDate: Date = Date(),
         calendar: Calendar = .current
     ) -> Challenge {
-        let normalizedStartDate = calendar.startOfDay(for: startDate)
+        let normalizedStartDate = DayBoundaryPolicy.normalizedDay(
+            for: startDate,
+            calendar: calendar
+        )
 
         return Challenge(
             id: UUID(),
@@ -47,7 +50,10 @@ extension Challenge {
         for startDate: Date,
         calendar: Calendar = .current
     ) -> Date {
-        let normalizedStartDate = calendar.startOfDay(for: startDate)
+        let normalizedStartDate = DayBoundaryPolicy.normalizedDay(
+            for: startDate,
+            calendar: calendar
+        )
 
         return calendar.date(
             byAdding: .day,
@@ -96,7 +102,10 @@ extension Challenge {
         startDate: Date = Date(),
         calendar: Calendar = .current
     ) -> Challenge {
-        let normalizedStartDate = calendar.startOfDay(for: startDate)
+        let normalizedStartDate = DayBoundaryPolicy.normalizedDay(
+            for: startDate,
+            calendar: calendar
+        )
 
         return Challenge(
             id: id,

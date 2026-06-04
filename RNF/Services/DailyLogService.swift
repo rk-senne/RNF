@@ -9,21 +9,24 @@ final class DailyLogService {
     private let habitService: HabitService
     private let userService: UserService
     private let authProvider: AuthProviding
+    private let calendar: Calendar
 
     init(
         supabase: SupabaseService = .shared,
         habitService: HabitService = HabitService(),
         userService: UserService? = nil,
-        authProvider: AuthProviding? = nil
+        authProvider: AuthProviding? = nil,
+        calendar: Calendar = .current
     ) {
         self.supabase = supabase
         self.habitService = habitService
         self.userService = userService ?? UserService(supabase: supabase)
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
+        self.calendar = calendar
     }
 
     private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
+        DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar)
     }
 
     func fetchTodayLog(userId: UUID, date: Date) async throws -> DailyLog? {
@@ -95,7 +98,7 @@ final class DailyLogService {
     func getTodayLog(for profile: Profile, dailyGoal: Int) async throws -> DailyLog {
 
         guard !profile.isPlaceholder else {
-            return .today(goal: dailyGoal)
+            return .today(goal: dailyGoal, calendar: calendar)
         }
 
         let today = normalizedDay(Date())
