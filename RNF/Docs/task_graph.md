@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [x] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+- [ ] P15-MIG-01 Add skill tree table migrations for reproducible backend setup
 Depends on:
-- P14-SVC-04
+- P14-TST-04
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -885,3 +885,59 @@ Depends on:
 - [x] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
 Depends on:
 - P14-SVC-04
+
+## Phase 15 – Audit-Driven Production Cleanup
+
+### Backend Reproducibility
+
+- [ ] P15-MIG-01 Add skill tree table migrations for reproducible backend setup
+Depends on:
+- P14-TST-04
+
+- [ ] P15-MIG-02 Add skill tree RLS policies and verification coverage
+Depends on:
+- P15-MIG-01
+
+- [ ] P15-MIG-03 Add reading proof storage bucket and object policy migration
+Depends on:
+- P15-MIG-02
+
+- [ ] P15-DOC-01 Update database schema and migration runbook for skill tree and storage setup
+Depends on:
+- P15-MIG-03
+
+### Launch And Workflow Boundaries
+
+- [ ] P15-APP-01 Wire `AppStateManager` into the root app shell
+Depends on:
+- P15-DOC-01
+
+- [ ] P15-VM-01 Move reading proof workflow state into `ReadViewModel`
+Depends on:
+- P15-APP-01
+
+- [ ] P15-VM-02 Move workout finalizing state into `WorkoutViewModel`
+Depends on:
+- P15-VM-01
+
+- [ ] P15-ENG-01 Move workout and reading `GameState.apply(...)` calls out of engines
+Depends on:
+- P15-VM-02
+
+### Date, Docs, And Hygiene
+
+- [ ] P15-TIME-01 Centralize day boundary handling for services and daily reset logic
+Depends on:
+- P15-ENG-01
+
+- [ ] P15-DOC-02 Refresh stale repository map and architecture docs
+Depends on:
+- P15-TIME-01
+
+- [ ] P15-CHORE-01 Remove tracked Xcode user data and confirm ignore coverage
+Depends on:
+- P15-DOC-02
+
+- [ ] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
+Depends on:
+- P15-CHORE-01
