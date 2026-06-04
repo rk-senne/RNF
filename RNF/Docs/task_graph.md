@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-VM-02 Move workout finalizing state into `WorkoutViewModel`
+- [ ] P15-ENG-01 Move workout and reading `GameState.apply(...)` calls out of engines
 Depends on:
-- P15-VM-01
+- P15-VM-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -916,7 +916,7 @@ Depends on:
 Depends on:
 - P15-APP-01
 
-- [ ] P15-VM-02 Move workout finalizing state into `WorkoutViewModel`
+- [x] P15-VM-02 Move workout finalizing state into `WorkoutViewModel`
 Depends on:
 - P15-VM-01
 
