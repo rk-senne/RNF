@@ -26,7 +26,7 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
+- [x] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
 Depends on:
 - P15-CHORE-01
 
@@ -938,6 +938,6 @@ Depends on:
 Depends on:
 - P15-DOC-02
 
-- [ ] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
+- [x] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
 Depends on:
 - P15-CHORE-01

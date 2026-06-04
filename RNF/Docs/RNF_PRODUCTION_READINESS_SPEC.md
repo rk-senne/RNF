@@ -285,6 +285,18 @@ Builder must not add HealthKit or watchOS code unless the selected task explicit
 
 The command-line build must be reliable before automation can be trusted.
 
+### MVP Deployment Target
+
+RNF's iPhone MVP minimum deployment target is iOS 18.0.
+
+Rationale:
+
+- The current app code and resolved package dependencies do not require iOS 26-only APIs.
+- The Supabase Swift dependency graph supports substantially older iOS versions.
+- iOS 18.0 keeps the MVP available to more test devices while preserving a modern SwiftUI baseline.
+
+Do not raise the minimum deployment target for app, unit test, or UI test targets unless a selected task explicitly introduces and documents an API requirement that needs a newer iOS version.
+
 Required baseline command:
 
 ```bash
