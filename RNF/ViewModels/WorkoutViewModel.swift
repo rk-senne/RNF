@@ -32,6 +32,7 @@ final class WorkoutViewModel: ObservableObject {
     let durationSeconds: Int
 
     private let workoutCompleter: WorkoutCompleting
+    private weak var gameState: GameState?
 
     init(durationSeconds: Int) {
         let sanitizedDuration = max(durationSeconds, 0)
@@ -108,6 +109,7 @@ final class WorkoutViewModel: ObservableObject {
     }
 
     func configure(gameState: GameState) {
+        self.gameState = gameState
         workoutCompleter.configure(gameState: gameState)
     }
 
@@ -178,6 +180,7 @@ final class WorkoutViewModel: ObservableObject {
         )
 
         if let result {
+            applyCompletionResult(result)
             completionState = .completed(result.xpAwarded)
         } else {
             completionState = .failed("Workout could not be saved")
@@ -186,6 +189,23 @@ final class WorkoutViewModel: ObservableObject {
 
     func retryCompletion(date: Date = Date()) async {
         await completeSession(date: date)
+    }
+
+    private func applyCompletionResult(_ result: WorkoutCompletionResult) {
+        guard let gameState else {
+            return
+        }
+
+        gameState.apply(
+            profile: result.profile,
+            levelState: result.levelState,
+            titles: gameState.titles,
+            quests: gameState.quests,
+            dailyGoal: gameState.dailyGoal,
+            dailyCompleted: gameState.dailyCompleted,
+            completedHabitIDs: gameState.completedHabitIDs,
+            dailyLog: result.dailyLog
+        )
     }
 
 }

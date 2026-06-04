@@ -11,7 +11,7 @@ final class ReadingEngineTests: XCTestCase {
         super.tearDown()
     }
 
-    func testCompleteReadingUploadsProofAndUpdatesDailyLog() async throws {
+    func testCompleteReadingUploadsProofAndReturnsResultWithoutMutatingGameState() async throws {
         let userId = UUID()
         let dailyLogId = UUID()
         let uploadId = UUID()
@@ -159,9 +159,9 @@ final class ReadingEngineTests: XCTestCase {
         XCTAssertEqual(result?.profile.xp_total, 205)
         XCTAssertEqual(result?.profile.level, 2)
         XCTAssertEqual(result?.dailyLog.xp_earned, 10)
-        XCTAssertEqual(gameState.profile.xp_total, 205)
-        XCTAssertEqual(gameState.level, 2)
-        XCTAssertEqual(gameState.dailyLog.reading_completed, true)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
+        XCTAssertEqual(gameState.level, 1)
+        XCTAssertFalse(gameState.dailyLog.reading_completed)
 
         XCTAssertTrue(didUploadProof)
         XCTAssertTrue(didInsertReadingUpload)
@@ -408,7 +408,7 @@ final class ReadingEngineTests: XCTestCase {
 
         XCTAssertEqual(firstResult?.xpAwarded, 10)
         XCTAssertNil(retryResult)
-        XCTAssertEqual(gameState.profile.xp_total, 205)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
         XCTAssertEqual(
             requests.filter {
                 $0.httpMethod == "POST" &&

@@ -26,7 +26,7 @@ final class WorkoutEngineTests: XCTestCase {
         )
     }
 
-    func testCompleteWorkoutAwardsXPAndUpdatesGameState() async throws {
+    func testCompleteWorkoutAwardsXPWithoutMutatingGameState() async throws {
         let userId = UUID()
         let dailyLogId = UUID()
         let date = Self.date("2026-06-08T00:00:00Z")
@@ -132,9 +132,9 @@ final class WorkoutEngineTests: XCTestCase {
         XCTAssertEqual(result?.profile.level, 2)
         XCTAssertEqual(result?.levelState.leveledUp, true)
         XCTAssertEqual(result?.dailyLog.xp_earned, 15)
-        XCTAssertEqual(gameState.profile.xp_total, 210)
-        XCTAssertEqual(gameState.level, 2)
-        XCTAssertEqual(gameState.dailyLog.workout_completed, true)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
+        XCTAssertEqual(gameState.level, 1)
+        XCTAssertFalse(gameState.dailyLog.workout_completed)
 
         XCTAssertTrue(requests.contains { $0.httpMethod == "PATCH" && ($0.url?.absoluteString.contains("daily_logs") ?? false) })
         let workoutPatch = patchBodies
@@ -290,7 +290,7 @@ final class WorkoutEngineTests: XCTestCase {
 
         XCTAssertEqual(firstResult?.xpAwarded, 15)
         XCTAssertNil(retryResult)
-        XCTAssertEqual(gameState.profile.xp_total, 210)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
         XCTAssertEqual(
             patchBodies
                 .compactMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Bool] }

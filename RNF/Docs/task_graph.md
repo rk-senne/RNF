@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-ENG-01 Move workout and reading `GameState.apply(...)` calls out of engines
+- [ ] P15-TIME-01 Centralize day boundary handling for services and daily reset logic
 Depends on:
-- P15-VM-02
+- P15-ENG-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -920,7 +920,7 @@ Depends on:
 Depends on:
 - P15-VM-01
 
-- [ ] P15-ENG-01 Move workout and reading `GameState.apply(...)` calls out of engines
+- [x] P15-ENG-01 Move workout and reading `GameState.apply(...)` calls out of engines
 Depends on:
 - P15-VM-02
 

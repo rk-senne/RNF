@@ -34,6 +34,7 @@ final class ReadViewModel: ObservableObject {
     @Published private(set) var uploadState: UploadState = .idle
 
     private let readingCompleter: ReadingCompleting
+    private weak var gameState: GameState?
 
     init() {
         self.readingCompleter = ReadingEngine()
@@ -72,6 +73,7 @@ final class ReadViewModel: ObservableObject {
     }
 
     func configure(gameState: GameState) {
+        self.gameState = gameState
         readingCompleter.configure(gameState: gameState)
     }
 
@@ -116,6 +118,7 @@ final class ReadViewModel: ObservableObject {
             imageData: selectedImageData,
             date: date
         ) {
+            applyCompletionResult(result)
             uploadState = .completed(result.xpAwarded)
         } else {
             uploadState = .failed("Proof could not be uploaded")
@@ -126,6 +129,23 @@ final class ReadViewModel: ObservableObject {
         selectedImageData = nil
         selectedImage = nil
         uploadState = .failed("Photo could not be loaded")
+    }
+
+    private func applyCompletionResult(_ result: ReadingCompletionResult) {
+        guard let gameState else {
+            return
+        }
+
+        gameState.apply(
+            profile: result.profile,
+            levelState: result.levelState,
+            titles: gameState.titles,
+            quests: gameState.quests,
+            dailyGoal: gameState.dailyGoal,
+            dailyCompleted: gameState.dailyCompleted,
+            completedHabitIDs: gameState.completedHabitIDs,
+            dailyLog: result.dailyLog
+        )
     }
 
 }

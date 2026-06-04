@@ -276,6 +276,17 @@ final class PerkIntegrationTests: XCTestCase {
             date: date
         )
         let workoutResult = try XCTUnwrap(completedWorkout)
+        gameState.apply(
+            profile: workoutResult.profile,
+            levelState: workoutResult.levelState,
+            titles: gameState.titles,
+            quests: gameState.quests,
+            dailyGoal: gameState.dailyGoal,
+            dailyCompleted: gameState.dailyCompleted,
+            completedHabitIDs: gameState.completedHabitIDs,
+            dailyLog: workoutResult.dailyLog
+        )
+
         let completedReading = await readingEngine.completeReading(
             imageData: Data("proof".utf8),
             date: date

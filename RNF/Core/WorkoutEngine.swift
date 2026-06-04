@@ -102,17 +102,6 @@ final class WorkoutEngine {
                 return nil
             }
 
-            gameState.apply(
-                profile: updatedProfile,
-                levelState: levelState,
-                titles: gameState.titles,
-                quests: gameState.quests,
-                dailyGoal: gameState.dailyGoal,
-                dailyCompleted: gameState.dailyCompleted,
-                completedHabitIDs: gameState.completedHabitIDs,
-                dailyLog: completedLog
-            )
-
             let advancedChallenge = await challengeEngine.advanceIfDayComplete(
                 userId: updatedProfile.id,
                 date: date

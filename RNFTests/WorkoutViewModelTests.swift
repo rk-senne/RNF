@@ -30,6 +30,22 @@ final class WorkoutViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.isComplete)
     }
 
+    func testCompleteSessionAppliesCompletionResultToConfiguredGameState() async {
+        let viewModel = WorkoutViewModel(
+            durationSeconds: 100,
+            workoutCompleter: StubWorkoutCompleter(result: Self.completionResult(xpAwarded: 15))
+        )
+        let gameState = GameState()
+        viewModel.configure(gameState: gameState)
+
+        await viewModel.completeSession(date: Self.date)
+
+        XCTAssertEqual(gameState.profile.xp_total, 15)
+        XCTAssertEqual(gameState.level, 1)
+        XCTAssertEqual(gameState.xp, 15)
+        XCTAssertTrue(gameState.dailyLog.workout_completed)
+    }
+
     func testCompleteSessionSurfacesFailureWithoutCompletion() async {
         let viewModel = WorkoutViewModel(
             durationSeconds: 100,
@@ -130,8 +146,12 @@ final class WorkoutViewModelTests: XCTestCase {
             created_at: nil
         )
 
+        var dailyLog = DailyLog.today(userID: userId, goal: 3)
+        dailyLog.workout_completed = true
+        dailyLog.xp_earned = xpAwarded
+
         return WorkoutCompletionResult(
-            dailyLog: DailyLog.today(userID: userId, goal: 3),
+            dailyLog: dailyLog,
             profile: profile,
             xpAwarded: xpAwarded,
             levelState: XPSystem.levelState(for: xpAwarded),

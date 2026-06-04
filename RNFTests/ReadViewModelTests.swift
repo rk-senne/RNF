@@ -34,6 +34,21 @@ final class ReadViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.uploadState, .completed(14))
     }
 
+    func testSubmitProofAppliesCompletionResultToConfiguredGameState() async {
+        let completer = StubReadingCompleter(result: Self.completionResult(xpAwarded: 14))
+        let viewModel = ReadViewModel(readingCompleter: completer)
+        let gameState = GameState()
+        viewModel.configure(gameState: gameState)
+        viewModel.loadSelectedImageData(Self.imageData())
+
+        await viewModel.submitProof()
+
+        XCTAssertEqual(gameState.profile.xp_total, 14)
+        XCTAssertEqual(gameState.level, 1)
+        XCTAssertEqual(gameState.xp, 14)
+        XCTAssertTrue(gameState.dailyLog.reading_completed)
+    }
+
     func testSubmitProofSurfacesUploadFailure() async {
         let viewModel = ReadViewModel(readingCompleter: StubReadingCompleter(result: nil))
         viewModel.loadSelectedImageData(Self.imageData())
@@ -75,6 +90,10 @@ final class ReadViewModelTests: XCTestCase {
             created_at: nil
         )
 
+        var dailyLog = DailyLog.today(userID: userId, goal: 3)
+        dailyLog.reading_completed = true
+        dailyLog.xp_earned = xpAwarded
+
         return ReadingCompletionResult(
             upload: ReadingUpload(
                 id: UUID(),
@@ -82,7 +101,7 @@ final class ReadViewModelTests: XCTestCase {
                 image_url: "reading-proof/\(userId.uuidString)/1970-01-01.jpg",
                 date: date
             ),
-            dailyLog: DailyLog.today(userID: userId, goal: 3),
+            dailyLog: dailyLog,
             profile: profile,
             xpAwarded: xpAwarded,
             levelState: XPSystem.levelState(for: xpAwarded),
