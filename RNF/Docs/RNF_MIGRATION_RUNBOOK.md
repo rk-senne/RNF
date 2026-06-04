@@ -42,6 +42,29 @@ Check migration status against the active project:
 supabase migration list
 ```
 
+## SQL Structure Verification Notes
+
+Use these checks when reviewing migration SQL without a live database, and repeat the catalog queries below after `supabase db reset`.
+
+Required migration structure:
+
+- migration filenames use the ordered `000_descriptive_name.sql` format
+- daily idempotency is protected by `daily_logs(user_id, date)`, `habit_completions(user_id, habit_id, date)`, `workouts(user_id, date)`, and `reading_uploads(user_id, date)` uniqueness
+- active challenges and subscriptions are protected by partial unique indexes on `user_id` where `status = 'active'`
+- common reads have indexes for `daily_logs(user_id, date)`, `habit_completions(user_id, date)`, `challenges(user_id, status)`, `workouts(user_id, date)`, `reading_uploads(user_id, date)`, and `subscriptions(user_id, status)`
+- every user-owned table has row level security enabled
+- ownership policies use `auth.uid()` against `users.id` or the table `user_id`
+- migrations do not include demo users, plaintext secrets, auth tokens, or environment-specific credentials
+
+Current migration files satisfying these checks:
+
+- `003_create_daily_logs.sql`: `unique (user_id, date)`, daily log status checks, and `daily_logs_user_date_idx`
+- `004_create_habit_completions.sql`: `unique (user_id, habit_id, date)` and date lookup indexes
+- `005_create_challenges.sql`: challenge day/status checks and active-challenge uniqueness
+- `007_create_reading_uploads.sql`: `unique (user_id, date)` and date lookup index
+- `009_add_production_indexes.sql`: production indexes for workout uniqueness, challenge status lookup, and subscription status lookup
+- `010_enable_rls_policies.sql`: RLS enablement and authenticated ownership policies
+
 For RLS migrations, verify policies exist after applying migrations:
 
 ```sql

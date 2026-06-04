@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
+- [ ] P14-TST-02 Add auth user-scoping service tests
 Depends on:
-- P14-MIG-03
+- P14-AUTH-03
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -870,7 +870,7 @@ Depends on:
 
 ### Production Tests
 
-- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
+- [x] P14-TST-01 Add migration SQL structure tests or verification notes
 Depends on:
 - P14-MIG-03
 
