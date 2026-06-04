@@ -4,6 +4,20 @@ This document defines the minimum architecture cleanup needed to keep RNF scalab
 
 It is not a feature plan. Do not use this document to add new product behavior.
 
+Latest audit:
+
+- See `RNF_ARCHITECTURE_AUDIT_2026_06_04.md` for the current architecture, migration, test, and repo hygiene findings.
+- If this plan and the audit conflict, fix the higher-risk audit item first, then update this plan.
+
+2026-06-04 status:
+
+- App shell routing now uses `AppStateManager`.
+- `ReadViewModel` and `WorkoutViewModel` own their main workflows.
+- `WorkoutEngine` and `ReadingEngine` return typed results instead of applying directly to `GameState`.
+- Skill tree tables, reading proof storage, and policy docs/migrations are represented in the repo.
+- Day-boundary handling is centralized through `DayBoundaryPolicy`.
+- The full `RNFTests` target is currently green.
+
 ## Current Verdict
 
 The project architecture is acceptable for an early SwiftUI MVP.
@@ -132,21 +146,22 @@ Not allowed:
 
 ## Current Risks
 
-### 1. `ProgressionEngine` Owns Too Much
+### 1. `ProgressionEngine` Still Reads `GameState`
 
-`ProgressionEngine` currently coordinates progression rules, calls persistence services, and mutates `GameState`.
+`ProgressionEngine` currently coordinates progression rules, calls persistence services, and reads a configured `GameState` snapshot.
 
 Risk:
 
 - Harder to test.
 - Harder to reuse for challenge, calendar, workout, or reading flows.
-- Makes `GameState` a dependency of domain orchestration.
+- Keeps `GameState` as an input dependency of domain orchestration.
 
 Fix direction:
 
 - Keep progression orchestration in the engine.
 - Return a typed result containing updated profile, daily log, quest plan, completed IDs, and UI event flags.
-- Let `HabitsViewModel` apply that result to `GameState`.
+- Keep `HabitsViewModel` responsible for applying that result to `GameState`.
+- Eventually replace `configure(gameState:)` with explicit input values or a small input snapshot.
 
 ### 2. `GameState` Can Become a Catch-All
 
@@ -241,7 +256,7 @@ Current method classification:
 
 | Method | Responsibility | Boundary note |
 | --- | --- | --- |
-| `normalizedDay(_:)` | date normalization helper | Keep private to persistence methods unless shared date normalization becomes explicit. |
+| `normalizedDay(_:)` | date normalization wrapper | Delegates to shared `DayBoundaryPolicy` with the service calendar. |
 | `fetchTodayLog(userId:date:)` | daily log persistence | Reads one `daily_logs` record for a user and normalized day. |
 | `createDailyLog(userId:date:)` | daily log persistence | Inserts one `daily_logs` record and falls back to the existing record on duplicate creation. |
 | `getTodayLog(for:dailyGoal:)` | daily log persistence | Fetch-or-create convenience for the current daily log; returns a local placeholder log for placeholder profiles. |

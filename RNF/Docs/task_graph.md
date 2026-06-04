@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-DOC-02 Refresh stale repository map and architecture docs
+- [ ] P15-CHORE-01 Remove tracked Xcode user data and confirm ignore coverage
 Depends on:
-- P15-TIME-01
+- P15-DOC-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -930,7 +930,7 @@ Depends on:
 Depends on:
 - P15-ENG-01
 
-- [ ] P15-DOC-02 Refresh stale repository map and architecture docs
+- [x] P15-DOC-02 Refresh stale repository map and architecture docs
 Depends on:
 - P15-TIME-01
 
