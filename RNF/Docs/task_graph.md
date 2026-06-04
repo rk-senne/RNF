@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-MIG-02 Add skill tree RLS policies and verification coverage
+- [ ] P15-MIG-03 Add reading proof storage bucket and object policy migration
 Depends on:
-- P15-MIG-01
+- P15-MIG-02
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -894,7 +894,7 @@ Depends on:
 Depends on:
 - P14-TST-04
 
-- [ ] P15-MIG-02 Add skill tree RLS policies and verification coverage
+- [x] P15-MIG-02 Add skill tree RLS policies and verification coverage
 Depends on:
 - P15-MIG-01
 
