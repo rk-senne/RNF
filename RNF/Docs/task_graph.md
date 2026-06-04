@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-TST-02 Add auth user-scoping service tests
+- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
 Depends on:
-- P14-AUTH-03
+- P14-SVC-03
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -874,7 +874,7 @@ Depends on:
 Depends on:
 - P14-MIG-03
 
-- [ ] P14-TST-02 Add auth user-scoping service tests
+- [x] P14-TST-02 Add auth user-scoping service tests
 Depends on:
 - P14-AUTH-03
 
