@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct WorkoutCompletionResult {
 
@@ -57,6 +58,7 @@ final class WorkoutEngine {
             let gameState,
             !gameState.profile.isPlaceholder
         else {
+            RNFLogger.sync.info("operation=complete_workout result=skipped reason=invalid_or_placeholder")
             return nil
         }
 
@@ -67,6 +69,7 @@ final class WorkoutEngine {
             )
 
             guard !existingLog.workout_completed else {
+                RNFLogger.sync.info("operation=complete_workout result=skipped reason=duplicate")
                 return nil
             }
 
@@ -95,6 +98,7 @@ final class WorkoutEngine {
             let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
 
             guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
+                RNFLogger.sync.error("operation=complete_workout result=failure step=save_state daily_log_state=\(String(describing: dailyLogSaveResult.saveState), privacy: .public) profile_state=\(String(describing: profileSaveResult.saveState), privacy: .public)")
                 return nil
             }
 
@@ -136,6 +140,7 @@ final class WorkoutEngine {
                 )
             }
 
+            RNFLogger.sync.info("operation=complete_workout result=success challenge_advanced=\(advancedChallenge != nil, privacy: .public)")
             return WorkoutCompletionResult(
                 dailyLog: completedLog,
                 profile: updatedProfile,
@@ -144,6 +149,7 @@ final class WorkoutEngine {
                 advancedChallenge: advancedChallenge
             )
         } catch {
+            RNFLogger.sync.error("operation=complete_workout result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }

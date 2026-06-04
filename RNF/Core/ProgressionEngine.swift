@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct ProgressionResult {
 
@@ -50,6 +51,7 @@ final class ProgressionEngine {
             let habit = gameState.quests.first(where: { $0.id == habitId }),
             !gameState.completedHabitIDs.contains(habitId)
         else {
+            RNFLogger.habitCompletion.info("operation=process_habit_completion result=skipped reason=unavailable_or_duplicate")
             return nil
         }
 
@@ -68,6 +70,7 @@ final class ProgressionEngine {
                 dailyGoal: dailyGoal
             )
         } catch {
+            RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=get_today_log error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
 
@@ -123,13 +126,16 @@ final class ProgressionEngine {
         if !updatedProfile.isPlaceholder {
             do {
                 guard let recordedCompletion = try await dailyLogService.recordHabitCompletion(completion) else {
+                    RNFLogger.habitCompletion.error("operation=process_habit_completion result=failure step=record_completion error_category=not_recorded")
                     return nil
                 }
 
                 guard recordedCompletion.id == completion.id else {
+                    RNFLogger.habitCompletion.info("operation=process_habit_completion result=duplicate_existing")
                     return nil
                 }
             } catch {
+                RNFLogger.habitCompletion.error("operation=process_habit_completion result=failure step=record_completion error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
                 return nil
             }
         }
@@ -144,6 +150,7 @@ final class ProgressionEngine {
 
         let dailyLogSaveResult = await dailyLogService.saveDailyLog(updatedDailyLog)
         if !updatedProfile.isPlaceholder, !dailyLogSaveResult.savedRemotely {
+            RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=save_daily_log error_category=\(String(describing: dailyLogSaveResult.error), privacy: .public)")
             return nil
         }
 
@@ -156,12 +163,14 @@ final class ProgressionEngine {
                     updatedDailyLog = persistedDailyLog
                 }
             } catch {
+                RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=update_status error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
                 return nil
             }
         }
 
         let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
         if !updatedProfile.isPlaceholder, !profileSaveResult.savedRemotely {
+            RNFLogger.sync.error("operation=process_habit_completion result=failure step=save_profile error_category=\(String(describing: profileSaveResult.error), privacy: .public)")
             return nil
         }
 
@@ -219,6 +228,8 @@ final class ProgressionEngine {
                 )
             }
         }
+
+        RNFLogger.habitCompletion.info("operation=process_habit_completion result=success mission_completed=\(missionCompleted, privacy: .public)")
 
         return ProgressionResult(
             habit: habit,

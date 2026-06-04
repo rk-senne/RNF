@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct ReadingCompletionResult {
 
@@ -50,6 +51,7 @@ final class ReadingEngine {
     ) async -> ReadingCompletionResult? {
 
         guard let gameState, !gameState.profile.isPlaceholder else {
+            RNFLogger.sync.info("operation=complete_reading result=skipped reason=missing_or_placeholder_state")
             return nil
         }
 
@@ -60,6 +62,7 @@ final class ReadingEngine {
             )
 
             guard !existingLog.reading_completed else {
+                RNFLogger.sync.info("operation=complete_reading result=skipped reason=duplicate")
                 return nil
             }
 
@@ -94,6 +97,7 @@ final class ReadingEngine {
             let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
 
             guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
+                RNFLogger.sync.error("operation=complete_reading result=failure step=save_state daily_log_state=\(String(describing: dailyLogSaveResult.saveState), privacy: .public) profile_state=\(String(describing: profileSaveResult.saveState), privacy: .public)")
                 return nil
             }
 
@@ -135,6 +139,7 @@ final class ReadingEngine {
                 )
             }
 
+            RNFLogger.sync.info("operation=complete_reading result=success challenge_advanced=\(advancedChallenge != nil, privacy: .public)")
             return ReadingCompletionResult(
                 upload: upload,
                 dailyLog: completedLog,
@@ -144,6 +149,7 @@ final class ReadingEngine {
                 advancedChallenge: advancedChallenge
             )
         } catch {
+            RNFLogger.sync.error("operation=complete_reading result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }

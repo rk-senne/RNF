@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
+- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
 Depends on:
-- P14-OBS-01
+- P14-MIG-03
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -864,7 +864,7 @@ Depends on:
 Depends on:
 - P14-SVC-01
 
-- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
+- [x] P14-OBS-02 Add user-safe logging to critical service and engine flows
 Depends on:
 - P14-OBS-01
 

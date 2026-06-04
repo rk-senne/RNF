@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Supabase
 import PostgREST
 
@@ -73,12 +74,15 @@ final class DailyLogService {
                 .execute()
                 .value
 
+            RNFLogger.dailyLog.info("operation=create_daily_log result=success")
             return createdLog
         } catch {
             if let existingLog = try await fetchTodayLog(userId: userId, date: normalizedDate) {
+                RNFLogger.dailyLog.info("operation=create_daily_log result=duplicate_existing")
                 return existingLog
             }
 
+            RNFLogger.dailyLog.error("operation=create_daily_log result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             throw error
         }
     }
@@ -116,6 +120,7 @@ final class DailyLogService {
     func recordHabitCompletion(_ completion: HabitCompletion) async throws -> HabitCompletion? {
 
         guard let userId = completion.user_id else {
+            RNFLogger.habitCompletion.error("operation=record_habit_completion result=failure error_category=missing_user")
             return nil
         }
 
@@ -126,6 +131,7 @@ final class DailyLogService {
             habitId: completion.habit_id,
             date: normalizedDate
         ) {
+            RNFLogger.habitCompletion.info("operation=record_habit_completion result=duplicate_existing")
             return existingCompletion
         }
 
@@ -155,12 +161,15 @@ final class DailyLogService {
                 habitId: completion.habit_id,
                 date: normalizedDate
             ) {
+                RNFLogger.habitCompletion.info("operation=record_habit_completion result=duplicate_after_insert")
                 return existingCompletion
             }
 
+            RNFLogger.habitCompletion.error("operation=record_habit_completion result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             throw error
         }
 
+        RNFLogger.habitCompletion.info("operation=record_habit_completion result=success")
         return createdCompletion
     }
 
@@ -226,6 +235,7 @@ final class DailyLogService {
     func updateStatus(userId: UUID, date: Date) async throws -> DailyLog? {
 
         guard let dailyLog = try await fetchTodayLog(userId: userId, date: date) else {
+            RNFLogger.dailyLog.info("operation=update_daily_log_status result=not_found")
             return nil
         }
 
@@ -244,6 +254,7 @@ final class DailyLogService {
             .execute()
             .value
 
+        RNFLogger.dailyLog.info("operation=update_daily_log_status result=success status=\(updatedStatus.rawValue, privacy: .public)")
         return updatedLog
     }
 
@@ -255,6 +266,7 @@ final class DailyLogService {
     func saveDailyLog(_ dailyLog: DailyLog) async -> RNFServiceWriteResult<DailyLog> {
 
         guard dailyLog.user_id != nil else {
+            RNFLogger.dailyLog.error("operation=save_daily_log result=local_only error_category=unauthenticated")
             return .savedLocallyOnly(dailyLog, error: .unauthenticated)
         }
 
@@ -278,8 +290,10 @@ final class DailyLogService {
                 .upsert(normalizedDailyLog)
                 .execute()
 
+            RNFLogger.dailyLog.info("operation=save_daily_log result=success")
             return .savedRemotely(normalizedDailyLog)
         } catch {
+            RNFLogger.dailyLog.error("operation=save_daily_log result=local_only error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return .savedLocallyOnly(normalizedDailyLog, error: .from(error))
         }
 

@@ -11,4 +11,12 @@ enum RNFLogger {
     static let challenge = Logger(subsystem: subsystem, category: "Challenge")
     static let sync = Logger(subsystem: subsystem, category: "Sync")
 
+    static func errorCategory(_ error: Error) -> String {
+        if let serviceError = error as? RNFServiceError {
+            return String(describing: serviceError)
+        }
+
+        return String(describing: type(of: error))
+    }
+
 }
