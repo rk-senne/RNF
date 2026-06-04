@@ -26,9 +26,9 @@ Status legend:
 
  NEXT TASK TO IMPLEMENT
 
-- [ ] P15-CHORE-01 Remove tracked Xcode user data and confirm ignore coverage
+- [ ] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
 Depends on:
-- P15-DOC-02
+- P15-CHORE-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -934,7 +934,7 @@ Depends on:
 Depends on:
 - P15-TIME-01
 
-- [ ] P15-CHORE-01 Remove tracked Xcode user data and confirm ignore coverage
+- [x] P15-CHORE-01 Remove tracked Xcode user data and confirm ignore coverage
 Depends on:
 - P15-DOC-02
 
