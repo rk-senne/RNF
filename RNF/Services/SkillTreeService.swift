@@ -5,9 +5,14 @@ import PostgREST
 final class SkillTreeService {
 
     private let supabase: SupabaseService
+    private let authProvider: AuthProviding
 
-    init(supabase: SupabaseService = .shared) {
+    init(
+        supabase: SupabaseService = .shared,
+        authProvider: AuthProviding? = nil
+    ) {
         self.supabase = supabase
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
     func fetchSkillNodes() async throws -> [SkillTreeNode] {
@@ -27,6 +32,11 @@ final class SkillTreeService {
             .eq("user_id", value: userId.uuidString)
             .execute()
             .value
+    }
+
+    func fetchUserUnlocks() async throws -> [UserSkillUnlock] {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await fetchUserUnlocks(userId: userId)
     }
 
     func unlockNode(
@@ -51,6 +61,18 @@ final class SkillTreeService {
             .value
     }
 
+    func unlockNode(
+        nodeId: UUID,
+        unlockedAt: Date = Date()
+    ) async throws -> UserSkillUnlock {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await unlockNode(
+            userId: userId,
+            nodeId: nodeId,
+            unlockedAt: unlockedAt
+        )
+    }
+
     func unlockState(for profile: Profile) async throws -> SkillTreeUnlockState {
 
         guard !profile.isPlaceholder else {
@@ -68,6 +90,19 @@ final class SkillTreeService {
         )
     }
 
+    func authenticatedUnlockState(for profile: Profile) async throws -> SkillTreeUnlockState {
+
+        guard !profile.isPlaceholder else {
+            return SkillTreeSystem.unlockState(
+                profile: profile,
+                unlockedSkills: []
+            )
+        }
+
+        _ = try await authProvider.requireCurrentUserID(matching: profile.id)
+        return try await unlockState(for: profile)
+    }
+
     func activePerks(for profile: Profile) async throws -> ActivePerkSummary {
 
         guard !profile.isPlaceholder else {
@@ -81,6 +116,16 @@ final class SkillTreeService {
             skillNodes: skillNodes,
             unlockedSkills: unlockedSkills
         )
+    }
+
+    func authenticatedActivePerks(for profile: Profile) async throws -> ActivePerkSummary {
+
+        guard !profile.isPlaceholder else {
+            return .empty
+        }
+
+        _ = try await authProvider.requireCurrentUserID(matching: profile.id)
+        return try await activePerks(for: profile)
     }
 
 }

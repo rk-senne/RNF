@@ -111,4 +111,19 @@ final class UserService {
 
     }
 
+    func saveAuthenticatedProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
+
+        guard !profile.isPlaceholder else {
+            return .savedLocallyOnly(profile, error: .unauthenticated)
+        }
+
+        do {
+            _ = try await authProvider.requireCurrentUserID(matching: profile.id)
+            return await saveProfile(profile)
+        } catch {
+            return .notSaved(.from(error))
+        }
+
+    }
+
 }

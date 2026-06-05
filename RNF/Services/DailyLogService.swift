@@ -302,8 +302,29 @@ final class DailyLogService {
 
     }
 
+    func saveAuthenticatedDailyLog(_ dailyLog: DailyLog) async -> RNFServiceWriteResult<DailyLog> {
+
+        guard let userId = dailyLog.user_id else {
+            RNFLogger.dailyLog.error("operation=save_daily_log result=not_saved error_category=unauthenticated")
+            return .notSaved(.unauthenticated)
+        }
+
+        do {
+            _ = try await authProvider.requireCurrentUserID(matching: userId)
+            return await saveDailyLog(dailyLog)
+        } catch {
+            RNFLogger.dailyLog.error("operation=save_daily_log result=not_saved error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return .notSaved(.from(error))
+        }
+
+    }
+
     func saveProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
         await userService.saveProfile(profile)
+    }
+
+    func saveAuthenticatedProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
+        await userService.saveAuthenticatedProfile(profile)
     }
 
 }

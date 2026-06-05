@@ -968,7 +968,7 @@ Depends on:
 Depends on:
 - P16-TST-01
 
-- [ ] P16-AUTH-02 Add authenticated methods or user-id validation for production service paths that still need owner-scoped access
+- [x] P16-AUTH-02 Add authenticated methods or user-id validation for production service paths that still need owner-scoped access
 Depends on:
 - P16-AUTH-01
 
