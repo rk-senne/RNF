@@ -954,11 +954,11 @@ Depends on:
 Depends on:
 - P16-ENG-01
 
-- [ ] P16-VM-01 Update `HabitsViewModel` to build `ProgressionInput`, apply `ProgressionResult`, and remove `ProgressionEngine.configure(gameState:)`
+- [x] P16-VM-01 Update `HabitsViewModel` to build `ProgressionInput`, apply `ProgressionResult`, and remove `ProgressionEngine.configure(gameState:)`
 Depends on:
 - P16-ENG-02
 
-- [ ] P16-TST-01 Remove remaining `ProgressionEngine.configure(gameState:)` usage from production and test paths
+- [x] P16-TST-01 Remove remaining `ProgressionEngine.configure(gameState:)` usage from production and test paths
 Depends on:
 - P16-VM-01
 

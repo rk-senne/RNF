@@ -39,7 +39,6 @@ final class HabitsViewModel: ObservableObject {
     func load(gameState: GameState) async {
 
         self.gameState = gameState
-        progressionEngine.configure(gameState: gameState)
 
         guard !isLoaded else {
             resetDailyStateIfNeeded()
@@ -90,12 +89,16 @@ final class HabitsViewModel: ObservableObject {
 
         animatedHabit = habit.id
         completionErrorMessage = nil
+        let input = ProgressionInput(gameState: gameState)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.animatedHabit = nil
         }
 
-        guard let result = await progressionEngine.processHabitCompletion(habitId: habit.id) else {
+        guard let result = await progressionEngine.processHabitCompletion(
+            habitId: habit.id,
+            input: input
+        ) else {
             completionErrorMessage = "We couldn't save that completion. Please try again."
             return
         }
@@ -190,7 +193,6 @@ final class HabitsViewModel: ObservableObject {
 #if DEBUG
     func loadForTesting(gameState: GameState) async {
         self.gameState = gameState
-        progressionEngine.configure(gameState: gameState)
     }
 #endif
 

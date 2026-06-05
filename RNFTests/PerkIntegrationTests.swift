@@ -112,9 +112,10 @@ final class PerkIntegrationTests: XCTestCase {
             completedHabitIDs: [],
             dailyLog: .today(goal: 1)
         )
-        engine.configure(gameState: gameState)
-
-        let progressionResult = await engine.processHabitCompletion(habitId: habitId)
+        let progressionResult = await engine.processHabitCompletion(
+            habitId: habitId,
+            input: ProgressionInput(gameState: gameState)
+        )
         let result = try XCTUnwrap(progressionResult)
 
         XCTAssertEqual(result.xpGained, 15)

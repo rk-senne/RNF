@@ -24,9 +24,10 @@ final class ProgressionEngineTests: XCTestCase {
             completedHabitIDs: [],
             dailyLog: .today(goal: 2)
         )
-        engine.configure(gameState: gameState)
-
-        let result = await engine.processHabitCompletion(habitId: initialHabit.id)
+        let result = await engine.processHabitCompletion(
+            habitId: initialHabit.id,
+            input: ProgressionInput(gameState: gameState)
+        )
 
         let progressionResult = try XCTUnwrap(result)
         XCTAssertFalse(progressionResult.questPlan.habits.isEmpty)
@@ -62,9 +63,10 @@ final class ProgressionEngineTests: XCTestCase {
             completedHabitIDs: [],
             dailyLog: .today(goal: 1)
         )
-        engine.configure(gameState: gameState)
-
-        let completionResult = await engine.processHabitCompletion(habitId: habit.id)
+        let completionResult = await engine.processHabitCompletion(
+            habitId: habit.id,
+            input: ProgressionInput(gameState: gameState)
+        )
         let result = try XCTUnwrap(completionResult)
 
         XCTAssertEqual(result.habit.id, habit.id)

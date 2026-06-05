@@ -25,7 +25,6 @@ final class ProgressionEngine {
     private let skillTreeService: SkillTreeService
     private let analyticsService: AnalyticsService
     private let calendar: Calendar
-    private weak var gameState: GameState?
 
     init(
         dailyLogService: DailyLogService = DailyLogService(),
@@ -41,24 +40,6 @@ final class ProgressionEngine {
         self.skillTreeService = skillTreeService
         self.analyticsService = analyticsService
         self.calendar = calendar
-    }
-
-    func configure(gameState: GameState) {
-        self.gameState = gameState
-    }
-
-    func processHabitCompletion(habitId: UUID) async -> ProgressionResult? {
-
-        guard let gameState else {
-            RNFLogger.habitCompletion.info("operation=process_habit_completion result=skipped reason=unavailable_or_duplicate")
-            return nil
-        }
-
-        return await processHabitCompletion(
-            habitId: habitId,
-            input: ProgressionInput(gameState: gameState)
-        )
-
     }
 
     func processHabitCompletion(
