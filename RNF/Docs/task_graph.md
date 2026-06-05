@@ -950,7 +950,7 @@ Depends on:
 Depends on:
 - P15-CONFIG-01
 
-- [ ] P16-ENG-02 Refactor `ProgressionEngine.processHabitCompletion(...)` to consume `ProgressionInput` instead of reading `GameState`
+- [x] P16-ENG-02 Refactor `ProgressionEngine.processHabitCompletion(...)` to consume `ProgressionInput` instead of reading `GameState`
 Depends on:
 - P16-ENG-01
 

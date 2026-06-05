@@ -49,32 +49,52 @@ final class ProgressionEngine {
 
     func processHabitCompletion(habitId: UUID) async -> ProgressionResult? {
 
+        guard let gameState else {
+            RNFLogger.habitCompletion.info("operation=process_habit_completion result=skipped reason=unavailable_or_duplicate")
+            return nil
+        }
+
+        return await processHabitCompletion(
+            habitId: habitId,
+            input: ProgressionInput(gameState: gameState)
+        )
+
+    }
+
+    func processHabitCompletion(
+        habitId: UUID,
+        input: ProgressionInput
+    ) async -> ProgressionResult? {
+
         guard
-            let gameState,
-            let habit = gameState.quests.first(where: { $0.id == habitId }),
-            !gameState.completedHabitIDs.contains(habitId)
+            let habit = input.quests.first(where: { $0.id == habitId }),
+            !input.completedHabitIDs.contains(habitId)
         else {
             RNFLogger.habitCompletion.info("operation=process_habit_completion result=skipped reason=unavailable_or_duplicate")
             return nil
         }
 
         let completionDate = Date()
-        let dailyGoal = gameState.dailyGoal
-        var updatedCompletedHabitIDs = gameState.completedHabitIDs
+        let dailyGoal = input.dailyGoal
+        var updatedCompletedHabitIDs = input.completedHabitIDs
         updatedCompletedHabitIDs.insert(habit.id)
 
-        var updatedProfile = gameState.profile
+        var updatedProfile = input.profile
         let previousStreak = updatedProfile.streak
 
         let todayLog: DailyLog
-        do {
-            todayLog = try await dailyLogService.getTodayLog(
-                for: updatedProfile,
-                dailyGoal: dailyGoal
-            )
-        } catch {
-            RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=get_today_log error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
-            return nil
+        if updatedProfile.isPlaceholder {
+            todayLog = input.dailyLog
+        } else {
+            do {
+                todayLog = try await dailyLogService.getTodayLog(
+                    for: updatedProfile,
+                    dailyGoal: dailyGoal
+                )
+            } catch {
+                RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=get_today_log error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+                return nil
+            }
         }
 
         let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
@@ -100,9 +120,9 @@ final class ProgressionEngine {
         updatedProfile.xp_total = xpState.totalXP
         updatedProfile.level = xpState.level
 
-        let updatedDailyCompleted = gameState.dailyCompleted + 1
+        let updatedDailyCompleted = input.dailyCompleted + 1
         let missionCompleted =
-            gameState.dailyCompleted < dailyGoal &&
+            input.dailyCompleted < dailyGoal &&
             updatedDailyCompleted >= dailyGoal
 
         if missionCompleted {
