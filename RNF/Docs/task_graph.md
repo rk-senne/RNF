@@ -946,7 +946,7 @@ Depends on:
 
 ### Progression Input Boundary
 
-- [ ] P16-ENG-01 Add a `ProgressionInput` snapshot contract and focused progression-input coverage
+- [x] P16-ENG-01 Add a `ProgressionInput` snapshot contract and focused progression-input coverage
 Depends on:
 - P15-CONFIG-01
 
