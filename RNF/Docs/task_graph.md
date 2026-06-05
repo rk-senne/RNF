@@ -964,7 +964,7 @@ Depends on:
 
 ### Authenticated Service Boundaries
 
-- [ ] P16-AUTH-01 Inventory production call sites that pass caller-supplied `userId` to authenticated services and document allowed exceptions
+- [x] P16-AUTH-01 Inventory production call sites that pass caller-supplied `userId` to authenticated services and document allowed exceptions
 Depends on:
 - P16-TST-01
 
