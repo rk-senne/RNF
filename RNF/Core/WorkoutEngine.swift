@@ -18,6 +18,7 @@ final class WorkoutEngine {
 
     private let workoutService: WorkoutService
     private let dailyLogService: DailyLogService
+    private let userService: UserService
     private let xpService: XPService
     private let challengeEngine: ChallengeEngine
     private let skillTreeService: SkillTreeService
@@ -27,6 +28,7 @@ final class WorkoutEngine {
     init(
         workoutService: WorkoutService = WorkoutService(),
         dailyLogService: DailyLogService = DailyLogService(),
+        userService: UserService = UserService(),
         xpService: XPService = XPService(),
         challengeEngine: ChallengeEngine? = nil,
         skillTreeService: SkillTreeService = SkillTreeService(),
@@ -34,6 +36,7 @@ final class WorkoutEngine {
     ) {
         self.workoutService = workoutService
         self.dailyLogService = dailyLogService
+        self.userService = userService
         self.xpService = xpService
         self.challengeEngine = challengeEngine ?? ChallengeEngine()
         self.skillTreeService = skillTreeService
@@ -89,7 +92,7 @@ final class WorkoutEngine {
             completedLog.xp_earned += awardedXP
 
             let dailyLogSaveResult = await dailyLogService.saveAuthenticatedDailyLog(completedLog)
-            let profileSaveResult = await dailyLogService.saveAuthenticatedProfile(updatedProfile)
+            let profileSaveResult = await userService.saveAuthenticatedProfile(updatedProfile)
 
             guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
                 RNFLogger.sync.error("operation=complete_workout result=failure step=save_state daily_log_state=\(String(describing: dailyLogSaveResult.saveState), privacy: .public) profile_state=\(String(describing: profileSaveResult.saveState), privacy: .public)")

@@ -20,6 +20,7 @@ struct ProgressionResult {
 final class ProgressionEngine {
 
     private let dailyLogService: DailyLogService
+    private let userService: UserService
     private let xpService: XPService
     private let questService: QuestService
     private let skillTreeService: SkillTreeService
@@ -28,6 +29,7 @@ final class ProgressionEngine {
 
     init(
         dailyLogService: DailyLogService = DailyLogService(),
+        userService: UserService = UserService(),
         xpService: XPService = XPService(),
         questService: QuestService = QuestService(),
         skillTreeService: SkillTreeService = SkillTreeService(),
@@ -35,6 +37,7 @@ final class ProgressionEngine {
         calendar: Calendar = .current
     ) {
         self.dailyLogService = dailyLogService
+        self.userService = userService
         self.xpService = xpService
         self.questService = questService
         self.skillTreeService = skillTreeService
@@ -176,7 +179,7 @@ final class ProgressionEngine {
             }
         }
 
-        let profileSaveResult = await dailyLogService.saveAuthenticatedProfile(updatedProfile)
+        let profileSaveResult = await userService.saveAuthenticatedProfile(updatedProfile)
         if !updatedProfile.isPlaceholder, !profileSaveResult.savedRemotely {
             RNFLogger.sync.error("operation=process_habit_completion result=failure step=save_profile error_category=\(String(describing: profileSaveResult.error), privacy: .public)")
             return nil

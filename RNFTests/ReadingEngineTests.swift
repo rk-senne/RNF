@@ -109,7 +109,6 @@ final class ReadingEngineTests: XCTestCase {
         let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase, authProvider: authProvider),
             authProvider: authProvider
         )
         let engine = ReadingEngine(
@@ -119,6 +118,7 @@ final class ReadingEngineTests: XCTestCase {
                 authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             xpService: XPService(),
             challengeEngine: ChallengeEngine(
                 challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
@@ -366,7 +366,6 @@ final class ReadingEngineTests: XCTestCase {
         let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase, authProvider: authProvider),
             authProvider: authProvider
         )
         let engine = ReadingEngine(
@@ -376,6 +375,7 @@ final class ReadingEngineTests: XCTestCase {
                 authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             xpService: XPService(),
             challengeEngine: ChallengeEngine(
                 challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),

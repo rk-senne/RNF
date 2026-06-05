@@ -7,20 +7,17 @@ final class DailyLogService {
 
     private let supabase: SupabaseService
     private let habitService: HabitService
-    private let userService: UserService
     private let authProvider: AuthProviding
     private let calendar: Calendar
 
     init(
         supabase: SupabaseService = .shared,
         habitService: HabitService = HabitService(),
-        userService: UserService? = nil,
         authProvider: AuthProviding? = nil,
         calendar: Calendar = .current
     ) {
         self.supabase = supabase
         self.habitService = habitService
-        self.userService = userService ?? UserService(supabase: supabase)
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
         self.calendar = calendar
     }
@@ -326,14 +323,6 @@ final class DailyLogService {
             return .notSaved(.from(error))
         }
 
-    }
-
-    func saveProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
-        await userService.saveProfile(profile)
-    }
-
-    func saveAuthenticatedProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
-        await userService.saveAuthenticatedProfile(profile)
     }
 
 }

@@ -982,7 +982,7 @@ Depends on:
 
 ### Daily Log Boundary
 
-- [ ] P16-SVC-01 Replace `DailyLogService.saveProfile(_:)` passthrough usage with explicit `UserService` workflow dependencies
+- [x] P16-SVC-01 Replace `DailyLogService.saveProfile(_:)` passthrough usage with explicit `UserService` workflow dependencies
 Depends on:
 - P16-TST-02
 

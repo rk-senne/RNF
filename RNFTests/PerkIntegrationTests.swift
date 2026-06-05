@@ -89,11 +89,11 @@ final class PerkIntegrationTests: XCTestCase {
         let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase, authProvider: authProvider),
             authProvider: authProvider
         )
         let engine = ProgressionEngine(
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             xpService: XPService(),
             questService: QuestService(supabase: supabase),
             skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
@@ -244,7 +244,6 @@ final class PerkIntegrationTests: XCTestCase {
         let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase, authProvider: authProvider),
             authProvider: authProvider
         )
         let challengeEngine = ChallengeEngine(
@@ -260,6 +259,7 @@ final class PerkIntegrationTests: XCTestCase {
                 authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             challengeEngine: challengeEngine,
             skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
@@ -270,6 +270,7 @@ final class PerkIntegrationTests: XCTestCase {
                 authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             challengeEngine: challengeEngine,
             skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
