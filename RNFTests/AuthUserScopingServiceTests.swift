@@ -138,6 +138,105 @@ final class AuthUserScopingServiceTests: XCTestCase {
         XCTAssertTrue(request.url?.absoluteString.contains("id=eq.\(userId.uuidString)") ?? false)
     }
 
+    func testCalendarMonthLogsUsesAuthenticatedUserScope() async throws {
+        let userId = UUID()
+        var requests: [URLRequest] = []
+
+        AuthScopingMockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            return Self.jsonResponse(for: request, body: "[]")
+        }
+
+        let service = CalendarService(
+            supabase: makeSupabaseService(),
+            authProvider: StaticAuthProvider(userId: userId)
+        )
+
+        _ = try await service.getMonthLogs(month: Date())
+
+        let request = try XCTUnwrap(requests.first)
+        XCTAssertTrue(request.url?.absoluteString.contains("daily_logs") ?? false)
+        XCTAssertTrue(request.url?.absoluteString.contains("user_id=eq.\(userId.uuidString)") ?? false)
+    }
+
+    func testRecordAuthenticatedHabitCompletionRejectsMismatchedUserBeforeBackendRequest() async throws {
+        let authenticatedUserId = UUID()
+        let completion = HabitCompletion(
+            id: UUID(),
+            user_id: UUID(),
+            habit_id: UUID(),
+            completed_at: Date(),
+            date: Date(),
+            xp_awarded: 10,
+            created_at: nil
+        )
+        var requests: [URLRequest] = []
+
+        AuthScopingMockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            return Self.jsonResponse(for: request, body: "[]")
+        }
+
+        let service = DailyLogService(
+            supabase: makeSupabaseService(),
+            authProvider: StaticAuthProvider(userId: authenticatedUserId)
+        )
+
+        do {
+            _ = try await service.recordAuthenticatedHabitCompletion(completion)
+            XCTFail("Expected mismatched habit completion user to be rejected")
+        } catch AuthProvidingError.userIdMismatch {
+        } catch {
+            XCTFail("Expected AuthProvidingError.userIdMismatch, got \(error)")
+        }
+
+        XCTAssertTrue(requests.isEmpty)
+    }
+
+    func testSaveAuthenticatedDailyLogRejectsMismatchedUserBeforeBackendRequest() async throws {
+        let authenticatedUserId = UUID()
+        let dailyLog = DailyLog.today(userID: UUID(), goal: 2)
+        var requests: [URLRequest] = []
+
+        AuthScopingMockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            return Self.jsonResponse(for: request, body: "[]")
+        }
+
+        let service = DailyLogService(
+            supabase: makeSupabaseService(),
+            authProvider: StaticAuthProvider(userId: authenticatedUserId)
+        )
+
+        let result = await service.saveAuthenticatedDailyLog(dailyLog)
+
+        XCTAssertEqual(result.saveState, .notSaved)
+        XCTAssertEqual(result.error, .unauthenticated)
+        XCTAssertTrue(requests.isEmpty)
+    }
+
+    func testSaveAuthenticatedProfileRejectsMismatchedUserBeforeBackendRequest() async throws {
+        let authenticatedUserId = UUID()
+        let profile = Self.profile(id: UUID())
+        var requests: [URLRequest] = []
+
+        AuthScopingMockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            return Self.jsonResponse(for: request, body: "[]")
+        }
+
+        let service = UserService(
+            supabase: makeSupabaseService(),
+            authProvider: StaticAuthProvider(userId: authenticatedUserId)
+        )
+
+        let result = await service.saveAuthenticatedProfile(profile)
+
+        XCTAssertEqual(result.saveState, .notSaved)
+        XCTAssertEqual(result.error, .unauthenticated)
+        XCTAssertTrue(requests.isEmpty)
+    }
+
     private func makeSupabaseService() -> SupabaseService {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [AuthScopingMockURLProtocol.self]
@@ -187,6 +286,27 @@ final class AuthUserScopingServiceTests: XCTestCase {
           }
         ]
         """
+    }
+
+    private static func profile(id: UUID) -> Profile {
+        Profile(
+            id: id,
+            email: "forge@example.com",
+            xp_total: 120,
+            level: 2,
+            streak: 4,
+            forgiveness_tokens: 1,
+            morning_notification_time: nil,
+            evening_notification_time: nil,
+            strength: 10,
+            discipline: 10,
+            focus: 10,
+            energy: 10,
+            wisdom: 10,
+            mind: 10,
+            spirit: 10,
+            created_at: nil
+        )
     }
 
 }

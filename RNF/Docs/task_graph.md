@@ -976,7 +976,7 @@ Depends on:
 Depends on:
 - P16-AUTH-02
 
-- [ ] P16-TST-02 Add regression tests for authenticated service owner scoping and user-id mismatch behavior
+- [x] P16-TST-02 Add regression tests for authenticated service owner scoping and user-id mismatch behavior
 Depends on:
 - P16-AUTH-03
 
