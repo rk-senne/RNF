@@ -972,7 +972,7 @@ Depends on:
 Depends on:
 - P16-AUTH-01
 
-- [ ] P16-AUTH-03 Update production ViewModel, engine, and service call sites to prefer authenticated methods over broad `userId` overloads
+- [x] P16-AUTH-03 Update production ViewModel, engine, and service call sites to prefer authenticated methods over broad `userId` overloads
 Depends on:
 - P16-AUTH-02
 

@@ -176,6 +176,15 @@ final class DailyLogService {
         return createdCompletion
     }
 
+    func recordAuthenticatedHabitCompletion(_ completion: HabitCompletion) async throws -> HabitCompletion? {
+        guard let userId = completion.user_id else {
+            throw AuthProvidingError.missingCurrentUser
+        }
+
+        _ = try await authProvider.requireCurrentUserID(matching: userId)
+        return try await recordHabitCompletion(completion)
+    }
+
     private func fetchHabitCompletion(
         userId: UUID,
         habitId: UUID,

@@ -63,23 +63,17 @@ final class WorkoutEngine {
         }
 
         do {
-            let existingLog = try await workoutService.dailyLogForWorkout(
-                userId: gameState.profile.id,
-                date: date
-            )
+            let existingLog = try await workoutService.dailyLogForWorkout(date: date)
 
             guard !existingLog.workout_completed else {
                 RNFLogger.sync.info("operation=complete_workout result=skipped reason=duplicate")
                 return nil
             }
 
-            var completedLog = try await workoutService.completeWorkout(
-                userId: gameState.profile.id,
-                date: date
-            )
+            var completedLog = try await workoutService.completeWorkout(date: date)
 
             var updatedProfile = gameState.profile
-            let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+            let activePerks = (try? await skillTreeService.authenticatedActivePerks(for: updatedProfile)) ?? .empty
             let awardedXP = PerkSystem.modifiedXPReward(
                 baseXP: Self.workoutXP,
                 activePerks: activePerks,
@@ -94,18 +88,15 @@ final class WorkoutEngine {
             updatedProfile.level = levelState.level
             completedLog.xp_earned += awardedXP
 
-            let dailyLogSaveResult = await dailyLogService.saveDailyLog(completedLog)
-            let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
+            let dailyLogSaveResult = await dailyLogService.saveAuthenticatedDailyLog(completedLog)
+            let profileSaveResult = await dailyLogService.saveAuthenticatedProfile(updatedProfile)
 
             guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
                 RNFLogger.sync.error("operation=complete_workout result=failure step=save_state daily_log_state=\(String(describing: dailyLogSaveResult.saveState), privacy: .public) profile_state=\(String(describing: profileSaveResult.saveState), privacy: .public)")
                 return nil
             }
 
-            let advancedChallenge = await challengeEngine.advanceIfDayComplete(
-                userId: updatedProfile.id,
-                date: date
-            )
+            let advancedChallenge = await challengeEngine.advanceIfDayComplete(date: date)
 
             await analyticsService.trackEvent(
                 .workoutCompleted,

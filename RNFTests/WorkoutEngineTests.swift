@@ -85,19 +85,26 @@ final class WorkoutEngineTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
-        let dailyLogService = DailyLogService(supabase: supabase)
+        let authProvider = StaticTestAuthProvider(userId: userId)
+        let dailyLogService = DailyLogService(
+            supabase: supabase,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
+            authProvider: authProvider
+        )
         let engine = WorkoutEngine(
             workoutService: WorkoutService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
             xpService: XPService(),
             challengeEngine: ChallengeEngine(
-                challengeService: ChallengeService(supabase: supabase),
-                dailyLogService: dailyLogService
+                challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         gameState.profile = Profile(
@@ -242,19 +249,26 @@ final class WorkoutEngineTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
-        let dailyLogService = DailyLogService(supabase: supabase)
+        let authProvider = StaticTestAuthProvider(userId: userId)
+        let dailyLogService = DailyLogService(
+            supabase: supabase,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
+            authProvider: authProvider
+        )
         let engine = WorkoutEngine(
             workoutService: WorkoutService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
             xpService: XPService(),
             challengeEngine: ChallengeEngine(
-                challengeService: ChallengeService(supabase: supabase),
-                dailyLogService: dailyLogService
+                challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         gameState.profile = Profile(

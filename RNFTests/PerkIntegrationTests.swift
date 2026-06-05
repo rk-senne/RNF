@@ -86,15 +86,17 @@ final class PerkIntegrationTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase)
+            userService: UserService(supabase: supabase, authProvider: authProvider),
+            authProvider: authProvider
         )
         let engine = ProgressionEngine(
             dailyLogService: dailyLogService,
             xpService: XPService(),
             questService: QuestService(supabase: supabase),
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         var profile = Self.makeProfile(id: userId)
@@ -239,32 +241,37 @@ final class PerkIntegrationTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase)
+            userService: UserService(supabase: supabase, authProvider: authProvider),
+            authProvider: authProvider
         )
         let challengeEngine = ChallengeEngine(
-            challengeService: ChallengeService(supabase: supabase),
+            challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
             dailyLogService: dailyLogService,
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider),
+            authProvider: authProvider
         )
         let workoutEngine = WorkoutEngine(
             workoutService: WorkoutService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
             challengeEngine: challengeEngine,
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let readingEngine = ReadingEngine(
             readingService: ReadingService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
             challengeEngine: challengeEngine,
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         gameState.profile = Self.makeProfile(id: userId)

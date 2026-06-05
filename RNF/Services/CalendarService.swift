@@ -5,13 +5,16 @@ import PostgREST
 final class CalendarService {
 
     private let supabase: SupabaseService
+    private let authProvider: AuthProviding
     private let calendar: Calendar
 
     init(
         supabase: SupabaseService = .shared,
+        authProvider: AuthProviding? = nil,
         calendar: Calendar = .current
     ) {
         self.supabase = supabase
+        self.authProvider = authProvider ?? AuthService(supabase: supabase)
         self.calendar = calendar
     }
 
@@ -41,6 +44,11 @@ final class CalendarService {
             .value
 
         return logs
+    }
+
+    func getMonthLogs(month: Date) async throws -> [DailyLog] {
+        let userId = try await authProvider.requireCurrentUserID()
+        return try await getMonthLogs(userId: userId, month: month)
     }
 
     func groupMonthLogsByDay(_ logs: [DailyLog]) -> [Date: DailyLog] {

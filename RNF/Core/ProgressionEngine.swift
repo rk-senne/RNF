@@ -68,17 +68,18 @@ final class ProgressionEngine {
             todayLog = input.dailyLog
         } else {
             do {
-                todayLog = try await dailyLogService.getTodayLog(
-                    for: updatedProfile,
-                    dailyGoal: dailyGoal
-                )
+                if let fetchedLog = try await dailyLogService.fetchTodayLog(date: completionDate) {
+                    todayLog = fetchedLog
+                } else {
+                    todayLog = try await dailyLogService.createDailyLog(date: completionDate)
+                }
             } catch {
                 RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=get_today_log error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
                 return nil
             }
         }
 
-        let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+        let activePerks = (try? await skillTreeService.authenticatedActivePerks(for: updatedProfile)) ?? .empty
         var updatedStats = updatedProfile.stats
         StatSystem.applyReward(
             stats: &updatedStats,
@@ -132,7 +133,7 @@ final class ProgressionEngine {
 
         if !updatedProfile.isPlaceholder {
             do {
-                guard let recordedCompletion = try await dailyLogService.recordHabitCompletion(completion) else {
+                guard let recordedCompletion = try await dailyLogService.recordAuthenticatedHabitCompletion(completion) else {
                     RNFLogger.habitCompletion.error("operation=process_habit_completion result=failure step=record_completion error_category=not_recorded")
                     return nil
                 }
@@ -158,7 +159,7 @@ final class ProgressionEngine {
         updatedDailyLog.xp_earned += awardedXP
         updatedDailyLog.status = missionCompleted ? .complete : .partial
 
-        let dailyLogSaveResult = await dailyLogService.saveDailyLog(updatedDailyLog)
+        let dailyLogSaveResult = await dailyLogService.saveAuthenticatedDailyLog(updatedDailyLog)
         if !updatedProfile.isPlaceholder, !dailyLogSaveResult.savedRemotely {
             RNFLogger.dailyLog.error("operation=process_habit_completion result=failure step=save_daily_log error_category=\(String(describing: dailyLogSaveResult.error), privacy: .public)")
             return nil
@@ -166,10 +167,7 @@ final class ProgressionEngine {
 
         if !updatedProfile.isPlaceholder {
             do {
-                if let persistedDailyLog = try await dailyLogService.updateStatus(
-                    userId: updatedProfile.id,
-                    date: completionDate
-                ) {
+                if let persistedDailyLog = try await dailyLogService.updateStatus(date: completionDate) {
                     updatedDailyLog = persistedDailyLog
                 }
             } catch {
@@ -178,7 +176,7 @@ final class ProgressionEngine {
             }
         }
 
-        let profileSaveResult = await dailyLogService.saveProfile(updatedProfile)
+        let profileSaveResult = await dailyLogService.saveAuthenticatedProfile(updatedProfile)
         if !updatedProfile.isPlaceholder, !profileSaveResult.savedRemotely {
             RNFLogger.sync.error("operation=process_habit_completion result=failure step=save_profile error_category=\(String(describing: profileSaveResult.error), privacy: .public)")
             return nil

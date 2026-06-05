@@ -503,7 +503,7 @@ struct AscensionView: View {
             return
         }
 
-        activeChallenge = await challengeEngine.loadActiveChallenge(userId: game.profile.id)
+        activeChallenge = await challengeEngine.loadActiveChallenge()
     }
 
     private func loadActivePerkSummary() async {
@@ -511,7 +511,7 @@ struct AscensionView: View {
         activePerksLoadFailed = false
 
         do {
-            activePerks = try await skillTreeService.activePerks(for: game.profile)
+            activePerks = try await skillTreeService.authenticatedActivePerks(for: game.profile)
         } catch {
             activePerks = .empty
             activePerksLoadFailed = true
@@ -532,10 +532,7 @@ struct AscensionView: View {
         }
 
         do {
-            let logs = try await calendarService.getMonthLogs(
-                userId: game.profile.id,
-                month: calendarMonth
-            )
+            let logs = try await calendarService.getMonthLogs(month: calendarMonth)
             let logsByDay = calendarService.groupMonthLogsByDay(logs)
 
             calendarStatuses = logsByDay.reduce(into: [:]) { statuses, item in
@@ -558,10 +555,7 @@ struct AscensionView: View {
         isUsingForgiveness = true
         defer { isUsingForgiveness = false }
 
-        guard let result = await challengeEngine.useForgiveness(
-            userId: game.profile.id,
-            currentStreak: game.streak
-        ) else {
+        guard let result = await challengeEngine.useForgiveness(currentStreak: game.streak) else {
             forgivenessMessage = "Recovery failed"
             return
         }

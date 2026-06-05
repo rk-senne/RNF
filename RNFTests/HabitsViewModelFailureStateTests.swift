@@ -70,10 +70,14 @@ final class HabitsViewModelFailureStateTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
         let viewModel = HabitsViewModel(
             progressionEngine: ProgressionEngine(
-                dailyLogService: DailyLogService(supabase: supabase),
-                skillTreeService: SkillTreeService(supabase: supabase)
+                dailyLogService: DailyLogService(
+                    supabase: supabase,
+                    authProvider: authProvider
+                ),
+                skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
             )
         )
         let gameState = GameState()
