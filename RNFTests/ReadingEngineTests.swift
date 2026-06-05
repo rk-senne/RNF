@@ -11,7 +11,7 @@ final class ReadingEngineTests: XCTestCase {
         super.tearDown()
     }
 
-    func testCompleteReadingUploadsProofAndUpdatesDailyLog() async throws {
+    func testCompleteReadingUploadsProofAndReturnsResultWithoutMutatingGameState() async throws {
         let userId = UUID()
         let dailyLogId = UUID()
         let uploadId = UUID()
@@ -81,6 +81,10 @@ final class ReadingEngineTests: XCTestCase {
                 )
             }
 
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (response, Self.jsonData("[]"))
+            }
+
             if request.httpMethod == "PATCH", url.contains("daily_logs") {
                 return (
                     response,
@@ -102,22 +106,26 @@ final class ReadingEngineTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase)
+            authProvider: authProvider
         )
         let engine = ReadingEngine(
             readingService: ReadingService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             xpService: XPService(),
             challengeEngine: ChallengeEngine(
-                challengeService: ChallengeService(supabase: supabase),
-                dailyLogService: dailyLogService
+                challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         gameState.profile = Profile(
@@ -155,9 +163,9 @@ final class ReadingEngineTests: XCTestCase {
         XCTAssertEqual(result?.profile.xp_total, 205)
         XCTAssertEqual(result?.profile.level, 2)
         XCTAssertEqual(result?.dailyLog.xp_earned, 10)
-        XCTAssertEqual(gameState.profile.xp_total, 205)
-        XCTAssertEqual(gameState.level, 2)
-        XCTAssertEqual(gameState.dailyLog.reading_completed, true)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
+        XCTAssertEqual(gameState.level, 1)
+        XCTAssertFalse(gameState.dailyLog.reading_completed)
 
         XCTAssertTrue(didUploadProof)
         XCTAssertTrue(didInsertReadingUpload)
@@ -166,6 +174,263 @@ final class ReadingEngineTests: XCTestCase {
             .compactMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Bool] }
             .first { $0["reading_completed"] == true }
         XCTAssertNotNil(readingPatch)
+    }
+
+    func testCompleteReadingReturnsExistingDailyLogWithoutPatchWhenAlreadyCompleted() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.dailyLogJSON(
+                        id: dailyLogId,
+                        userId: userId,
+                        readingCompleted: true,
+                        wrappedInArray: request.httpMethod == "GET"
+                    )
+                )
+            )
+        }
+
+        let supabase = makeSupabaseService()
+        let service = ReadingService(
+            supabase: supabase,
+            dailyLogService: DailyLogService(supabase: supabase)
+        )
+        let result = try await service.completeReading(userId: userId, date: date)
+
+        XCTAssertEqual(result.id, dailyLogId)
+        XCTAssertTrue(result.reading_completed)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
+    }
+
+    func testUploadReadingProofReturnsExistingUploadWithoutDuplicateInsert() async throws {
+        let userId = UUID()
+        let uploadId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let url = request.url?.absoluteString ?? ""
+
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (
+                    response,
+                    Self.jsonData(
+                        "[\(Self.readingUploadJSON(id: uploadId, userId: userId, imageURL: "reading-proof/\(userId.uuidString)/2026-06-08.jpg"))]"
+                    )
+                )
+            }
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.dailyLogJSON(
+                        id: dailyLogId,
+                        userId: userId,
+                        readingCompleted: true,
+                        wrappedInArray: request.httpMethod == "GET"
+                    )
+                )
+            )
+        }
+
+        let supabase = makeSupabaseService()
+        let service = ReadingService(
+            supabase: supabase,
+            dailyLogService: DailyLogService(supabase: supabase)
+        )
+        let result = try await service.uploadReadingProof(
+            imageData: Data("proof-image".utf8),
+            userId: userId,
+            date: date
+        )
+
+        XCTAssertEqual(result.id, uploadId)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET", "GET"])
+        XCTAssertFalse(requests.contains { request in
+            request.httpMethod == "POST" &&
+                ((request.url?.absoluteString.contains("reading_uploads") ?? false) ||
+                 (request.url?.absoluteString.contains("/storage/v1/object/reading-proof/") ?? false))
+        })
+    }
+
+    func testRetryingCompletedReadingDoesNotAwardDuplicateXPOrUploadAgain() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let uploadId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+        var readingCompleted = false
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let url = request.url?.absoluteString ?? ""
+
+            if request.httpMethod == "GET", url.contains("daily_logs") {
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(
+                            id: dailyLogId,
+                            userId: userId,
+                            readingCompleted: readingCompleted,
+                            wrappedInArray: true
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (response, Self.jsonData("[]"))
+            }
+
+            if request.httpMethod == "POST", url.contains("/storage/v1/object/reading-proof/") {
+                return (
+                    response,
+                    Self.jsonData(
+                        """
+                        {
+                          "Key": "reading-proof/\(userId.uuidString)/2026-06-08.jpg",
+                          "Id": "storage-id"
+                        }
+                        """
+                    )
+                )
+            }
+
+            if request.httpMethod == "POST", url.contains("reading_uploads") {
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.readingUploadJSON(
+                            id: uploadId,
+                            userId: userId,
+                            imageURL: "reading-proof/\(userId.uuidString)/2026-06-08.jpg"
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "PATCH", url.contains("daily_logs") {
+                readingCompleted = true
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(
+                            id: dailyLogId,
+                            userId: userId,
+                            readingCompleted: true
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "GET", url.contains("challenges") {
+                return (response, Self.jsonData("[]"))
+            }
+
+            return (response, Self.jsonData("{}"))
+        }
+
+        let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
+        let dailyLogService = DailyLogService(
+            supabase: supabase,
+            authProvider: authProvider
+        )
+        let engine = ReadingEngine(
+            readingService: ReadingService(
+                supabase: supabase,
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
+            ),
+            dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
+            xpService: XPService(),
+            challengeEngine: ChallengeEngine(
+                challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
+            ),
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
+        )
+        let gameState = GameState()
+        gameState.profile = Profile(
+            id: userId,
+            email: "test@example.com",
+            xp_total: 195,
+            level: 1,
+            streak: 0,
+            forgiveness_tokens: 0,
+            morning_notification_time: nil,
+            evening_notification_time: nil,
+            strength: 1,
+            discipline: 1,
+            focus: 1,
+            energy: 1,
+            wisdom: 1,
+            mind: 1,
+            spirit: 1,
+            created_at: nil
+        )
+        engine.configure(gameState: gameState)
+
+        let firstResult = await engine.completeReading(
+            imageData: Data("proof-image".utf8),
+            date: date
+        )
+        let retryResult = await engine.completeReading(
+            imageData: Data("proof-image".utf8),
+            date: date
+        )
+
+        XCTAssertEqual(firstResult?.xpAwarded, 10)
+        XCTAssertNil(retryResult)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
+        XCTAssertEqual(
+            requests.filter {
+                $0.httpMethod == "POST" &&
+                    ($0.url?.absoluteString.contains("/storage/v1/object/reading-proof/") ?? false)
+            }.count,
+            1
+        )
+        XCTAssertEqual(
+            requests.filter {
+                $0.httpMethod == "POST" &&
+                    ($0.url?.absoluteString.contains("reading_uploads") ?? false)
+            }.count,
+            1
+        )
     }
 
     private func makeSupabaseService() -> SupabaseService {

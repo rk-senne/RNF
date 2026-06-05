@@ -130,11 +130,11 @@ active challenge exists.
 
 The system loads:
 
-daily_log for today.
+daily_log for today, using the user's current calendar/timezone.
 
 If daily log does not exist:
 
-create daily_log.
+create daily_log for the normalized local day.
 
 Next state:
 
@@ -169,7 +169,7 @@ Effects:
 streak increases
 xp bonus awarded
 
-Next state occurs automatically on next calendar day.
+Next state occurs automatically when the user's normalized local calendar day changes.
 
 Transition:
 
@@ -329,11 +329,11 @@ state = onboarding_notifications
 
 Step 3
 
-Fetch today's daily_log.
+Fetch today's daily_log using the user's current calendar/timezone.
 
 If none:
 
-create record.
+create record for the normalized local day.
 
 state = daily_progress
 

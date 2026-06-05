@@ -9,18 +9,15 @@ struct ActiveWorkoutTimerView: View {
     let durationSeconds: Int
     let xp: Int
 
-    @State private var remainingSeconds: Int
-    @State private var elapsedSeconds = 0
-    @State private var isRunning = true
-    @State private var isComplete = false
-
-    private let workoutEngine = WorkoutEngine()
+    @StateObject private var viewModel: WorkoutViewModel
 
     init(title: String, durationSeconds: Int, xp: Int) {
         self.title = title
         self.durationSeconds = durationSeconds
         self.xp = xp
-        _remainingSeconds = State(initialValue: durationSeconds)
+        _viewModel = StateObject(
+            wrappedValue: WorkoutViewModel(durationSeconds: durationSeconds)
+        )
     }
 
     var body: some View {
@@ -28,7 +25,7 @@ struct ActiveWorkoutTimerView: View {
         VStack(spacing: 28) {
             Spacer(minLength: 24)
 
-            if isComplete {
+            if viewModel.isComplete {
                 completionContent
             } else {
                 timerContent
@@ -42,10 +39,10 @@ struct ActiveWorkoutTimerView: View {
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            workoutEngine.configure(gameState: game)
+            viewModel.configure(gameState: game)
         }
-        .task(id: isRunning) {
-            await runTimer()
+        .task(id: viewModel.isRunning) {
+            await viewModel.runTimer()
         }
 
     }
@@ -59,34 +56,62 @@ struct ActiveWorkoutTimerView: View {
                     .tracking(1.2)
                     .foregroundStyle(Color.secondary)
 
-                Text(timerText)
+                Text(viewModel.timerText)
                     .font(.system(size: 64, weight: .black, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.primary)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
 
-                ProgressView(value: progress)
+                ProgressView(value: viewModel.progress)
                     .tint(Color(red: 0.3, green: 0.43, blue: 0.86))
                     .scaleEffect(x: 1, y: 1.8, anchor: .center)
             }
 
             HStack(spacing: 12) {
                 Button {
-                    isRunning.toggle()
+                    viewModel.toggleRunning()
                 } label: {
-                    Label(isRunning ? "Pause" : "Resume", systemImage: isRunning ? "pause.fill" : "play.fill")
+                    Label(
+                        viewModel.primaryControlTitle,
+                        systemImage: viewModel.primaryControlIcon
+                    )
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(!viewModel.canToggleTimer || viewModel.isFinalizing)
 
                 Button(role: .destructive) {
                     endSession()
                 } label: {
-                    Text("End")
+                    Label("End", systemImage: "stop.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                .disabled(viewModel.isFinalizing)
+            }
+
+            if viewModel.isFinalizing {
+                ProgressView("Saving workout")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.secondary)
+            }
+
+            if let errorMessage = viewModel.errorMessage {
+                VStack(spacing: 12) {
+                    Text(errorMessage)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.red)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        retryCompletion()
+                    } label: {
+                        Label("Retry", systemImage: "arrow.clockwise")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
 
             Text("+\(xp) XP after 80% completion")
@@ -107,14 +132,14 @@ struct ActiveWorkoutTimerView: View {
                 .font(.system(size: 28, weight: .black, design: .rounded))
                 .foregroundStyle(Color.primary)
 
-            Text("+\(xp) XP")
+            Text("+\(viewModel.completedXP ?? xp) XP")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(Color(red: 0.12, green: 0.54, blue: 0.3))
 
             Button {
                 dismiss()
             } label: {
-                Text("Done")
+                Label("Done", systemImage: "checkmark")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -123,61 +148,19 @@ struct ActiveWorkoutTimerView: View {
 
     }
 
-    private var timerText: String {
-        let minutes = remainingSeconds / 60
-        let seconds = remainingSeconds % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-
-    private var progress: Double {
-        guard durationSeconds > 0 else {
-            return 0
-        }
-
-        return Double(elapsedSeconds) / Double(durationSeconds)
-    }
-
-    private func runTimer() async {
-        guard isRunning, !isComplete else {
-            return
-        }
-
-        while isRunning && remainingSeconds > 0 && !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
-
-            guard isRunning, remainingSeconds > 0, !Task.isCancelled else {
-                return
-            }
-
-            remainingSeconds -= 1
-            elapsedSeconds += 1
-        }
-
-        if remainingSeconds == 0 {
-            completeSession()
-        }
-    }
-
     private func endSession() {
-        if WorkoutDurationValidator.isComplete(
-            durationSeconds: durationSeconds,
-            elapsedSeconds: elapsedSeconds
-        ) {
-            completeSession()
-        } else {
-            dismiss()
+        Task {
+            let didAttemptCompletion = await viewModel.endSession()
+
+            if !didAttemptCompletion {
+                dismiss()
+            }
         }
     }
 
-    private func completeSession() {
-        isRunning = false
-        isComplete = true
-
+    private func retryCompletion() {
         Task {
-            _ = await workoutEngine.completeWorkout(
-                durationSeconds: durationSeconds,
-                elapsedSeconds: max(elapsedSeconds, durationSeconds)
-            )
+            await viewModel.retryCompletion()
         }
     }
 

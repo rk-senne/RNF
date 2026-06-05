@@ -24,11 +24,11 @@ Status legend:
 - `[x]` complete
 - `[ ]` not started
 
- NEXT TASK TO IMPLEMENT
+NEXT TASK TO IMPLEMENT
 
-- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+P16-ENG-01 Add a `ProgressionInput` snapshot contract and focused progression-input coverage
 Depends on:
-- P14-SVC-02
+- P15-CONFIG-01
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -840,48 +840,176 @@ Depends on:
 - P14-SVC-01
 - P14-MIG-01
 
-- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+- [x] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
 Depends on:
 - P14-SVC-02
 
-- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
+- [x] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
 Depends on:
 - P14-SVC-01
 
 ### Date And Time Safety
 
-- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
+- [x] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
 Depends on:
 - P14-MIG-01
 
-- [ ] P14-TIME-02 Document timezone policy in service and state docs
+- [x] P14-TIME-02 Document timezone policy in service and state docs
 Depends on:
 - P14-TIME-01
 
 ### Observability
 
-- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
+- [x] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
 Depends on:
 - P14-SVC-01
 
-- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
+- [x] P14-OBS-02 Add user-safe logging to critical service and engine flows
 Depends on:
 - P14-OBS-01
 
 ### Production Tests
 
-- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
+- [x] P14-TST-01 Add migration SQL structure tests or verification notes
 Depends on:
 - P14-MIG-03
 
-- [ ] P14-TST-02 Add auth user-scoping service tests
+- [x] P14-TST-02 Add auth user-scoping service tests
 Depends on:
 - P14-AUTH-03
 
-- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
+- [x] P14-TST-03 Add idempotent retry integration tests for daily actions
 Depends on:
 - P14-SVC-03
 
-- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+- [x] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
 Depends on:
 - P14-SVC-04
+
+## Phase 15 – Audit-Driven Production Cleanup
+
+### Backend Reproducibility
+
+- [x] P15-MIG-01 Add skill tree table migrations for reproducible backend setup
+Depends on:
+- P14-TST-04
+
+- [x] P15-MIG-02 Add skill tree RLS policies and verification coverage
+Depends on:
+- P15-MIG-01
+
+- [x] P15-MIG-03 Add reading proof storage bucket and object policy migration
+Depends on:
+- P15-MIG-02
+
+- [x] P15-DOC-01 Update database schema and migration runbook for skill tree and storage setup
+Depends on:
+- P15-MIG-03
+
+### Launch And Workflow Boundaries
+
+- [x] P15-APP-01 Wire `AppStateManager` into the root app shell
+Depends on:
+- P15-DOC-01
+
+- [x] P15-VM-01 Move reading proof workflow state into `ReadViewModel`
+Depends on:
+- P15-APP-01
+
+- [x] P15-VM-02 Move workout finalizing state into `WorkoutViewModel`
+Depends on:
+- P15-VM-01
+
+- [x] P15-ENG-01 Move workout and reading `GameState.apply(...)` calls out of engines
+Depends on:
+- P15-VM-02
+
+### Date, Docs, And Hygiene
+
+- [x] P15-TIME-01 Centralize day boundary handling for services and daily reset logic
+Depends on:
+- P15-ENG-01
+
+- [x] P15-DOC-02 Refresh stale repository map and architecture docs
+Depends on:
+- P15-TIME-01
+
+- [x] P15-CHORE-01 Remove tracked Xcode user data and confirm ignore coverage
+Depends on:
+- P15-DOC-02
+
+- [x] P15-CONFIG-01 Confirm and document the MVP minimum iOS deployment target
+Depends on:
+- P15-CHORE-01
+
+## Phase 16 – Architecture Hardening
+
+### Progression Input Boundary
+
+- [x] P16-ENG-01 Add a `ProgressionInput` snapshot contract and focused progression-input coverage
+Depends on:
+- P15-CONFIG-01
+
+- [x] P16-ENG-02 Refactor `ProgressionEngine.processHabitCompletion(...)` to consume `ProgressionInput` instead of reading `GameState`
+Depends on:
+- P16-ENG-01
+
+- [x] P16-VM-01 Update `HabitsViewModel` to build `ProgressionInput`, apply `ProgressionResult`, and remove `ProgressionEngine.configure(gameState:)`
+Depends on:
+- P16-ENG-02
+
+- [x] P16-TST-01 Remove remaining `ProgressionEngine.configure(gameState:)` usage from production and test paths
+Depends on:
+- P16-VM-01
+
+### Authenticated Service Boundaries
+
+- [x] P16-AUTH-01 Inventory production call sites that pass caller-supplied `userId` to authenticated services and document allowed exceptions
+Depends on:
+- P16-TST-01
+
+- [x] P16-AUTH-02 Add authenticated methods or user-id validation for production service paths that still need owner-scoped access
+Depends on:
+- P16-AUTH-01
+
+- [x] P16-AUTH-03 Update production ViewModel, engine, and service call sites to prefer authenticated methods over broad `userId` overloads
+Depends on:
+- P16-AUTH-02
+
+- [x] P16-TST-02 Add regression tests for authenticated service owner scoping and user-id mismatch behavior
+Depends on:
+- P16-AUTH-03
+
+### Daily Log Boundary
+
+- [x] P16-SVC-01 Replace `DailyLogService.saveProfile(_:)` passthrough usage with explicit `UserService` workflow dependencies
+Depends on:
+- P16-TST-02
+
+- [ ] P16-SVC-02 Move `DailyLogService.calculateStatus(for:)` into a pure `DailyLogStatusPolicy`
+Depends on:
+- P16-SVC-01
+
+- [ ] P16-TST-03 Add focused tests for the daily-log persistence and status-policy boundary
+Depends on:
+- P16-SVC-02
+
+### SwiftUI Surface Cleanup
+
+- [ ] P16-UI-01 Split `AscensionView` into focused private subviews without changing behavior
+Depends on:
+- P16-TST-03
+
+- [ ] P16-UI-02 Split large habit and profile screen subviews only where workflow state already lives in ViewModels
+Depends on:
+- P16-UI-01
+
+- [ ] P16-TST-04 Run the app build and targeted tests after the view splits
+Depends on:
+- P16-UI-02
+
+### Documentation
+
+- [ ] P16-DOC-01 Refresh architecture audit and repository map after Phase 16 hardening
+Depends on:
+- P16-TST-04

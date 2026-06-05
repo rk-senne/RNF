@@ -4,12 +4,13 @@ import SwiftUI
 struct RNFApp: App {
 
     @StateObject var gameState = GameState()
+    @StateObject var appStateManager = AppStateManager()
 
     var body: some Scene {
 
         WindowGroup {
 
-            RootView()
+            AppShellView(appStateManager: appStateManager)
                 .environmentObject(gameState)
 
         }

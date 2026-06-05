@@ -1,550 +1,367 @@
 # RNF Repository Map
 
-This document defines the folder structure and responsibilities of every directory in the RNF project.
+This document describes the current RNF project layout and the architecture boundaries Codex should follow when making changes.
 
-The goal is to keep the architecture clean, predictable, and scalable.
+The app is an early SwiftUI MVP. The folder structure is usable; most cleanup work should improve boundaries inside the existing structure rather than move files around.
 
-Codex must follow this structure when generating code.
+## Target Flow
 
-Architecture layers:
+```text
+View
+  -> ViewModel
+  -> Engine / Use Case
+  -> Service
+  -> Supabase / Local Storage
+```
 
-UI  
-↓  
-Systems  
-↓  
-Models  
-↓  
-Services / Backend
+State returns upward as typed results:
 
-No file should violate this hierarchy.
+```text
+Supabase / Local Storage
+  -> Service
+  -> Engine / Use Case
+  -> ViewModel
+  -> GameState
+  -> View
+```
 
----
+`GameState` is a shared progression snapshot. Feature-specific transient state belongs in feature ViewModels.
 
-# Root Project Structure
+## Root Structure
 
-RNF
-│
-├── App
-├── Components
-├── Core
-├── Docs
-├── Features
-├── Models
-├── Navigation
-├── Systems
-├── Assets
-├── RNFTests
-├── RNFUITests
+```text
+RNF/
+  App/
+  Components/
+  Core/
+  DesignSystem/
+  Docs/
+  Extensions/
+  Features/
+  Models/
+  Navigation/
+  Services/
+  Systems/
+  ViewModels/
+  Assets.xcassets/
+RNFTests/
+RNFUITests/
+supabase/migrations/
+scripts/
+```
 
----
+## App
 
-# App
-
-Folder:
-
-App/
-
-Purpose:
+`RNF/App/`
 
 Application entry point.
 
-Files:
+Current files:
 
-RNFApp.swift
+- `RNFApp.swift`
 
 Responsibilities:
 
-Initialize application  
-Inject global environment objects  
-Configure Supabase client  
-Set RootView
+- Create shared app-level state objects.
+- Install the root app shell.
+- Inject `GameState` and app-state dependencies into the SwiftUI hierarchy.
 
----
+## Navigation
 
-# Components
+`RNF/Navigation/`
 
-Folder:
+Application routing and authenticated shell composition.
 
-Components/
+Current files:
 
-Purpose:
+- `AppShellView.swift`
+- `RootView.swift`
+
+Responsibilities:
+
+- `AppShellView` owns launch/session/onboarding routing through `AppStateManager`.
+- `RootView` owns the authenticated tab experience.
+- Keep navigation decisions out of feature views unless they are local to that feature.
+
+## Features
+
+`RNF/Features/`
+
+Feature folders contain SwiftUI screens and screen-local components.
+
+Current feature folders:
+
+- `Ascension/`
+- `Habits/`
+- `Onboarding/`
+- `Profile/`
+- `Read/`
+- `Workouts/`
+
+Feature views should:
+
+- Render state.
+- Read `GameState` where needed.
+- Read ViewModel state.
+- Forward user intent to ViewModels.
+
+Feature views should not:
+
+- Call Supabase directly.
+- Own persistence decisions.
+- Recalculate core progression rules.
+- Contain long-lived workflow state when a ViewModel exists.
+
+## ViewModels
+
+`RNF/ViewModels/`
+
+Screen workflow state and UI-facing orchestration.
+
+Current files:
+
+- `AscensionViewModel.swift`
+- `HabitsViewModel.swift`
+- `ReadViewModel.swift`
+- `WorkoutViewModel.swift`
+
+Responsibilities:
+
+- Own UI-only state such as loading, selected media, timer/finalizing state, and retryable errors.
+- Call engines or services.
+- Apply typed domain results to `GameState`.
+- Translate failures into user-facing messages or retry states.
+
+ViewModels should not contain Supabase query code or core game-rule calculations.
+
+## Core
+
+`RNF/Core/`
+
+Application-level state, app-state routing, logging, and domain workflow engines.
+
+Current files:
+
+- `AppConfig.swift`
+- `AppState.swift`
+- `AppStateManager.swift`
+- `ChallengeEngine.swift`
+- `GameState.swift`
+- `ProgressionEngine.swift`
+- `ReadingEngine.swift`
+- `RNFLogger.swift`
+- `WorkoutEngine.swift`
+
+Responsibilities:
+
+- `GameState` stores shared player progression state.
+- `AppStateManager` resolves launch/session/onboarding route state.
+- Engines coordinate domain workflows and return typed result values.
+- Engines should not directly mutate `GameState`; ViewModels apply returned results.
+
+Known boundary note:
+
+- `ProgressionEngine` still reads a configured `GameState` snapshot as input. Future cleanup should move it toward explicit input values, but broad rewrites should wait for a dedicated task.
+
+## Services
+
+`RNF/Services/`
+
+Supabase, auth, persistence, analytics, and platform-facing service boundaries.
+
+Current files include:
+
+- `SupabaseService.swift`
+- `AuthService.swift`
+- `AuthProviding.swift`
+- `DailyLogService.swift`
+- `HabitService.swift`
+- `ChallengeService.swift`
+- `CalendarService.swift`
+- `ReadingService.swift`
+- `WorkoutService.swift`
+- `UserService.swift`
+- `SkillTreeService.swift`
+- `SubscriptionService.swift`
+- `AnalyticsService.swift`
+- `EvolutionService.swift`
+- `NotificationScheduler.swift`
+- `QuestService.swift`
+- `RNFServiceResult.swift`
+- `XPService.swift`
+
+Responsibilities:
+
+- Own Supabase queries and writes.
+- Normalize persistence-bound values.
+- Return typed models and write results.
+- Keep UI state out of service classes.
+
+Date policy:
+
+- Daily records and proof paths must use `DayBoundaryPolicy`.
+- Services that need timezone control should accept an injected `Calendar`.
+
+## Systems
+
+`RNF/Systems/`
+
+Pure deterministic rules and helper policies.
+
+Current files include:
+
+- `XPSystem.swift`
+- `StreakSystem.swift`
+- `BadgeSystem.swift`
+- `StatSystem.swift`
+- `QuestDifficultySystem.swift`
+- `QuestGenerator.swift`
+- `QuestMapper.swift`
+- `QuestRepository.swift`
+- `QuestRewardSystem.swift`
+- `DisciplineSystem.swift`
+- `EvolutionSystem.swift`
+- `ForgivenessSystem.swift`
+- `PerkSystem.swift`
+- `SkillTreeSystem.swift`
+- `WorkoutDurationValidator.swift`
+- `DayBoundaryPolicy.swift`
+
+Responsibilities:
+
+- XP math.
+- Streak and forgiveness rules.
+- Badge/title rules.
+- Quest selection and reward mapping.
+- Skill/perk calculations.
+- Workout duration validation.
+- Shared date-boundary policy.
+
+Systems should not call Supabase or mutate SwiftUI state.
+
+## Models
+
+`RNF/Models/`
+
+Codable app/database contracts with small mapping or factory helpers where useful.
+
+Current files include:
+
+- `Profile.swift`
+- `Stats.swift`
+- `Habit.swift`
+- `HabitCompletion.swift`
+- `DailyLog.swift`
+- `DailyLogStatus.swift`
+- `Challenge.swift`
+- `WorkoutSession.swift`
+- `ReadingUpload.swift`
+- `Quest.swift`
+- `Perk.swift`
+- `SkillTree.swift`
+- `Evolution.swift`
+
+Many model fields intentionally mirror Supabase column names. Do not rename database-shaped fields without a dedicated migration and mapping task.
+
+## Components
+
+`RNF/Components/`
 
 Reusable UI components shared across screens.
 
-Components must contain **no business logic**.
+Current files include:
 
-Files:
+- `DailyMissionBar.swift`
+- `XPBar.swift`
+- `HabitRow.swift`
+- `CalendarGridView.swift`
+- `DisciplineRadarChart.swift`
 
-DailyMissionBar.swift  
-XPBar.swift  
-HabitRow.swift  
-DisciplineRadarChart.swift  
+Components should stay presentational. They may format display state, but they should not own persistence workflows or business rules.
 
-Example responsibilities:
+## Design System
 
-DailyMissionBar
+`RNF/DesignSystem/`
 
-Displays daily completion progress.
+Shared visual tokens.
 
-XPBar
+Current files:
 
-Displays XP progress toward next level.
+- `Colors.swift`
+- `Typography.swift`
+- `Spacing.swift`
+- `Animations.swift`
 
-HabitRow
+## Extensions
 
-Displays individual habit card.
+`RNF/Extensions/`
 
-DisciplineRadarChart
+Small Swift extensions.
 
-Displays stat radar visualization.
+Current files:
 
----
+- `Color+Hex.swift`
+- `Date+Helpers.swift`
 
-# Core
+Date helpers should delegate daily boundaries to `DayBoundaryPolicy` so services, proof paths, and resets stay consistent.
 
-Folder:
+## Docs
 
-Core/
+`RNF/Docs/`
 
-Purpose:
+Product, architecture, schema, security, and operating documentation.
 
-Application-wide utilities and shared state.
+Important architecture docs:
 
-Files:
+- `RNF_ARCHITECTURE_FIX_PLAN.md`
+- `RNF_ARCHITECTURE_AUDIT_2026_06_04.md`
+- `RNF_SERVICE_LAYER_SPEC.md`
+- `RNF_PRODUCTION_READINESS_SPEC.md`
+- `RNF_DATABASE_SCHEMA.md`
+- `RNF_MIGRATION_RUNBOOK.md`
+- `RNF_SECURITY.md`
+- `task_graph.md`
 
-AppConfig.swift  
-GameState.swift  
-SupabaseManager.swift  
+`task_graph.md` is the source of truth for Builder task order.
 
----
+## Supabase Migrations
 
-## AppConfig
+`supabase/migrations/`
 
-Holds application configuration.
+Migrations define reproducible backend state for core app tables, RLS, indexes, skill tree tables, and reading proof storage.
 
-Examples:
+Current migration chain includes:
 
-API endpoints  
-feature flags  
-constants
+- core user/progression tables
+- daily logs and habit completions
+- challenge, workout, reading upload, and subscription tables
+- production indexes
+- RLS policies
+- `skill_nodes` and `user_skills`
+- private `reading-proof` storage bucket and owner-folder policies
 
----
+## Tests
 
-## GameState
+`RNFTests/`
 
-Global application state.
+Unit and integration-style tests for systems, services, engines, ViewModels, navigation shell, and critical workflows.
 
-Must conform to:
+`RNFUITests/`
 
-ObservableObject
+UI test target scaffold.
 
-Contains:
+## Codex Guardrails
 
-level  
-xp  
-xpToNext  
-streak  
-stats  
-titles  
+When changing RNF:
 
-Shared using:
-
-EnvironmentObject
-
----
-
-## SupabaseManager
-
-Singleton responsible for configuring Supabase client.
-
-Handles:
-
-authentication client  
-database client  
-storage client
-
----
-
-# Docs
-
-Folder:
-
-Docs/
-
-Purpose:
-
-All product documentation and architecture specifications.
-
-Files:
-
-codex_build_instructions.md  
-RNF_API_CONTRACT.md  
-RNF_DATABASE_SCHEMA.md  
-RNF_FEATURE_SPEC.md  
-RNF_GAMIFICATION_SYSTEM.md  
-RNF_METRICS_SYSTEM.md  
-RNF_PROJECT_OVERVIEW.md  
-RNF_RETENTION_SYSTEM.md  
-RNF_SCREENS_SPEC.md  
-RNF_SERVICE_LAYER_SPEC.md  
-RNF_STATE_MACHINE.md  
-RNF_REPOSITORY_MAP.md
-
-These files guide Codex and future developers.
-
----
-
-# Features
-
-Folder:
-
-Features/
-
-Purpose:
-
-Contains feature-specific screens.
-
-Each feature gets its own folder.
-
----
-
-## Ascension
-
-Files:
-
-AscensionView.swift
-
-Purpose:
-
-Displays player progression.
-
-Shows:
-
-Level  
-XP bar  
-Radar chart  
-Streak  
-Titles
-
----
-
-## Habits
-
-Files:
-
-ContentView.swift
-
-Purpose:
-
-Main habit completion screen.
-
-Responsibilities:
-
-display habits  
-complete habits  
-trigger XP rewards  
-update stats
-
----
-
-## Profile
-
-Files:
-
-ProfileView.swift  
-EvolutionView.swift
-
-Purpose:
-
-Display user profile information and long-term milestones.
-
----
-
-# Models
-
-Folder:
-
-Models/
-
-Purpose:
-
-Data structures used throughout the application.
-
-Models must contain **no logic**.
-
-Files:
-
-Habit.swift  
-HabitCompletion.swift  
-Profile.swift  
-Quest.swift  
-Stats.swift  
-
----
-
-## Habit
-
-Represents an available habit.
-
-Fields:
-
-id  
-name  
-description  
-xpReward
-
----
-
-## HabitCompletion
-
-Represents a completed habit instance.
-
-Fields:
-
-habit_id  
-date  
-xp_awarded
-
----
-
-## Profile
-
-Represents the user's RPG state.
-
-Fields:
-
-id  
-xp  
-level  
-streak_days
-
-strength  
-discipline  
-focus  
-energy  
-wisdom  
-mind  
-spirit
-
----
-
-## Quest
-
-Represents dynamic quests generated by the system.
-
-Fields:
-
-title  
-description  
-difficulty  
-stat modifiers
-
----
-
-## Stats
-
-Represents character stat distribution.
-
-Fields:
-
-strength  
-discipline  
-focus  
-energy  
-wisdom  
-mind  
-spirit
-
----
-
-# Navigation
-
-Folder:
-
-Navigation/
-
-Purpose:
-
-App navigation structure.
-
-Files:
-
-RootView.swift
-
-Responsibilities:
-
-Define TabView
-
-Tabs:
-
-Habits  
-Ascension  
-Profile
-
-RootView receives GameState via EnvironmentObject.
-
----
-
-# Systems
-
-Folder:
-
-Systems/
-
-Purpose:
-
-Contains all RPG engine logic.
-
-Systems must contain **no UI code**.
-
-Files:
-
-BadgeSystem.swift  
-DisciplineSystem.swift  
-QuestDifficultySystem.swift  
-QuestGenerator.swift  
-QuestMapper.swift  
-QuestRepository.swift  
-QuestRewardSystem.swift  
-StatSystem.swift  
-StreakSystem.swift  
-XPSystem.swift  
-
----
-
-## XPSystem
-
-Handles:
-
-XP rewards  
-level progression
-
----
-
-## StatSystem
-
-Handles stat growth when habits complete.
-
----
-
-## StreakSystem
-
-Calculates streak logic.
-
----
-
-## QuestGenerator
-
-Generates quests based on weakest stats.
-
----
-
-## QuestMapper
-
-Maps quests to habits.
-
----
-
-## QuestRepository
-
-Stores predefined quests.
-
----
-
-## QuestRewardSystem
-
-Calculates stat rewards from quests.
-
----
-
-## QuestDifficultySystem
-
-Adjusts quest difficulty based on player level.
-
----
-
-## BadgeSystem
-
-Handles title unlock logic.
-
----
-
-# Assets
-
-Folder:
-
-Assets/
-
-Purpose:
-
-App images and icons.
-
-Examples:
-
-icons  
-backgrounds  
-app icon
-
----
-
-# Tests
-
-Folders:
-
-RNFTests  
-RNFUITests
-
-Purpose:
-
-Unit tests and UI tests.
-
-Examples:
-
-XP calculation tests  
-streak logic tests  
-UI interaction tests
-
----
-
-# Package Dependencies
-
-RNF currently depends on:
-
-Supabase Swift SDK
-
-Future dependencies may include:
-
-PostHog analytics SDK  
-StoreKit utilities
-
----
-
-# Architectural Rules
-
-Views must never call Supabase.
-
-Views must never contain business logic.
-
-Systems must never contain UI code.
-
-Models must never contain logic.
-
-Services handle backend communication.
-
-GameState is the single source of truth.
-
----
-
-# Codex Rules
-
-When generating code, Codex must:
-
-Place UI inside Features or Components.
-
-Place game logic inside Systems.
-
-Place data structures inside Models.
-
-Place configuration inside Core.
-
-Never mix UI and systems.
+- Work from `RNF/Docs/task_graph.md`.
+- Keep each cycle to one task.
+- Put UI in `Features/` or `Components/`.
+- Put screen workflow state in `ViewModels/`.
+- Put app state and engines in `Core/`.
+- Put Supabase access in `Services/`.
+- Put pure rules in `Systems/`.
+- Put data contracts in `Models/`.
+- Do not add broad architecture layers without an explicit task.
+- Do not move files for cosmetic reasons.
+- Preserve the existing SwiftUI direction.

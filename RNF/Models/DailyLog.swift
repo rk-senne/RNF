@@ -25,12 +25,17 @@ struct DailyLog: Codable, Identifiable {
 
 extension DailyLog {
 
-    static func today(userID: UUID? = nil, goal: Int) -> DailyLog {
+    static func today(
+        userID: UUID? = nil,
+        goal: Int,
+        date: Date = Date(),
+        calendar: Calendar = .current
+    ) -> DailyLog {
 
         DailyLog(
             id: UUID(),
             user_id: userID,
-            date: Date().startOfDay,
+            date: DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar),
             habits_completed: 0,
             habits_required: goal,
             workout_completed: false,

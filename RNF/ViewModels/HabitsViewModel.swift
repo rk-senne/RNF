@@ -11,12 +11,14 @@ final class HabitsViewModel: ObservableObject {
     @Published var unlockedBadge = ""
     @Published var animatedHabit: UUID?
     @Published var loadErrorMessage: String?
+    @Published var completionErrorMessage: String?
     @Published var weeklyHabit: Habit?
 
     private let userService: UserService
     private let questService: QuestService
     private let xpService: XPService
     private let progressionEngine: ProgressionEngine
+    private let calendar: Calendar
     private weak var gameState: GameState?
     private var isLoaded = false
 
@@ -24,18 +26,19 @@ final class HabitsViewModel: ObservableObject {
         userService: UserService? = nil,
         questService: QuestService? = nil,
         xpService: XPService? = nil,
-        progressionEngine: ProgressionEngine? = nil
+        progressionEngine: ProgressionEngine? = nil,
+        calendar: Calendar = .current
     ) {
         self.userService = userService ?? UserService()
         self.questService = questService ?? QuestService()
         self.xpService = xpService ?? XPService()
         self.progressionEngine = progressionEngine ?? ProgressionEngine()
+        self.calendar = calendar
     }
 
     func load(gameState: GameState) async {
 
         self.gameState = gameState
-        progressionEngine.configure(gameState: gameState)
 
         guard !isLoaded else {
             resetDailyStateIfNeeded()
@@ -85,15 +88,22 @@ final class HabitsViewModel: ObservableObject {
         }
 
         animatedHabit = habit.id
+        completionErrorMessage = nil
+        let input = ProgressionInput(gameState: gameState)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.animatedHabit = nil
         }
 
-        guard let result = await progressionEngine.processHabitCompletion(habitId: habit.id) else {
+        guard let result = await progressionEngine.processHabitCompletion(
+            habitId: habit.id,
+            input: input
+        ) else {
+            completionErrorMessage = "We couldn't save that completion. Please try again."
             return
         }
 
+        completionErrorMessage = nil
         applyState(
             profile: result.updatedProfile,
             levelState: result.levelState,
@@ -152,7 +162,7 @@ final class HabitsViewModel: ObservableObject {
             return
         }
 
-        let today = Date().formatted("yyyy-MM-dd")
+        let today = DayBoundaryPolicy.dayIdentifier(for: Date(), calendar: calendar)
         let defaults = UserDefaults.standard
         let lastResetDate = defaults.string(forKey: "lastResetDate")
 
@@ -173,10 +183,17 @@ final class HabitsViewModel: ObservableObject {
             completedHabitIDs: [],
             dailyLog: .today(
                 userID: gameState.profile.isPlaceholder ? nil : gameState.profile.id,
-                goal: questPlan.daily.dailyGoal
+                goal: questPlan.daily.dailyGoal,
+                calendar: calendar
             )
         )
 
     }
+
+#if DEBUG
+    func loadForTesting(gameState: GameState) async {
+        self.gameState = gameState
+    }
+#endif
 
 }

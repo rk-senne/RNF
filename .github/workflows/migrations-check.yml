@@ -79,3 +79,50 @@ jobs:
             echo "Expected production indexes in Supabase migrations."
             exit 1
           fi
+
+      - name: Verify skill tree migration guardrails are present
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_patterns=(
+            "create table if not exists public.skill_nodes"
+            "create table if not exists public.user_skills"
+            "references public.users (id) on delete cascade"
+            "references public.skill_nodes (id) on delete cascade"
+            "unique (user_id, skill_node_id)"
+            "alter table public.skill_nodes enable row level security"
+            "alter table public.user_skills enable row level security"
+            "create policy skill_nodes_authenticated_read"
+            "create policy user_skills_own_rows"
+          )
+
+          for pattern in "${required_patterns[@]}"; do
+            if ! grep -Riq "$pattern" supabase/migrations; then
+              echo "Missing skill tree migration guardrail: $pattern"
+              exit 1
+            fi
+          done
+
+      - name: Verify reading proof storage guardrails are present
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_patterns=(
+            "insert into storage.buckets"
+            "'reading-proof'"
+            "alter table storage.objects enable row level security"
+            "create policy reading_proof_own_objects_select"
+            "create policy reading_proof_own_objects_insert"
+            "create policy reading_proof_own_objects_update"
+            "create policy reading_proof_own_objects_delete"
+            "storage.foldername(name)"
+          )
+
+          for pattern in "${required_patterns[@]}"; do
+            if ! grep -Riq "$pattern" supabase/migrations; then
+              echo "Missing reading proof storage guardrail: $pattern"
+              exit 1
+            fi
+          done

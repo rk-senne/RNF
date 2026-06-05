@@ -288,7 +288,7 @@ BadgeSystem.swift
 
 User progress must persist between sessions.
 
-Player data must be saved locally.
+Authenticated production progress persists through Supabase-backed services. Local placeholder or demo state may exist only for unauthenticated local mode and must not write production data.
 
 ## Stored Data
 
@@ -301,13 +301,18 @@ completed habits
 
 ## Storage Options
 
-UserDefaults (Phase 1)  
-Supabase (Phase 2)
+Supabase is the production persistence layer.
+
+Local-only storage is allowed only for explicit demo, preview, or unauthenticated fallback flows.
 
 ## Files
 
-GameState.swift  
-SupabaseManager.swift
+GameState.swift
+SupabaseService.swift
+UserService.swift
+DailyLogService.swift
+ReadingService.swift
+WorkoutService.swift
 
 ---
 
@@ -332,9 +337,9 @@ XPBar.swift
 
 ---
 
-# Future Systems (Phase 2)
+# Expanded Systems
 
-These systems are planned but not yet implemented.
+These systems are represented in the later implementation phases. New work must follow `task_graph.md` and the architecture docs instead of reintroducing direct view-to-persistence workflows.
 
 ---
 

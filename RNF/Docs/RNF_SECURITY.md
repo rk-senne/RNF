@@ -109,6 +109,37 @@ user_id matches auth.uid()
 
 ---
 
+# Caller-Supplied User ID Inventory
+
+Production service calls should prefer authenticated methods that resolve the current user through `AuthProviding`. Broad `userId` overloads may remain only when the caller's ID is already derived from Supabase Auth or when the overload is an internal helper behind an authenticated wrapper.
+
+Allowed current exceptions:
+
+| Caller | Service path | Reason |
+| --- | --- | --- |
+| `AppStateManager.resolveLaunchState` | `ChallengeService.getActiveChallenge(userId:)`, `DailyLogService.fetchTodayLog(userId:date:)`, `DailyLogService.createDailyLog(userId:date:)` | The ID comes directly from `AuthService.restoreSession().user.id` in the same flow. |
+| `AuthService.bootstrapProfile` | `users` upsert | The bootstrap profile ID comes from the Supabase auth result/session being created or restored. |
+| Authenticated wrapper methods in `DailyLogService`, `ChallengeService`, `WorkoutService`, `ReadingService`, `SubscriptionService`, and `UserService` | Internal calls to matching `userId` overloads | The ID is resolved through `authProvider.requireCurrentUserID()` before delegation. |
+| Internal service composition after a verified service entry point | Daily-log create/fetch/update helpers, reading proof fetch, subscription update helpers | The ID is passed through the same call chain after the authenticated entry point resolves it. |
+
+Production paths that still need narrowing in Phase 16 follow-up tasks:
+
+| Caller | Current source of `userId` | Service path |
+| --- | --- | --- |
+| `ContentView.refreshChallenge` | `game.profile.id` | `ChallengeEngine.loadActiveChallenge(userId:)` |
+| `AscensionView.loadActiveChallenge`, `useForgiveness`, and `advanceChallengeIfNeeded` | `game.profile.id` | `ChallengeEngine` methods and downstream `ChallengeService`, `DailyLogService`, `UserService`, and `SkillTreeService` calls |
+| `ProgressionEngine.processHabitCompletion` | `ProgressionInput.profile.id` | `DailyLogService.updateStatus(userId:date:)` and skill-tree/profile persistence paths |
+| `WorkoutEngine.completeWorkout` | `gameState.profile.id` / `updatedProfile.id` | `WorkoutService`, `DailyLogService`, and `ChallengeEngine` calls |
+| `ReadingEngine.completeReading` | `gameState.profile.id` / `updatedProfile.id` | `ReadingService`, `DailyLogService`, and `ChallengeEngine` calls |
+| `SubscriptionManagementView.syncSubscription` | injected optional `userId` view parameter | `SubscriptionService.syncSubscription(userId:)` |
+| `SkillTreeService.activePerks` and unlock helpers | `profile.id` | `fetchUserUnlocks(userId:)` and unlock persistence |
+
+Follow-up implementation rule:
+
+`P16-AUTH-02` and `P16-AUTH-03` should either route these production paths through authenticated no-argument service methods or validate that any supplied `userId` matches the current authenticated user before touching user-owned data.
+
+---
+
 # Rate Limiting
 
 Login attempts limited.

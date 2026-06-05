@@ -176,7 +176,7 @@ struct ContentView: View {
             return
         }
 
-        activeChallenge = await challengeEngine.loadActiveChallenge(userId: game.profile.id)
+        activeChallenge = await challengeEngine.loadActiveChallenge()
     }
 
     private func statPill(title: String, value: String, tint: Color) -> some View {

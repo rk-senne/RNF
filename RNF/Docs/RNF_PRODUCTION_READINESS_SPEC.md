@@ -285,6 +285,18 @@ Builder must not add HealthKit or watchOS code unless the selected task explicit
 
 The command-line build must be reliable before automation can be trusted.
 
+### MVP Deployment Target
+
+RNF's iPhone MVP minimum deployment target is iOS 18.0.
+
+Rationale:
+
+- The current app code and resolved package dependencies do not require iOS 26-only APIs.
+- The Supabase Swift dependency graph supports substantially older iOS versions.
+- iOS 18.0 keeps the MVP available to more test devices while preserving a modern SwiftUI baseline.
+
+Do not raise the minimum deployment target for app, unit test, or UI test targets unless a selected task explicitly introduces and documents an API requirement that needs a newer iOS version.
+
 Required baseline command:
 
 ```bash
@@ -301,26 +313,24 @@ Build failures caused by environment setup must be fixed or documented before tr
 
 ### Repository Hygiene
 
-Tracked local IDE/user files must be cleaned up before enforcing stricter CI hygiene gates.
+Tracked local IDE/user files are not allowed.
 
-Known cleanup item:
+Known local-noise paths:
 
 ```text
 RNF.xcodeproj/xcuserdata/
+.DS_Store
+.rnf/
 ```
 
-Current CI intentionally blocks newly tracked `.DS_Store` and `.rnf/` files, but does not yet fail on `xcuserdata` because that state already exists in the repository history. Create a dedicated cleanup branch before enabling the stricter rule:
+Target outcome for repository hygiene:
 
-```text
-chore/remove-xcode-userdata
-```
-
-Target outcome:
-
-- remove tracked `xcuserdata`
-- add or confirm `.gitignore` coverage for `xcuserdata/`
-- update the documentation workflow to reject future tracked `xcuserdata`
+- keep tracked `xcuserdata` removed
+- keep `.gitignore` coverage for `xcuserdata/`
+- keep documentation checks rejecting committed local-noise files where possible
 - verify Xcode still opens and builds the shared scheme
+
+If tracked `xcuserdata` returns, remove it in a dedicated hygiene task before feature work continues.
 
 Minimum test order:
 

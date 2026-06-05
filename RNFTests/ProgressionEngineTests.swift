@@ -24,9 +24,10 @@ final class ProgressionEngineTests: XCTestCase {
             completedHabitIDs: [],
             dailyLog: .today(goal: 2)
         )
-        engine.configure(gameState: gameState)
-
-        let result = await engine.processHabitCompletion(habitId: initialHabit.id)
+        let result = await engine.processHabitCompletion(
+            habitId: initialHabit.id,
+            input: ProgressionInput(gameState: gameState)
+        )
 
         let progressionResult = try XCTUnwrap(result)
         XCTAssertFalse(progressionResult.questPlan.habits.isEmpty)
@@ -62,9 +63,10 @@ final class ProgressionEngineTests: XCTestCase {
             completedHabitIDs: [],
             dailyLog: .today(goal: 1)
         )
-        engine.configure(gameState: gameState)
-
-        let completionResult = await engine.processHabitCompletion(habitId: habit.id)
+        let completionResult = await engine.processHabitCompletion(
+            habitId: habit.id,
+            input: ProgressionInput(gameState: gameState)
+        )
         let result = try XCTUnwrap(completionResult)
 
         XCTAssertEqual(result.habit.id, habit.id)
@@ -84,6 +86,48 @@ final class ProgressionEngineTests: XCTestCase {
         XCTAssertTrue(result.leveledUp)
         XCTAssertTrue(result.missionCompleted)
         XCTAssertEqual(result.unlockedBadge, "Ember Initiate")
+    }
+
+    func testProcessHabitCompletionConsumesProgressionInputWithoutConfiguredGameState() async throws {
+        let habit = Habit(
+            id: UUID(),
+            name: "Drink Water",
+            description: "Hydrate",
+            xpReward: 10
+        )
+        let input = ProgressionInput(
+            profile: .placeholder,
+            quests: [habit],
+            completedHabitIDs: [],
+            dailyCompleted: 0,
+            dailyGoal: 2,
+            dailyLog: DailyLog(
+                id: UUID(),
+                user_id: nil,
+                date: Date(timeIntervalSince1970: 1_750_000_000),
+                habits_completed: 0,
+                habits_required: 2,
+                workout_completed: false,
+                reading_completed: false,
+                forgiveness_used: false,
+                xp_earned: 20,
+                status: .partial,
+                created_at: nil
+            )
+        )
+        let engine = ProgressionEngine()
+
+        let completionResult = await engine.processHabitCompletion(
+            habitId: habit.id,
+            input: input
+        )
+        let result = try XCTUnwrap(completionResult)
+
+        XCTAssertEqual(result.habit.id, habit.id)
+        XCTAssertEqual(result.updatedDailyLog.habits_completed, 1)
+        XCTAssertEqual(result.updatedDailyLog.xp_earned, input.dailyLog.xp_earned + habit.xpReward)
+        XCTAssertEqual(result.completedHabitIDs, [habit.id])
+        XCTAssertEqual(result.xpGained, habit.xpReward)
     }
 
 }

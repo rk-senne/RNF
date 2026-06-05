@@ -217,16 +217,8 @@ Add release workflows only after:
 - release branches exist
 - product versioning is clear
 
-## Known Follow-Up
+## Repository Hygiene Follow-Up
 
-Create a cleanup branch:
+Tracked `RNF.xcodeproj/xcuserdata/` has been removed. Keep `.gitignore` coverage in place and reject user-specific Xcode state if it appears again.
 
-```text
-chore/remove-xcode-userdata
-```
-
-Purpose:
-
-- remove tracked `RNF.xcodeproj/xcuserdata/`
-- confirm `.gitignore` blocks future user-specific Xcode state
-- then tighten `docs-check.yml` to reject tracked `xcuserdata`
+Future cleanup tasks should use `chore/<short-name>` branches and stay separate from app feature work.

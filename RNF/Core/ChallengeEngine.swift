@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct ForgivenessResult {
     let dailyLog: DailyLog
@@ -15,6 +16,7 @@ final class ChallengeEngine {
     private let skillTreeService: SkillTreeService
     private let calendar: Calendar
     private let analyticsService: AnalyticsService
+    private let authProvider: AuthProviding
 
     init(
         challengeService: ChallengeService = ChallengeService(),
@@ -22,7 +24,8 @@ final class ChallengeEngine {
         userService: UserService = UserService(),
         skillTreeService: SkillTreeService = SkillTreeService(),
         calendar: Calendar = .current,
-        analyticsService: AnalyticsService = AnalyticsService()
+        analyticsService: AnalyticsService = AnalyticsService(),
+        authProvider: AuthProviding? = nil
     ) {
         self.challengeService = challengeService
         self.dailyLogService = dailyLogService
@@ -30,12 +33,26 @@ final class ChallengeEngine {
         self.skillTreeService = skillTreeService
         self.calendar = calendar
         self.analyticsService = analyticsService
+        self.authProvider = authProvider ?? AuthService()
     }
 
     func loadActiveChallenge(userId: UUID) async -> Challenge? {
         do {
-            return try await challengeService.getActiveChallenge(userId: userId)
+            let challenge = try await challengeService.getActiveChallenge(userId: userId)
+            RNFLogger.challenge.info("operation=load_active_challenge result=\(challenge == nil ? "not_found" : "success", privacy: .public)")
+            return challenge
         } catch {
+            RNFLogger.challenge.error("operation=load_active_challenge result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return nil
+        }
+    }
+
+    func loadActiveChallenge() async -> Challenge? {
+        do {
+            let userId = try await authProvider.requireCurrentUserID()
+            return await loadActiveChallenge(userId: userId)
+        } catch {
+            RNFLogger.challenge.error("operation=load_active_challenge result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }
@@ -45,6 +62,7 @@ final class ChallengeEngine {
             let challenge = await loadActiveChallenge(userId: userId),
             canAdvance(challenge, on: date)
         else {
+            RNFLogger.challenge.info("operation=advance_if_day_complete result=skipped reason=no_active_or_not_ready")
             return nil
         }
 
@@ -53,15 +71,31 @@ final class ChallengeEngine {
                 let dailyLog = try await dailyLogService.updateStatus(userId: userId, date: date),
                 dailyLog.status == .complete
             else {
+                RNFLogger.challenge.info("operation=advance_if_day_complete result=skipped reason=day_incomplete")
                 return nil
             }
 
             if challenge.isFinalDay {
-                return try await challengeService.completeChallenge(challengeId: challenge.id)
+                let completedChallenge = try await challengeService.completeChallenge(challengeId: challenge.id)
+                RNFLogger.challenge.info("operation=advance_if_day_complete result=completed")
+                return completedChallenge
             }
 
-            return try await challengeService.advanceDay(challenge)
+            let advancedChallenge = try await challengeService.advanceDay(challenge)
+            RNFLogger.challenge.info("operation=advance_if_day_complete result=advanced")
+            return advancedChallenge
         } catch {
+            RNFLogger.challenge.error("operation=advance_if_day_complete result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return nil
+        }
+    }
+
+    func advanceIfDayComplete(date: Date = Date()) async -> Challenge? {
+        do {
+            let userId = try await authProvider.requireCurrentUserID()
+            return await advanceIfDayComplete(userId: userId, date: date)
+        } catch {
+            RNFLogger.challenge.error("operation=advance_if_day_complete result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }
@@ -74,6 +108,7 @@ final class ChallengeEngine {
 
         do {
             guard let dailyLog = try await dailyLogService.updateStatus(userId: userId, date: date) else {
+                RNFLogger.dailyLog.info("operation=use_forgiveness result=skipped reason=daily_log_not_found")
                 return nil
             }
 
@@ -89,6 +124,7 @@ final class ChallengeEngine {
             )
 
             guard evaluation.canUseForgiveness else {
+                RNFLogger.challenge.info("operation=use_forgiveness result=skipped reason=not_available")
                 return nil
             }
 
@@ -100,7 +136,11 @@ final class ChallengeEngine {
             forgivenLog.forgiveness_used = true
             forgivenLog.status = evaluation.status
 
-            await dailyLogService.saveDailyLog(forgivenLog)
+            let saveResult = await dailyLogService.saveDailyLog(forgivenLog)
+            guard saveResult.savedRemotely else {
+                RNFLogger.dailyLog.error("operation=use_forgiveness result=failure step=save_daily_log error_category=\(String(describing: saveResult.error), privacy: .public)")
+                return nil
+            }
 
             await analyticsService.trackEvent(
                 usesStoredToken ? .forgivenessUsed : .streakProtectionApplied,
@@ -111,12 +151,31 @@ final class ChallengeEngine {
                 ]
             )
 
+            RNFLogger.challenge.info("operation=use_forgiveness result=success")
             return ForgivenessResult(
                 dailyLog: forgivenLog,
                 remainingTokens: remainingTokens,
                 preservedStreak: evaluation.preservedStreak
             )
         } catch {
+            RNFLogger.challenge.error("operation=use_forgiveness result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return nil
+        }
+    }
+
+    func useForgiveness(
+        date: Date = Date(),
+        currentStreak: Int
+    ) async -> ForgivenessResult? {
+        do {
+            let userId = try await authProvider.requireCurrentUserID()
+            return await useForgiveness(
+                userId: userId,
+                date: date,
+                currentStreak: currentStreak
+            )
+        } catch {
+            RNFLogger.challenge.error("operation=use_forgiveness result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }
@@ -137,15 +196,34 @@ final class ChallengeEngine {
 
     func restartChallenge(_ challenge: Challenge, startDate: Date = Date()) async -> Challenge? {
         do {
-            return try await challengeService.restartChallenge(challenge, startDate: startDate)
+            let restartedChallenge = try await challengeService.restartChallenge(challenge, startDate: startDate)
+            RNFLogger.challenge.info("operation=restart_challenge_engine result=success")
+            return restartedChallenge
         } catch {
+            RNFLogger.challenge.error("operation=restart_challenge_engine result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return nil
+        }
+    }
+
+    func restartAuthenticatedChallenge(_ challenge: Challenge, startDate: Date = Date()) async -> Challenge? {
+        do {
+            _ = try await authProvider.requireCurrentUserID(matching: challenge.user_id)
+            return await restartChallenge(challenge, startDate: startDate)
+        } catch {
+            RNFLogger.challenge.error("operation=restart_challenge_engine result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }
 
     private func canAdvance(_ challenge: Challenge, on date: Date) -> Bool {
-        let startDate = calendar.startOfDay(for: challenge.start_date)
-        let targetDate = calendar.startOfDay(for: date)
+        let startDate = DayBoundaryPolicy.normalizedDay(
+            for: challenge.start_date,
+            calendar: calendar
+        )
+        let targetDate = DayBoundaryPolicy.normalizedDay(
+            for: date,
+            calendar: calendar
+        )
         let elapsedDays = calendar.dateComponents([.day], from: startDate, to: targetDate).day ?? 0
         let expectedDay = min(max(elapsedDays + 1, 1), Challenge.totalDays)
         return challenge.normalizedCurrentDay <= expectedDay

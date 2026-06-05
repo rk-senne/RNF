@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Supabase
 import PostgREST
 
@@ -7,29 +8,30 @@ final class ChallengeService {
     private let supabase: SupabaseService
     private let analyticsService: AnalyticsService
     private let authProvider: AuthProviding
+    private let calendar: Calendar
 
     init(
         supabase: SupabaseService = .shared,
         analyticsService: AnalyticsService = AnalyticsService(),
-        authProvider: AuthProviding? = nil
+        authProvider: AuthProviding? = nil,
+        calendar: Calendar = .current
     ) {
         self.supabase = supabase
         self.analyticsService = analyticsService
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
+        self.calendar = calendar
     }
 
     private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
+        DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar)
     }
 
     func startChallenge(userId: UUID, startDate: Date = Date()) async throws -> Challenge {
 
+        RNFLogger.challenge.info("operation=start_challenge result=started")
+
         let normalizedStartDate = normalizedDay(startDate)
-        let endDate = Calendar.current.date(
-            byAdding: .day,
-            value: 89,
-            to: normalizedStartDate
-        ) ?? normalizedStartDate
+        let endDate = Challenge.endDate(for: normalizedStartDate, calendar: calendar)
 
         let challenge = Challenge(
             id: UUID(),
@@ -41,23 +43,29 @@ final class ChallengeService {
             created_at: nil
         )
 
-        let createdChallenge: Challenge = try await supabase.client
-            .from("challenges")
-            .insert(challenge)
-            .select()
-            .single()
-            .execute()
-            .value
+        do {
+            let createdChallenge: Challenge = try await supabase.client
+                .from("challenges")
+                .insert(challenge)
+                .select()
+                .single()
+                .execute()
+                .value
 
-        await analyticsService.trackEvent(
-            .challengeStarted,
-            properties: [
-                "user_id": userId.uuidString,
-                "start_date": Self.analyticsTimestamp(for: normalizedStartDate)
-            ]
-        )
+            await analyticsService.trackEvent(
+                .challengeStarted,
+                properties: [
+                    "user_id": userId.uuidString,
+                    "start_date": Self.analyticsTimestamp(for: normalizedStartDate)
+                ]
+            )
 
-        return createdChallenge
+            RNFLogger.challenge.info("operation=start_challenge result=success")
+            return createdChallenge
+        } catch {
+            RNFLogger.challenge.error("operation=start_challenge result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            throw error
+        }
     }
 
     func startChallenge(startDate: Date = Date()) async throws -> Challenge {
@@ -86,6 +94,8 @@ final class ChallengeService {
 
     func advanceDay(_ challenge: Challenge) async throws -> Challenge {
 
+        RNFLogger.challenge.info("operation=advance_challenge_day result=started")
+
         let advancedChallenge = challenge.mapped(
             currentDay: min(challenge.normalizedCurrentDay + 1, Challenge.totalDays)
         )
@@ -94,42 +104,56 @@ final class ChallengeService {
             let current_day: Int
         }
 
-        let updatedChallenge: Challenge = try await supabase.client
-            .from("challenges")
-            .update(DayUpdate(current_day: advancedChallenge.current_day))
-            .eq("id", value: challenge.id.uuidString)
-            .select()
-            .single()
-            .execute()
-            .value
+        do {
+            let updatedChallenge: Challenge = try await supabase.client
+                .from("challenges")
+                .update(DayUpdate(current_day: advancedChallenge.current_day))
+                .eq("id", value: challenge.id.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
 
-        return updatedChallenge
+            RNFLogger.challenge.info("operation=advance_challenge_day result=success day=\(updatedChallenge.normalizedCurrentDay, privacy: .public)")
+            return updatedChallenge
+        } catch {
+            RNFLogger.challenge.error("operation=advance_challenge_day result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            throw error
+        }
     }
 
     func completeChallenge(challengeId: UUID) async throws -> Challenge {
+
+        RNFLogger.challenge.info("operation=complete_challenge result=started")
 
         struct StatusUpdate: Encodable {
             let status: Challenge.Status
         }
 
-        let completedChallenge: Challenge = try await supabase.client
-            .from("challenges")
-            .update(StatusUpdate(status: .completed))
-            .eq("id", value: challengeId.uuidString)
-            .select()
-            .single()
-            .execute()
-            .value
+        do {
+            let completedChallenge: Challenge = try await supabase.client
+                .from("challenges")
+                .update(StatusUpdate(status: .completed))
+                .eq("id", value: challengeId.uuidString)
+                .select()
+                .single()
+                .execute()
+                .value
 
-        await analyticsService.trackEvent(
-            .challengeCompleted,
-            properties: [
-                "user_id": completedChallenge.user_id.uuidString,
-                "end_date": Self.analyticsTimestamp(for: completedChallenge.end_date)
-            ]
-        )
+            await analyticsService.trackEvent(
+                .challengeCompleted,
+                properties: [
+                    "user_id": completedChallenge.user_id.uuidString,
+                    "end_date": Self.analyticsTimestamp(for: completedChallenge.end_date)
+                ]
+            )
 
-        return completedChallenge
+            RNFLogger.challenge.info("operation=complete_challenge result=success")
+            return completedChallenge
+        } catch {
+            RNFLogger.challenge.error("operation=complete_challenge result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            throw error
+        }
     }
 
     func restartChallenge(
@@ -137,20 +161,30 @@ final class ChallengeService {
         startDate: Date = Date()
     ) async throws -> Challenge {
 
+        RNFLogger.challenge.info("operation=restart_challenge result=started")
+
         struct StatusUpdate: Encodable {
             let status: Challenge.Status
         }
 
-        try await supabase.client
-            .from("challenges")
-            .update(StatusUpdate(status: .reset))
-            .eq("id", value: challenge.id.uuidString)
-            .execute()
+        do {
+            try await supabase.client
+                .from("challenges")
+                .update(StatusUpdate(status: .reset))
+                .eq("id", value: challenge.id.uuidString)
+                .execute()
 
-        return try await startChallenge(
-            userId: challenge.user_id,
-            startDate: startDate
-        )
+            let restartedChallenge = try await startChallenge(
+                userId: challenge.user_id,
+                startDate: startDate
+            )
+
+            RNFLogger.challenge.info("operation=restart_challenge result=success")
+            return restartedChallenge
+        } catch {
+            RNFLogger.challenge.error("operation=restart_challenge result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            throw error
+        }
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {

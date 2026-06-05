@@ -248,6 +248,133 @@ final class DailyLogServiceTests: XCTestCase {
         XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
     }
 
+    func testFetchTodayLogQueriesNormalizedDate() async throws {
+        let userId = UUID()
+        let inputDate = Self.date("2026-03-10T15:45:30Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData("[]"))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        _ = try await service.fetchTodayLog(userId: userId, date: inputDate)
+
+        let request = try XCTUnwrap(requests.first)
+        let dateFilter = try XCTUnwrap(Self.queryValue(named: "date", in: request))
+        let normalizedDateString = String(dateFilter.dropFirst("eq.".count))
+        let queriedDate = try XCTUnwrap(Self.date(from: normalizedDateString))
+
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertTrue(dateFilter.hasPrefix("eq."))
+        XCTAssertEqual(queriedDate, Calendar.current.startOfDay(for: inputDate))
+    }
+
+    func testFetchTodayLogUsesInjectedDayBoundaryCalendar() async throws {
+        let userId = UUID()
+        let inputDate = Self.date("2026-03-10T22:30:00Z")
+        let calendar = Self.calendar(timeZoneOffset: 7_200)
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData("[]"))
+        }
+
+        let service = DailyLogService(
+            supabase: makeSupabaseService(),
+            calendar: calendar
+        )
+        _ = try await service.fetchTodayLog(userId: userId, date: inputDate)
+
+        let request = try XCTUnwrap(requests.first)
+        let dateFilter = try XCTUnwrap(Self.queryValue(named: "date", in: request))
+        let normalizedDateString = String(dateFilter.dropFirst("eq.".count))
+        let queriedDate = try XCTUnwrap(Self.date(from: normalizedDateString))
+
+        XCTAssertEqual(
+            queriedDate,
+            DayBoundaryPolicy.normalizedDay(for: inputDate, calendar: calendar)
+        )
+    }
+
+    func testSaveDailyLogSurfacesLocalOnlyResultWhenRemoteSaveFails() async throws {
+        let userId = UUID()
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 500,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData(#"{"message":"daily log save failed"}"#))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        let dailyLog = DailyLog(
+            id: UUID(),
+            user_id: userId,
+            date: Date(timeIntervalSince1970: 1_772_582_400),
+            habits_completed: 1,
+            habits_required: 2,
+            workout_completed: false,
+            reading_completed: false,
+            forgiveness_used: false,
+            xp_earned: 25,
+            status: .partial,
+            created_at: nil
+        )
+
+        let result = await service.saveDailyLog(dailyLog)
+
+        XCTAssertEqual(result.saveState, .savedLocallyOnly)
+        XCTAssertEqual(result.error, .unknown)
+        XCTAssertEqual(result.value?.id, dailyLog.id)
+        XCTAssertEqual(requests.map(\.httpMethod), ["POST"])
+        XCTAssertTrue(requests[0].url?.absoluteString.contains("daily_logs") ?? false)
+    }
+
+    func testSaveDailyLogReturnsLocalOnlyWithoutBackendForPlaceholderLog() async throws {
+        var requestCount = 0
+
+        MockURLProtocol.requestHandler = { request in
+            requestCount += 1
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return (response, Self.jsonData("{}"))
+        }
+
+        let service = DailyLogService(supabase: makeSupabaseService())
+        let dailyLog = DailyLog.today(goal: 2)
+
+        let result = await service.saveDailyLog(dailyLog)
+
+        XCTAssertEqual(result.saveState, .savedLocallyOnly)
+        XCTAssertEqual(result.error, .unauthenticated)
+        XCTAssertEqual(result.value?.id, dailyLog.id)
+        XCTAssertEqual(requestCount, 0)
+    }
+
     private func makeSupabaseService() -> SupabaseService {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
@@ -267,6 +394,38 @@ final class DailyLogServiceTests: XCTestCase {
 
     private static func jsonData(_ string: String) -> Data {
         Data(string.utf8)
+    }
+
+    private static func date(_ string: String) -> Date {
+        ISO8601DateFormatter().date(from: string) ?? Date(timeIntervalSince1970: 0)
+    }
+
+    private static func date(from string: String) -> Date? {
+        let fractionalFormatter = ISO8601DateFormatter()
+        fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        if let date = fractionalFormatter.date(from: string) {
+            return date
+        }
+
+        return ISO8601DateFormatter().date(from: string)
+    }
+
+    private static func calendar(timeZoneOffset: Int) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: timeZoneOffset) ?? .current
+        return calendar
+    }
+
+    private static func queryValue(named name: String, in request: URLRequest) -> String? {
+        guard let url = request.url else {
+            return nil
+        }
+
+        return URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?
+            .first { $0.name == name }?
+            .value
     }
 
     private static func requestBodyData(from request: URLRequest) -> Data? {

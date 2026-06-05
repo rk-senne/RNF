@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Supabase
 import PostgREST
 
@@ -6,23 +7,23 @@ final class DailyLogService {
 
     private let supabase: SupabaseService
     private let habitService: HabitService
-    private let userService: UserService
     private let authProvider: AuthProviding
+    private let calendar: Calendar
 
     init(
         supabase: SupabaseService = .shared,
         habitService: HabitService = HabitService(),
-        userService: UserService = UserService(),
-        authProvider: AuthProviding? = nil
+        authProvider: AuthProviding? = nil,
+        calendar: Calendar = .current
     ) {
         self.supabase = supabase
         self.habitService = habitService
-        self.userService = userService
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
+        self.calendar = calendar
     }
 
     private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
+        DayBoundaryPolicy.normalizedDay(for: date, calendar: calendar)
     }
 
     func fetchTodayLog(userId: UUID, date: Date) async throws -> DailyLog? {
@@ -73,12 +74,15 @@ final class DailyLogService {
                 .execute()
                 .value
 
+            RNFLogger.dailyLog.info("operation=create_daily_log result=success")
             return createdLog
         } catch {
             if let existingLog = try await fetchTodayLog(userId: userId, date: normalizedDate) {
+                RNFLogger.dailyLog.info("operation=create_daily_log result=duplicate_existing")
                 return existingLog
             }
 
+            RNFLogger.dailyLog.error("operation=create_daily_log result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             throw error
         }
     }
@@ -91,7 +95,7 @@ final class DailyLogService {
     func getTodayLog(for profile: Profile, dailyGoal: Int) async throws -> DailyLog {
 
         guard !profile.isPlaceholder else {
-            return .today(goal: dailyGoal)
+            return .today(goal: dailyGoal, calendar: calendar)
         }
 
         let today = normalizedDay(Date())
@@ -116,6 +120,7 @@ final class DailyLogService {
     func recordHabitCompletion(_ completion: HabitCompletion) async throws -> HabitCompletion? {
 
         guard let userId = completion.user_id else {
+            RNFLogger.habitCompletion.error("operation=record_habit_completion result=failure error_category=missing_user")
             return nil
         }
 
@@ -126,6 +131,7 @@ final class DailyLogService {
             habitId: completion.habit_id,
             date: normalizedDate
         ) {
+            RNFLogger.habitCompletion.info("operation=record_habit_completion result=duplicate_existing")
             return existingCompletion
         }
 
@@ -155,13 +161,25 @@ final class DailyLogService {
                 habitId: completion.habit_id,
                 date: normalizedDate
             ) {
+                RNFLogger.habitCompletion.info("operation=record_habit_completion result=duplicate_after_insert")
                 return existingCompletion
             }
 
+            RNFLogger.habitCompletion.error("operation=record_habit_completion result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             throw error
         }
 
+        RNFLogger.habitCompletion.info("operation=record_habit_completion result=success")
         return createdCompletion
+    }
+
+    func recordAuthenticatedHabitCompletion(_ completion: HabitCompletion) async throws -> HabitCompletion? {
+        guard let userId = completion.user_id else {
+            throw AuthProvidingError.missingCurrentUser
+        }
+
+        _ = try await authProvider.requireCurrentUserID(matching: userId)
+        return try await recordHabitCompletion(completion)
     }
 
     private func fetchHabitCompletion(
@@ -226,6 +244,7 @@ final class DailyLogService {
     func updateStatus(userId: UUID, date: Date) async throws -> DailyLog? {
 
         guard let dailyLog = try await fetchTodayLog(userId: userId, date: date) else {
+            RNFLogger.dailyLog.info("operation=update_daily_log_status result=not_found")
             return nil
         }
 
@@ -244,6 +263,7 @@ final class DailyLogService {
             .execute()
             .value
 
+        RNFLogger.dailyLog.info("operation=update_daily_log_status result=success status=\(updatedStatus.rawValue, privacy: .public)")
         return updatedLog
     }
 
@@ -252,10 +272,11 @@ final class DailyLogService {
         return try await updateStatus(userId: userId, date: date)
     }
 
-    func saveDailyLog(_ dailyLog: DailyLog) async {
+    func saveDailyLog(_ dailyLog: DailyLog) async -> RNFServiceWriteResult<DailyLog> {
 
         guard dailyLog.user_id != nil else {
-            return
+            RNFLogger.dailyLog.error("operation=save_daily_log result=local_only error_category=unauthenticated")
+            return .savedLocallyOnly(dailyLog, error: .unauthenticated)
         }
 
         let normalizedDailyLog = DailyLog(
@@ -277,14 +298,31 @@ final class DailyLogService {
                 .from("daily_logs")
                 .upsert(normalizedDailyLog)
                 .execute()
+
+            RNFLogger.dailyLog.info("operation=save_daily_log result=success")
+            return .savedRemotely(normalizedDailyLog)
         } catch {
-            // Local state stays consistent even if the backend call fails.
+            RNFLogger.dailyLog.error("operation=save_daily_log result=local_only error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return .savedLocallyOnly(normalizedDailyLog, error: .from(error))
         }
 
     }
 
-    func saveProfile(_ profile: Profile) async {
-        await userService.saveProfile(profile)
+    func saveAuthenticatedDailyLog(_ dailyLog: DailyLog) async -> RNFServiceWriteResult<DailyLog> {
+
+        guard let userId = dailyLog.user_id else {
+            RNFLogger.dailyLog.error("operation=save_daily_log result=not_saved error_category=unauthenticated")
+            return .notSaved(.unauthenticated)
+        }
+
+        do {
+            _ = try await authProvider.requireCurrentUserID(matching: userId)
+            return await saveDailyLog(dailyLog)
+        } catch {
+            RNFLogger.dailyLog.error("operation=save_daily_log result=not_saved error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
+            return .notSaved(.from(error))
+        }
+
     }
 
 }

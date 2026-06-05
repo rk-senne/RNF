@@ -86,15 +86,17 @@ final class PerkIntegrationTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase)
+            authProvider: authProvider
         )
         let engine = ProgressionEngine(
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             xpService: XPService(),
             questService: QuestService(supabase: supabase),
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         var profile = Self.makeProfile(id: userId)
@@ -112,9 +114,10 @@ final class PerkIntegrationTests: XCTestCase {
             completedHabitIDs: [],
             dailyLog: .today(goal: 1)
         )
-        engine.configure(gameState: gameState)
-
-        let progressionResult = await engine.processHabitCompletion(habitId: habitId)
+        let progressionResult = await engine.processHabitCompletion(
+            habitId: habitId,
+            input: ProgressionInput(gameState: gameState)
+        )
         let result = try XCTUnwrap(progressionResult)
 
         XCTAssertEqual(result.xpGained, 15)
@@ -213,6 +216,10 @@ final class PerkIntegrationTests: XCTestCase {
                 return (response, Self.jsonData(#"{"Key":"reading-proof/test.jpg","Id":"storage-id"}"#))
             }
 
+            if request.httpMethod == "GET", url.contains("reading_uploads") {
+                return (response, Self.jsonData("[]"))
+            }
+
             if request.httpMethod == "POST", url.contains("reading_uploads") {
                 return (
                     response,
@@ -234,32 +241,38 @@ final class PerkIntegrationTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
         let dailyLogService = DailyLogService(
             supabase: supabase,
-            userService: UserService(supabase: supabase)
+            authProvider: authProvider
         )
         let challengeEngine = ChallengeEngine(
-            challengeService: ChallengeService(supabase: supabase),
+            challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
             dailyLogService: dailyLogService,
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider),
+            authProvider: authProvider
         )
         let workoutEngine = WorkoutEngine(
             workoutService: WorkoutService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             challengeEngine: challengeEngine,
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let readingEngine = ReadingEngine(
             readingService: ReadingService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             challengeEngine: challengeEngine,
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         gameState.profile = Self.makeProfile(id: userId)
@@ -272,6 +285,17 @@ final class PerkIntegrationTests: XCTestCase {
             date: date
         )
         let workoutResult = try XCTUnwrap(completedWorkout)
+        gameState.apply(
+            profile: workoutResult.profile,
+            levelState: workoutResult.levelState,
+            titles: gameState.titles,
+            quests: gameState.quests,
+            dailyGoal: gameState.dailyGoal,
+            dailyCompleted: gameState.dailyCompleted,
+            completedHabitIDs: gameState.completedHabitIDs,
+            dailyLog: workoutResult.dailyLog
+        )
+
         let completedReading = await readingEngine.completeReading(
             imageData: Data("proof".utf8),
             date: date

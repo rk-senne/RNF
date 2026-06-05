@@ -8,12 +8,15 @@ The schema supports:
 - XP progression
 - streak tracking
 - quests
+- skill trees
 - reading verification
 - subscriptions
 
-All tables must include:
+Most persistence tables include:
 
 created_at timestamp.
+
+Join/unlock tables may omit `created_at` when the runtime model uses a more specific timestamp such as `unlocked_at`.
 
 ---
 
@@ -245,6 +248,83 @@ Supabase Storage bucket:
 
 reading-proof
 
+Objects are stored under:
+
+reading-proof/{user_id}/{yyyy-MM-dd}.jpg
+
+The bucket is private. Storage object policies scope access to the authenticated user's first path segment.
+
+---
+
+# Table: skill_nodes
+
+Stores global skill tree nodes.
+
+Fields:
+
+id (uuid primary key)
+
+name (text)
+
+stat_type (text)
+
+Values:
+
+- strength
+- discipline
+- focus
+- energy
+- wisdom
+- mind
+- spirit
+
+tier (integer)
+
+Values:
+
+- 1
+- 2
+- 3
+
+required_stat (integer, nullable)
+
+required_node (uuid foreign key -> skill_nodes.id, nullable)
+
+perk_type (text)
+
+Values:
+
+- xp_multiplier
+- stat_bonus
+- quest_reward_bonus
+- streak_protection
+
+Compatibility aliases are allowed for older perk names used by the app mapper.
+
+perk_value (integer)
+
+created_at (timestamp)
+
+---
+
+# Table: user_skills
+
+Stores user-owned skill node unlocks.
+
+Fields:
+
+id (uuid primary key)
+
+user_id (uuid foreign key -> users.id)
+
+skill_node_id (uuid foreign key -> skill_nodes.id)
+
+unlocked_at (timestamp)
+
+Uniqueness:
+
+user_id + skill_node_id
+
 ---
 
 # Data Relationships
@@ -259,7 +339,11 @@ users → challenges
 
 users → reading_uploads
 
+users → user_skills
+
 habits → habit_completions
+
+skill_nodes → user_skills
 
 quests used by QuestGenerator.
 
@@ -276,12 +360,24 @@ forgiven → green with marker
 
 ---
 
-# Security (Future Phase)
+# Security
 
-Enable Supabase Row Level Security.
+Supabase Row Level Security is enabled by migrations.
 
-Example policy:
+Ownership policy shape:
 
-Users can only access their own records.
+users.id = auth.uid()
+
+All user-owned tables use:
 
 auth.uid() = user_id
+
+Global catalog tables:
+
+skill_nodes can be read by authenticated users.
+
+Storage:
+
+reading-proof objects are private and scoped to:
+
+(storage.foldername(name))[1] = auth.uid()

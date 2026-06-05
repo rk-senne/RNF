@@ -26,7 +26,7 @@ final class WorkoutEngineTests: XCTestCase {
         )
     }
 
-    func testCompleteWorkoutAwardsXPAndUpdatesGameState() async throws {
+    func testCompleteWorkoutAwardsXPWithoutMutatingGameState() async throws {
         let userId = UUID()
         let dailyLogId = UUID()
         let date = Self.date("2026-06-08T00:00:00Z")
@@ -85,19 +85,26 @@ final class WorkoutEngineTests: XCTestCase {
         }
 
         let supabase = makeSupabaseService()
-        let dailyLogService = DailyLogService(supabase: supabase)
+        let authProvider = StaticTestAuthProvider(userId: userId)
+        let dailyLogService = DailyLogService(
+            supabase: supabase,
+            authProvider: authProvider
+        )
         let engine = WorkoutEngine(
             workoutService: WorkoutService(
                 supabase: supabase,
-                dailyLogService: dailyLogService
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
             dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
             xpService: XPService(),
             challengeEngine: ChallengeEngine(
-                challengeService: ChallengeService(supabase: supabase),
-                dailyLogService: dailyLogService
+                challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
             ),
-            skillTreeService: SkillTreeService(supabase: supabase)
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
         )
         let gameState = GameState()
         gameState.profile = Profile(
@@ -132,15 +139,179 @@ final class WorkoutEngineTests: XCTestCase {
         XCTAssertEqual(result?.profile.level, 2)
         XCTAssertEqual(result?.levelState.leveledUp, true)
         XCTAssertEqual(result?.dailyLog.xp_earned, 15)
-        XCTAssertEqual(gameState.profile.xp_total, 210)
-        XCTAssertEqual(gameState.level, 2)
-        XCTAssertEqual(gameState.dailyLog.workout_completed, true)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
+        XCTAssertEqual(gameState.level, 1)
+        XCTAssertFalse(gameState.dailyLog.workout_completed)
 
         XCTAssertTrue(requests.contains { $0.httpMethod == "PATCH" && ($0.url?.absoluteString.contains("daily_logs") ?? false) })
         let workoutPatch = patchBodies
             .compactMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Bool] }
             .first { $0["workout_completed"] == true }
         XCTAssertNotNil(workoutPatch)
+    }
+
+    func testCompleteWorkoutReturnsExistingDailyLogWithoutPatchWhenAlreadyCompleted() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+
+            return (
+                response,
+                Self.jsonData(
+                    Self.dailyLogJSON(
+                        id: dailyLogId,
+                        userId: userId,
+                        workoutCompleted: true,
+                        wrappedInArray: request.httpMethod == "GET"
+                    )
+                )
+            )
+        }
+
+        let supabase = makeSupabaseService()
+        let service = WorkoutService(
+            supabase: supabase,
+            dailyLogService: DailyLogService(supabase: supabase)
+        )
+        let result = try await service.completeWorkout(userId: userId, date: date)
+
+        XCTAssertEqual(result.id, dailyLogId)
+        XCTAssertTrue(result.workout_completed)
+        XCTAssertEqual(requests.map(\.httpMethod), ["GET"])
+    }
+
+    func testRetryingCompletedWorkoutDoesNotAwardDuplicateXPOrPatchAgain() async throws {
+        let userId = UUID()
+        let dailyLogId = UUID()
+        let date = Self.date("2026-06-08T00:00:00Z")
+        var requests: [URLRequest] = []
+        var patchBodies: [Data] = []
+        var workoutCompleted = false
+
+        MockURLProtocol.requestHandler = { request in
+            requests.append(request)
+            if let body = Self.requestBodyData(from: request) {
+                patchBodies.append(body)
+            }
+
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            let url = request.url?.absoluteString ?? ""
+
+            if request.httpMethod == "GET", url.contains("daily_logs") {
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(
+                            id: dailyLogId,
+                            userId: userId,
+                            workoutCompleted: workoutCompleted,
+                            wrappedInArray: true
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "PATCH", url.contains("daily_logs") {
+                workoutCompleted = true
+                return (
+                    response,
+                    Self.jsonData(
+                        Self.dailyLogJSON(
+                            id: dailyLogId,
+                            userId: userId,
+                            workoutCompleted: true
+                        )
+                    )
+                )
+            }
+
+            if request.httpMethod == "GET", url.contains("challenges") {
+                return (response, Self.jsonData("[]"))
+            }
+
+            return (response, Self.jsonData("{}"))
+        }
+
+        let supabase = makeSupabaseService()
+        let authProvider = StaticTestAuthProvider(userId: userId)
+        let dailyLogService = DailyLogService(
+            supabase: supabase,
+            authProvider: authProvider
+        )
+        let engine = WorkoutEngine(
+            workoutService: WorkoutService(
+                supabase: supabase,
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
+            ),
+            dailyLogService: dailyLogService,
+            userService: UserService(supabase: supabase, authProvider: authProvider),
+            xpService: XPService(),
+            challengeEngine: ChallengeEngine(
+                challengeService: ChallengeService(supabase: supabase, authProvider: authProvider),
+                dailyLogService: dailyLogService,
+                authProvider: authProvider
+            ),
+            skillTreeService: SkillTreeService(supabase: supabase, authProvider: authProvider)
+        )
+        let gameState = GameState()
+        gameState.profile = Profile(
+            id: userId,
+            email: "test@example.com",
+            xp_total: 195,
+            level: 1,
+            streak: 0,
+            forgiveness_tokens: 0,
+            morning_notification_time: nil,
+            evening_notification_time: nil,
+            strength: 1,
+            discipline: 1,
+            focus: 1,
+            energy: 1,
+            wisdom: 1,
+            mind: 1,
+            spirit: 1,
+            created_at: nil
+        )
+        engine.configure(gameState: gameState)
+
+        let firstResult = await engine.completeWorkout(
+            durationSeconds: 100,
+            elapsedSeconds: 80,
+            date: date
+        )
+        let retryResult = await engine.completeWorkout(
+            durationSeconds: 100,
+            elapsedSeconds: 80,
+            date: date
+        )
+
+        XCTAssertEqual(firstResult?.xpAwarded, 15)
+        XCTAssertNil(retryResult)
+        XCTAssertEqual(gameState.profile.xp_total, 195)
+        XCTAssertEqual(
+            patchBodies
+                .compactMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Bool] }
+                .filter { $0["workout_completed"] == true }
+                .count,
+            1
+        )
     }
 
     private func makeSupabaseService() -> SupabaseService {

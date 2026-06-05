@@ -261,13 +261,13 @@ struct SubscriptionManagementView: View {
     }
 
     private func syncSubscription() async {
-        guard let userId else { return }
+        guard userId != nil else { return }
 
         isSyncing = true
         syncMessage = nil
 
         do {
-            try await subscriptionService.syncSubscription(userId: userId)
+            try await subscriptionService.syncSubscription()
             entitlement = await subscriptionService.validateEntitlement()
             syncMessage = "Subscription state synced."
         } catch {

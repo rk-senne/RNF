@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct WorkoutCompletionResult {
 
@@ -17,6 +18,7 @@ final class WorkoutEngine {
 
     private let workoutService: WorkoutService
     private let dailyLogService: DailyLogService
+    private let userService: UserService
     private let xpService: XPService
     private let challengeEngine: ChallengeEngine
     private let skillTreeService: SkillTreeService
@@ -26,6 +28,7 @@ final class WorkoutEngine {
     init(
         workoutService: WorkoutService = WorkoutService(),
         dailyLogService: DailyLogService = DailyLogService(),
+        userService: UserService = UserService(),
         xpService: XPService = XPService(),
         challengeEngine: ChallengeEngine? = nil,
         skillTreeService: SkillTreeService = SkillTreeService(),
@@ -33,6 +36,7 @@ final class WorkoutEngine {
     ) {
         self.workoutService = workoutService
         self.dailyLogService = dailyLogService
+        self.userService = userService
         self.xpService = xpService
         self.challengeEngine = challengeEngine ?? ChallengeEngine()
         self.skillTreeService = skillTreeService
@@ -57,26 +61,22 @@ final class WorkoutEngine {
             let gameState,
             !gameState.profile.isPlaceholder
         else {
+            RNFLogger.sync.info("operation=complete_workout result=skipped reason=invalid_or_placeholder")
             return nil
         }
 
         do {
-            let existingLog = try await workoutService.dailyLogForWorkout(
-                userId: gameState.profile.id,
-                date: date
-            )
+            let existingLog = try await workoutService.dailyLogForWorkout(date: date)
 
             guard !existingLog.workout_completed else {
+                RNFLogger.sync.info("operation=complete_workout result=skipped reason=duplicate")
                 return nil
             }
 
-            var completedLog = try await workoutService.completeWorkout(
-                userId: gameState.profile.id,
-                date: date
-            )
+            var completedLog = try await workoutService.completeWorkout(date: date)
 
             var updatedProfile = gameState.profile
-            let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+            let activePerks = (try? await skillTreeService.authenticatedActivePerks(for: updatedProfile)) ?? .empty
             let awardedXP = PerkSystem.modifiedXPReward(
                 baseXP: Self.workoutXP,
                 activePerks: activePerks,
@@ -91,24 +91,15 @@ final class WorkoutEngine {
             updatedProfile.level = levelState.level
             completedLog.xp_earned += awardedXP
 
-            await dailyLogService.saveDailyLog(completedLog)
-            await dailyLogService.saveProfile(updatedProfile)
+            let dailyLogSaveResult = await dailyLogService.saveAuthenticatedDailyLog(completedLog)
+            let profileSaveResult = await userService.saveAuthenticatedProfile(updatedProfile)
 
-            gameState.apply(
-                profile: updatedProfile,
-                levelState: levelState,
-                titles: gameState.titles,
-                quests: gameState.quests,
-                dailyGoal: gameState.dailyGoal,
-                dailyCompleted: gameState.dailyCompleted,
-                completedHabitIDs: gameState.completedHabitIDs,
-                dailyLog: completedLog
-            )
+            guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
+                RNFLogger.sync.error("operation=complete_workout result=failure step=save_state daily_log_state=\(String(describing: dailyLogSaveResult.saveState), privacy: .public) profile_state=\(String(describing: profileSaveResult.saveState), privacy: .public)")
+                return nil
+            }
 
-            let advancedChallenge = await challengeEngine.advanceIfDayComplete(
-                userId: updatedProfile.id,
-                date: date
-            )
+            let advancedChallenge = await challengeEngine.advanceIfDayComplete(date: date)
 
             await analyticsService.trackEvent(
                 .workoutCompleted,
@@ -132,6 +123,7 @@ final class WorkoutEngine {
                 )
             }
 
+            RNFLogger.sync.info("operation=complete_workout result=success challenge_advanced=\(advancedChallenge != nil, privacy: .public)")
             return WorkoutCompletionResult(
                 dailyLog: completedLog,
                 profile: updatedProfile,
@@ -140,6 +132,7 @@ final class WorkoutEngine {
                 advancedChallenge: advancedChallenge
             )
         } catch {
+            RNFLogger.sync.error("operation=complete_workout result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }

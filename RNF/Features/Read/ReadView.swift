@@ -4,15 +4,6 @@ import UIKit
 
 struct ReadView: View {
 
-    private enum UploadState {
-        case idle
-        case loadingPhoto
-        case ready
-        case uploading
-        case completed(Int)
-        case failed(String)
-    }
-
     private struct ReadingArticle: Identifiable {
         let id = UUID()
         let title: String
@@ -39,12 +30,15 @@ struct ReadView: View {
     ]
 
     @EnvironmentObject private var game: GameState
-    @State private var selectedPhoto: PhotosPickerItem?
-    @State private var selectedImageData: Data?
-    @State private var selectedImage: UIImage?
-    @State private var uploadState: UploadState = .idle
+    @StateObject private var viewModel: ReadViewModel
 
-    private let readingEngine = ReadingEngine()
+    init() {
+        _viewModel = StateObject(wrappedValue: ReadViewModel())
+    }
+
+    init(viewModel: ReadViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
 
@@ -74,11 +68,11 @@ struct ReadView: View {
         .navigationTitle("Read")
         .navigationBarTitleDisplayMode(.large)
         .task {
-            readingEngine.configure(gameState: game)
+            viewModel.configure(gameState: game)
         }
-        .onChange(of: selectedPhoto) { _, newPhoto in
+        .onChange(of: viewModel.selectedPhoto) { _, newPhoto in
             Task {
-                await loadSelectedPhoto(newPhoto)
+                await viewModel.loadSelectedPhoto(newPhoto)
             }
         }
 
@@ -125,7 +119,7 @@ struct ReadView: View {
                     .foregroundStyle(Color.secondary)
                 }
 
-                if let selectedImage {
+                if let selectedImage = viewModel.selectedImage {
                     Image(uiImage: selectedImage)
                         .resizable()
                         .scaledToFill()
@@ -145,10 +139,14 @@ struct ReadView: View {
 
     private var uploadControls: some View {
 
-        VStack(alignment: .leading, spacing: 10) {
+        let photoButtonTitle = viewModel.photoButtonTitle
+        let submitButtonTitle = viewModel.submitButtonTitle
+        let submitButtonIcon = viewModel.submitButtonIcon
+
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 PhotosPicker(
-                    selection: $selectedPhoto,
+                    selection: $viewModel.selectedPhoto,
                     matching: .images,
                     photoLibrary: .shared()
                 ) {
@@ -156,18 +154,18 @@ struct ReadView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(isUploading)
+                .disabled(viewModel.isUploading)
 
                 Button {
                     Task {
-                        await submitProof()
+                        await viewModel.submitProof()
                     }
                 } label: {
                     Label(submitButtonTitle, systemImage: submitButtonIcon)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(selectedImageData == nil || isUploading || isLoadingPhoto)
+                .disabled(viewModel.selectedImageData == nil || viewModel.isUploading || viewModel.isLoadingPhoto)
             }
 
             uploadStatus
@@ -178,7 +176,7 @@ struct ReadView: View {
     @ViewBuilder
     private var uploadStatus: some View {
 
-        switch uploadState {
+        switch viewModel.uploadState {
         case .idle:
             EmptyView()
         case .loadingPhoto:
@@ -297,77 +295,6 @@ struct ReadView: View {
                     .fill(tint.opacity(0.12))
             )
 
-    }
-
-    private var photoButtonTitle: String {
-        selectedImage == nil ? "Choose Photo" : "Change"
-    }
-
-    private var submitButtonTitle: String {
-        isUploading ? "Uploading" : "Submit"
-    }
-
-    private var submitButtonIcon: String {
-        isUploading ? "hourglass" : "arrow.up.circle.fill"
-    }
-
-    private var isLoadingPhoto: Bool {
-        if case .loadingPhoto = uploadState {
-            return true
-        }
-
-        return false
-    }
-
-    private var isUploading: Bool {
-        if case .uploading = uploadState {
-            return true
-        }
-
-        return false
-    }
-
-    private func loadSelectedPhoto(_ photo: PhotosPickerItem?) async {
-        guard let photo else {
-            return
-        }
-
-        uploadState = .loadingPhoto
-
-        do {
-            guard
-                let data = try await photo.loadTransferable(type: Data.self),
-                let image = UIImage(data: data)
-            else {
-                selectedImageData = nil
-                selectedImage = nil
-                uploadState = .failed("Photo could not be loaded")
-                return
-            }
-
-            selectedImageData = data
-            selectedImage = image
-            uploadState = .ready
-        } catch {
-            selectedImageData = nil
-            selectedImage = nil
-            uploadState = .failed("Photo could not be loaded")
-        }
-    }
-
-    private func submitProof() async {
-        guard let selectedImageData else {
-            uploadState = .failed("Choose a photo first")
-            return
-        }
-
-        uploadState = .uploading
-
-        if let result = await readingEngine.completeReading(imageData: selectedImageData) {
-            uploadState = .completed(result.xpAwarded)
-        } else {
-            uploadState = .failed("Proof could not be uploaded")
-        }
     }
 
 }

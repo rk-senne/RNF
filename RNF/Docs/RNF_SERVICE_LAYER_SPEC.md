@@ -142,6 +142,10 @@ Manages daily progress.
 
 This is the backbone of the system.
 
+Date policy:
+
+Daily log service methods that accept a `Date` must normalize it with the user's current calendar before querying or writing `daily_logs.date`. User-facing "today" follows the user's current calendar/timezone, while persisted daily records are stored as normalized day values. Daily log lookups must therefore compare against the normalized start of the target day instead of the raw timestamp that triggered the action.
+
 Responsibilities:
 
 Create daily log  
@@ -283,6 +287,10 @@ Completion sequence:
 # ChallengeService
 
 Manages the 90-day challenge system.
+
+Date policy:
+
+Challenge start and end calculations use normalized local start dates. `startChallenge()` stores the normalized start day, and challenge day advancement compares normalized calendar days so daylight-saving transitions do not skip or duplicate challenge days. If a future server-side policy replaces local normalization, service and engine tests must be updated together.
 
 Responsibilities:
 

@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 struct ReadingCompletionResult {
 
@@ -18,6 +19,7 @@ final class ReadingEngine {
 
     private let readingService: ReadingService
     private let dailyLogService: DailyLogService
+    private let userService: UserService
     private let xpService: XPService
     private let challengeEngine: ChallengeEngine
     private let skillTreeService: SkillTreeService
@@ -27,6 +29,7 @@ final class ReadingEngine {
     init(
         readingService: ReadingService = ReadingService(),
         dailyLogService: DailyLogService = DailyLogService(),
+        userService: UserService = UserService(),
         xpService: XPService = XPService(),
         challengeEngine: ChallengeEngine? = nil,
         skillTreeService: SkillTreeService = SkillTreeService(),
@@ -34,6 +37,7 @@ final class ReadingEngine {
     ) {
         self.readingService = readingService
         self.dailyLogService = dailyLogService
+        self.userService = userService
         self.xpService = xpService
         self.challengeEngine = challengeEngine ?? ChallengeEngine()
         self.skillTreeService = skillTreeService
@@ -50,32 +54,27 @@ final class ReadingEngine {
     ) async -> ReadingCompletionResult? {
 
         guard let gameState, !gameState.profile.isPlaceholder else {
+            RNFLogger.sync.info("operation=complete_reading result=skipped reason=missing_or_placeholder_state")
             return nil
         }
 
         do {
-            let existingLog = try await readingService.dailyLogForReading(
-                userId: gameState.profile.id,
-                date: date
-            )
+            let existingLog = try await readingService.dailyLogForReading(date: date)
 
             guard !existingLog.reading_completed else {
+                RNFLogger.sync.info("operation=complete_reading result=skipped reason=duplicate")
                 return nil
             }
 
             let upload = try await readingService.uploadReadingProof(
                 imageData: imageData,
-                userId: gameState.profile.id,
                 date: date
             )
 
-            var completedLog = try await readingService.dailyLogForReading(
-                userId: gameState.profile.id,
-                date: date
-            )
+            var completedLog = try await readingService.dailyLogForReading(date: date)
 
             var updatedProfile = gameState.profile
-            let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+            let activePerks = (try? await skillTreeService.authenticatedActivePerks(for: updatedProfile)) ?? .empty
             let awardedXP = PerkSystem.modifiedXPReward(
                 baseXP: Self.readingXP,
                 activePerks: activePerks,
@@ -90,24 +89,15 @@ final class ReadingEngine {
             updatedProfile.level = levelState.level
             completedLog.xp_earned += awardedXP
 
-            await dailyLogService.saveDailyLog(completedLog)
-            await dailyLogService.saveProfile(updatedProfile)
+            let dailyLogSaveResult = await dailyLogService.saveAuthenticatedDailyLog(completedLog)
+            let profileSaveResult = await userService.saveAuthenticatedProfile(updatedProfile)
 
-            gameState.apply(
-                profile: updatedProfile,
-                levelState: levelState,
-                titles: gameState.titles,
-                quests: gameState.quests,
-                dailyGoal: gameState.dailyGoal,
-                dailyCompleted: gameState.dailyCompleted,
-                completedHabitIDs: gameState.completedHabitIDs,
-                dailyLog: completedLog
-            )
+            guard dailyLogSaveResult.savedRemotely, profileSaveResult.savedRemotely else {
+                RNFLogger.sync.error("operation=complete_reading result=failure step=save_state daily_log_state=\(String(describing: dailyLogSaveResult.saveState), privacy: .public) profile_state=\(String(describing: profileSaveResult.saveState), privacy: .public)")
+                return nil
+            }
 
-            let advancedChallenge = await challengeEngine.advanceIfDayComplete(
-                userId: updatedProfile.id,
-                date: date
-            )
+            let advancedChallenge = await challengeEngine.advanceIfDayComplete(date: date)
 
             await analyticsService.trackEvent(
                 .readingCompleted,
@@ -131,6 +121,7 @@ final class ReadingEngine {
                 )
             }
 
+            RNFLogger.sync.info("operation=complete_reading result=success challenge_advanced=\(advancedChallenge != nil, privacy: .public)")
             return ReadingCompletionResult(
                 upload: upload,
                 dailyLog: completedLog,
@@ -140,6 +131,7 @@ final class ReadingEngine {
                 advancedChallenge: advancedChallenge
             )
         } catch {
+            RNFLogger.sync.error("operation=complete_reading result=failure error_category=\(RNFLogger.errorCategory(error), privacy: .public)")
             return nil
         }
     }
