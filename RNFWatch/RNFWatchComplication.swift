@@ -42,14 +42,22 @@ struct WatchComplicationView: View {
     var body: some View {
         switch family {
         case .accessoryCircular:
+            // P20-EXP-19d: Show progress gauge with streak
             ZStack {
-                ProgressView(value: entry.progress)
-                    .progressViewStyle(.circular)
-                Text("\(entry.streak)")
-                    .font(.system(size: 14, weight: .bold))
+                Gauge(value: entry.progress) {
+                    Text("")
+                }
+                .gaugeStyle(.accessoryCircularCapacity)
+                VStack(spacing: 0) {
+                    Text(StreakTierSystem.icon(for: StreakTierSystem.tier(for: entry.streak)))
+                        .font(.system(size: 10))
+                    Text("\(entry.streak)")
+                        .font(.system(size: 12, weight: .bold))
+                }
             }
         case .accessoryInline:
-            Text("🔥 \(entry.streak) streak")
+            // P20-EXP-19d: Show tier name in inline
+            Text("\(StreakTierSystem.icon(for: StreakTierSystem.tier(for: entry.streak))) \(entry.streak)d • \(StreakTierSystem.tier(for: entry.streak).rawValue)")
         default:
             Text("\(entry.streak)")
         }

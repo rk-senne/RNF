@@ -14,7 +14,7 @@ extension Date {
         Calendar.current.date(
             byAdding: DateComponents(day: 1, second: -1),
             to: startOfDay
-        )!
+        ) ?? self
     }
 
     // MARK: Is Today
@@ -55,7 +55,7 @@ extension Date {
             byAdding: .day,
             value: days,
             to: self
-        )!
+        ) ?? self
     }
 
     // MARK: Start of Month
@@ -67,7 +67,7 @@ extension Date {
             from: self
         )
 
-        return Calendar.current.date(from: components)!
+        return Calendar.current.date(from: components) ?? self
     }
 
     // MARK: End of Month
@@ -77,7 +77,7 @@ extension Date {
         Calendar.current.date(
             byAdding: DateComponents(month: 1, day: -1),
             to: startOfMonth
-        )!
+        ) ?? self
     }
 
     // MARK: Format Date
