@@ -9,7 +9,7 @@ final class EvolutionService {
     }
 
     func evolutionState(for profile: Profile) -> EvolutionState {
-
+        // TODO: Integrate with Supabase for persisted evolution state
         _ = supabase
 
         return EvolutionSystem.state(for: profile)

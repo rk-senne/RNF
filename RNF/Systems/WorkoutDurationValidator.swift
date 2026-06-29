@@ -23,11 +23,4 @@ struct WorkoutDurationValidator {
         ) >= WorkoutSession.completionThreshold
     }
 
-    static func isComplete(_ session: WorkoutSession) -> Bool {
-        isComplete(
-            durationSeconds: session.duration_seconds,
-            elapsedSeconds: session.elapsed_seconds
-        )
-    }
-
 }

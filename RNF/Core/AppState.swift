@@ -8,5 +8,8 @@ enum AppState: Equatable {
     case challengeActive
     case dailyProgress
     case dayComplete
+    case missedDay
     case challengeComplete
+    case offlineFallback
+    case guestTryout
 }

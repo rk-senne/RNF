@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UIKit
 
 @MainActor
 final class HabitsViewModel: ObservableObject {
@@ -11,6 +12,7 @@ final class HabitsViewModel: ObservableObject {
     @Published var unlockedBadge = ""
     @Published var animatedHabit: UUID?
     @Published var loadErrorMessage: String?
+    @Published var persistenceError: RNFServiceError?
     @Published var weeklyHabit: Habit?
 
     private let userService: UserService
@@ -73,6 +75,9 @@ final class HabitsViewModel: ObservableObject {
 
     func handleForegroundTransition() {
         resetDailyStateIfNeeded()
+        if let gameState {
+            WidgetDataWriter.shared.write(from: gameState)
+        }
     }
 
     func completeHabit(_ habit: Habit) async {
@@ -91,8 +96,12 @@ final class HabitsViewModel: ObservableObject {
         }
 
         guard let result = await progressionEngine.processHabitCompletion(habitId: habit.id) else {
+            persistenceError = .unknown
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
             return
         }
+        persistenceError = nil
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
         applyState(
             profile: result.updatedProfile,
@@ -108,12 +117,27 @@ final class HabitsViewModel: ObservableObject {
         showLevelUp = result.leveledUp
         showMissionComplete = result.missionCompleted
 
+        if result.leveledUp {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+
+        if result.missionCompleted {
+            let streak = result.updatedProfile.streak
+            if streak == 7 || streak == 30 || streak == 60 || streak == 90 {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
+        }
+
         if let badge = result.unlockedBadge {
             unlockedBadge = badge
             showBadgeUnlocked = true
         } else {
             unlockedBadge = ""
             showBadgeUnlocked = false
+        }
+
+        if let gameState {
+            WidgetDataWriter.shared.write(from: gameState)
         }
     }
 

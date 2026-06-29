@@ -165,7 +165,102 @@ Community streak events
 
 ---
 
-# Phase 5 — AI Expansion
+# Phase 15 — Launch Enhancements
+
+Goal:
+
+Polish UX, add resilience, and improve first-session conversion before public launch.
+
+Depends on: Phase 14 completion.
+
+---
+
+## Haptic Feedback and Micro-Animations
+
+Haptic success tap on habit completion  
+XP gain animation with haptic pulse on level-up  
+Streak milestone celebration animation
+
+---
+
+## iOS Widget
+
+WidgetKit extension with shared data model  
+Small widget: streak count + daily progress ring  
+Medium widget: today's quest list with completion state  
+Timeline refresh on habit completion and app foreground
+
+---
+
+## Data Export
+
+JSON export of user progress  
+CSV export for daily logs and habit completions  
+Share sheet integration for exported files
+
+---
+
+## Onboarding Friction Reduction
+
+Guest tryout mode: one day of habit tracking without account creation  
+Account creation gate after first day with data migration to authenticated user
+
+---
+
+## Error UX
+
+Toast/banner error component for transient failures  
+Retry action on error banners  
+Offline indicator banner when network unreachable
+
+---
+
+## Offline Handling
+
+NetworkMonitor service using NWPathMonitor  
+Local-first write queue for habit completions when offline  
+Background sync flush on connectivity restore  
+Idempotent deduplication on sync flush
+
+---
+
+## Session Restoration Robustness
+
+Token expiry detection and silent refresh  
+Graceful fallback state when Supabase unreachable during launch  
+Cached last-known state display during session restoration
+
+---
+
+## Accessibility Audit
+
+44pt minimum tap target verification across all screens  
+VoiceOver labels and hints on all custom components  
+Dynamic Type support verification at all accessibility sizes  
+WCAG AA contrast ratio verification for all color combinations  
+Reduce Motion support for all animations
+
+---
+
+## App Store Rating Prompt
+
+SKStoreReviewController trigger at streak milestones (7-day, 30-day, 50 habits)  
+90-day cooldown enforcement  
+Never prompt during onboarding or after failures
+
+---
+
+## Theme Toggle
+
+Theme preference model (light / dark / system) persisted in UserDefaults  
+preferredColorScheme applied at app root  
+Theme selection UI in profile settings
+
+---
+
+# Phase 5 — AI Expansion [DEFERRED]
+
+Status: DEFERRED — not required for launch. Revisit post-launch when retention data justifies personalization investment.
 
 Goal:
 

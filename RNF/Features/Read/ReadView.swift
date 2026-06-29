@@ -390,5 +390,6 @@ private extension View {
 #Preview {
     NavigationStack {
         ReadView()
+            .environmentObject(GameState())
     }
 }

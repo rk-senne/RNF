@@ -259,9 +259,235 @@ users → challenges
 
 users → reading_uploads
 
+users → workouts
+
+users → bosses
+
+users → user_achievements
+
+users → mastery_paths
+
+users → user_skills
+
+users → guild_members
+
+guilds → guild_members
+
+guilds → social_challenges
+
+skill_nodes → user_skills
+
 habits → habit_completions
 
 quests used by QuestGenerator.
+
+---
+
+# Table: workouts
+
+Stores individual workout sessions.
+
+Fields:
+
+id (uuid primary key)
+
+user_id (uuid foreign key → users.id)
+
+date (date)
+
+workout_type (text)
+
+target_duration_seconds (integer)
+
+completed_duration_seconds (integer, default 0)
+
+completed (boolean, default false)
+
+xp_awarded (integer, default 0)
+
+created_at (timestamptz)
+
+Note: Pre-provisioned for Phase 2. Phase 1 uses daily_logs.workout_completed.
+
+---
+
+# Table: bosses
+
+Symbolic boss battles for discipline reinforcement.
+
+Fields:
+
+id (uuid primary key)
+
+user_id (uuid foreign key → users.id)
+
+boss_type (text: procrastination, doubt, laziness, distraction, apathy)
+
+max_hp (integer)
+
+current_hp (integer)
+
+status (text: locked, active, defeated)
+
+defeated_at (timestamptz, nullable)
+
+created_at (timestamptz)
+
+---
+
+# Table: user_achievements
+
+Tracks unlocked achievements per user.
+
+Fields:
+
+id (uuid primary key)
+
+user_id (uuid foreign key → users.id)
+
+achievement_id (text)
+
+unlocked_at (timestamptz)
+
+Constraint: unique (user_id, achievement_id)
+
+---
+
+# Table: mastery_paths
+
+Tracks mastery path specialization progress.
+
+Fields:
+
+id (uuid primary key)
+
+user_id (uuid foreign key → users.id)
+
+path_type (text: warrior, scholar, monk, athlete, strategist)
+
+tier (integer, 1–3)
+
+xp_in_path (integer, default 0)
+
+started_at (timestamptz)
+
+Constraint: unique (user_id, path_type)
+
+---
+
+# Table: guilds
+
+Social accountability groups.
+
+Fields:
+
+id (uuid primary key)
+
+name (text)
+
+description (text, nullable)
+
+member_count (integer, default 1)
+
+total_xp (integer, default 0)
+
+created_by (uuid foreign key → users.id)
+
+created_at (timestamptz)
+
+---
+
+# Table: guild_members
+
+Guild membership join table.
+
+Fields:
+
+id (uuid primary key)
+
+guild_id (uuid foreign key → guilds.id)
+
+user_id (uuid foreign key → users.id)
+
+role (text: leader, member)
+
+joined_at (timestamptz)
+
+Constraint: unique (guild_id, user_id)
+
+---
+
+# Table: social_challenges
+
+Guild-level shared challenges.
+
+Fields:
+
+id (uuid primary key)
+
+guild_id (uuid foreign key → guilds.id)
+
+title (text)
+
+description (text, nullable)
+
+target_completions (integer)
+
+current_completions (integer, default 0)
+
+status (text: active, completed, expired)
+
+start_date (date)
+
+end_date (date)
+
+created_at (timestamptz)
+
+Constraint: end_date >= start_date
+
+---
+
+# Table: skill_nodes
+
+Skill tree node definitions.
+
+Fields:
+
+id (uuid primary key)
+
+name (text)
+
+stat_type (text: strength, discipline, focus, energy, wisdom, mind, spirit)
+
+tier (integer, 1–3)
+
+required_stat (integer, nullable)
+
+required_node (uuid foreign key → skill_nodes.id, nullable)
+
+perk_type (text)
+
+perk_value (integer, default 0)
+
+created_at (timestamptz)
+
+---
+
+# Table: user_skills
+
+Tracks user skill tree unlocks.
+
+Fields:
+
+id (uuid primary key)
+
+user_id (uuid foreign key → users.id)
+
+skill_node_id (uuid foreign key → skill_nodes.id)
+
+unlocked_at (timestamptz)
+
+Constraint: unique (user_id, skill_node_id)
 
 ---
 

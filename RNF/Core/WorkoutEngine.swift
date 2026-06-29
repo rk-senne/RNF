@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct WorkoutCompletionResult {
 
@@ -140,12 +141,13 @@ final class WorkoutEngine {
                 advancedChallenge: advancedChallenge
             )
         } catch {
+            RNFLogger.dailyLog.error("WorkoutEngine.completeWorkout failed: \(error.localizedDescription)")
             return nil
         }
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

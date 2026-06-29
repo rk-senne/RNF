@@ -1,6 +1,7 @@
 import Foundation
 import Supabase
 import PostgREST
+import os
 
 final class WorkoutService {
 
@@ -34,6 +35,11 @@ final class WorkoutService {
     func completeWorkout(userId: UUID, date: Date = Date()) async throws -> DailyLog {
         let dailyLog = try await dailyLogForWorkout(userId: userId, date: date)
 
+        guard !dailyLog.workout_completed else {
+            RNFLogger.sync.info("Workout already completed for today, skipping")
+            return dailyLog
+        }
+
         struct WorkoutCompletionUpdate: Encodable {
             let workout_completed: Bool
         }
@@ -55,10 +61,28 @@ final class WorkoutService {
         return try await completeWorkout(userId: userId, date: date)
     }
 
-    func startTimer(duration: TimeInterval) async {
-        _ = duration
+    func completeWorkoutSafe(userId: UUID, date: Date = Date()) async -> RNFServiceWriteResult<DailyLog> {
+        do {
+            let dailyLog = try await dailyLogForWorkout(userId: userId, date: date)
+
+            guard !dailyLog.workout_completed else {
+                return .savedRemotely(dailyLog)
+            }
+
+            let completedLog = try await completeWorkout(userId: userId, date: date)
+            return .savedRemotely(completedLog)
+        } catch {
+            return .notSaved(.unknown)
+        }
     }
 
-    func cancelWorkout() async {}
+    func completeWorkoutSafe(date: Date = Date()) async -> RNFServiceWriteResult<DailyLog> {
+        do {
+            let userId = try await authProvider.requireCurrentUserID()
+            return await completeWorkoutSafe(userId: userId, date: date)
+        } catch {
+            return .notSaved(.unauthenticated)
+        }
+    }
 
 }

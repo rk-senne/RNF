@@ -10,10 +10,6 @@ final class CalendarService {
         self.supabase = supabase
     }
 
-    private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
-    }
-
     func getMonthLogs(userId: UUID, month: Date) async throws -> [DailyLog] {
 
         let calendar = Calendar.current
@@ -41,12 +37,12 @@ final class CalendarService {
 
     func groupMonthLogsByDay(_ logs: [DailyLog]) -> [Date: DailyLog] {
         logs.reduce(into: [:]) { groupedLogs, dailyLog in
-            groupedLogs[normalizedDay(dailyLog.date)] = dailyLog
+            groupedLogs[dailyLog.date.startOfDay] = dailyLog
         }
     }
 
     func calendarStatus(for date: Date, logsByDay: [Date: DailyLog]) -> DailyLogStatus {
-        guard let dailyLog = logsByDay[normalizedDay(date)] else {
+        guard let dailyLog = logsByDay[date.startOfDay] else {
             return .missed
         }
 

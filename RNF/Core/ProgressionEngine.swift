@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct ProgressionResult {
 
@@ -24,6 +25,7 @@ final class ProgressionEngine {
     private let skillTreeService: SkillTreeService
     private let analyticsService: AnalyticsService
     private weak var gameState: GameState?
+    private var isProcessing = false
 
     init(
         dailyLogService: DailyLogService = DailyLogService(),
@@ -44,6 +46,10 @@ final class ProgressionEngine {
     }
 
     func processHabitCompletion(habitId: UUID) async -> ProgressionResult? {
+
+        guard !isProcessing else { return nil }
+        isProcessing = true
+        defer { isProcessing = false }
 
         guard
             let gameState,
@@ -68,6 +74,7 @@ final class ProgressionEngine {
                 dailyGoal: dailyGoal
             )
         } catch {
+            RNFLogger.habitCompletion.error("ProgressionEngine.processHabitCompletion failed: \(error.localizedDescription)")
             return nil
         }
 
@@ -126,10 +133,13 @@ final class ProgressionEngine {
                     return nil
                 }
 
-                guard recordedCompletion.id == completion.id else {
-                    return nil
+                // Chaos #9 fix: If backend returns an existing completion (dedup),
+                // treat it as success — the completion exists, mission accomplished.
+                if recordedCompletion.id != completion.id {
+                    RNFLogger.habitCompletion.info("Dedup: existing completion \(recordedCompletion.id) used instead of \(completion.id)")
                 }
             } catch {
+                RNFLogger.habitCompletion.error("ProgressionEngine recordHabitCompletion failed: \(error.localizedDescription)")
                 return nil
             }
         }
@@ -153,6 +163,7 @@ final class ProgressionEngine {
                     updatedDailyLog = persistedDailyLog
                 }
             } catch {
+                RNFLogger.habitCompletion.error("ProgressionEngine updateStatus failed: \(error.localizedDescription)")
                 return nil
             }
         }
@@ -230,7 +241,7 @@ final class ProgressionEngine {
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

@@ -63,5 +63,7 @@ struct DailyMissionBar: View {
                 .foregroundStyle(.secondary)
 
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Daily mission, \(completed) of \(goal) habits completed, \(Int(progress * 100)) percent")
     }
 }

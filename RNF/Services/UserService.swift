@@ -68,23 +68,16 @@ final class UserService {
 
     func decrementForgivenessTokens(userId: UUID) async throws -> Int {
 
-        let currentTokens = try await fetchForgivenessTokens(userId: userId)
+        // Use atomic RPC to prevent TOCTOU race condition (MEDIUM-3 / Chaos #11)
+        struct RPCResult: Decodable { let use_forgiveness_token: Int }
 
-        guard currentTokens > 0 else {
-            return 0
-        }
-
-        let updatedTokens = currentTokens - 1
-        let updatedRow: ForgivenessTokenRow = try await supabase.client
-            .from("users")
-            .update(ForgivenessTokenUpdate(forgiveness_tokens: updatedTokens))
-            .eq("id", value: userId.uuidString)
-            .select("forgiveness_tokens")
-            .single()
+        let result: Int = try await supabase.client
+            .rpc("use_forgiveness_token", params: ["uid": userId.uuidString])
             .execute()
             .value
 
-        return updatedRow.forgiveness_tokens
+        // RPC returns -1 if no row was updated (tokens already 0)
+        return max(result, 0)
     }
 
     func decrementForgivenessTokens() async throws -> Int {
@@ -92,10 +85,11 @@ final class UserService {
         return try await decrementForgivenessTokens(userId: userId)
     }
 
-    func saveProfile(_ profile: Profile) async {
+    @discardableResult
+    func saveProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
 
         guard !profile.isPlaceholder else {
-            return
+            return .notSaved(.unauthenticated)
         }
 
         do {
@@ -103,8 +97,11 @@ final class UserService {
                 .from("users")
                 .upsert(profile)
                 .execute()
+            return .savedRemotely(profile)
         } catch {
-            // The local game state remains authoritative until auth is added.
+            // GAP 19: Surface persistence failures.
+            // Spec: RNF_PRODUCTION_READINESS_SPEC.md — "ViewModels must know whether data was saved."
+            return .savedLocallyOnly(profile, error: .networkUnavailable)
         }
 
     }

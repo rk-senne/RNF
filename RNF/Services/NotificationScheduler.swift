@@ -89,7 +89,7 @@ final class NotificationScheduler {
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

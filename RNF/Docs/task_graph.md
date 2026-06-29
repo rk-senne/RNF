@@ -24,11 +24,8 @@ Status legend:
 - `[x]` complete
 - `[ ]` not started
 
- NEXT TASK TO IMPLEMENT
-
-- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
-Depends on:
-- P14-SVC-02
+ ALL TASKS COMPLETE
+- P14-TST-04
 
 ## Phase 6 – Core Gameplay Completion
 
@@ -840,48 +837,517 @@ Depends on:
 - P14-SVC-01
 - P14-MIG-01
 
-- [ ] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
+- [x] P14-SVC-03 Harden workout and reading retries against duplicate daily rewards
 Depends on:
 - P14-SVC-02
 
-- [ ] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
+- [x] P14-SVC-04 Surface critical authenticated persistence failures to ViewModels
 Depends on:
 - P14-SVC-01
 
 ### Date And Time Safety
 
-- [ ] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
+- [x] P14-TIME-01 Add normalized-date tests for daily logs and challenge day boundaries
 Depends on:
 - P14-MIG-01
 
-- [ ] P14-TIME-02 Document timezone policy in service and state docs
+- [x] P14-TIME-02 Document timezone policy in service and state docs
 Depends on:
 - P14-TIME-01
 
 ### Observability
 
-- [ ] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
+- [x] P14-OBS-01 Add `Logger` categories for auth, daily log, habit completion, challenge, and sync
 Depends on:
 - P14-SVC-01
 
-- [ ] P14-OBS-02 Add user-safe logging to critical service and engine flows
+- [x] P14-OBS-02 Add user-safe logging to critical service and engine flows
 Depends on:
 - P14-OBS-01
 
 ### Production Tests
 
-- [ ] P14-TST-01 Add migration SQL structure tests or verification notes
+- [x] P14-TST-01 Add migration SQL structure tests or verification notes
 Depends on:
 - P14-MIG-03
 
-- [ ] P14-TST-02 Add auth user-scoping service tests
+- [x] P14-TST-02 Add auth user-scoping service tests
 Depends on:
 - P14-AUTH-03
 
-- [ ] P14-TST-03 Add idempotent retry integration tests for daily actions
+- [x] P14-TST-03 Add idempotent retry integration tests for daily actions
 Depends on:
 - P14-SVC-03
 
-- [ ] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
+- [x] P14-TST-04 Add ViewModel failure-state tests for critical persistence errors
 Depends on:
 - P14-SVC-04
+
+## Phase 15 – Launch Enhancements
+
+### Haptic Feedback and Micro-Animations
+
+- [x] P15-UX-01 Add haptic feedback on habit completion (success tap)
+Depends on:
+- P14-TST-04
+
+- [x] P15-UX-02 Add XP gain animation with haptic pulse on level-up
+Depends on:
+- P15-UX-01
+
+- [x] P15-UX-03 Add streak milestone haptic and celebration animation
+Depends on:
+- P15-UX-01
+
+### iOS Widget
+
+- [x] P15-WGT-01 Create WidgetKit extension target with shared data model
+Depends on:
+- P14-TST-04
+
+- [x] P15-WGT-02 Add App Group for shared UserDefaults between app and widget
+Depends on:
+- P15-WGT-01
+
+- [x] P15-WGT-03 Build small widget showing streak count and daily progress ring
+Depends on:
+- P15-WGT-02
+
+- [x] P15-WGT-04 Build medium widget showing today's quest list with completion state
+Depends on:
+- P15-WGT-03
+
+- [x] P15-WGT-05 Add widget timeline refresh on habit completion and app foreground
+Depends on:
+- P15-WGT-04
+
+### Data Export
+
+- [x] P15-EXP-01 Create `ExportService` that serializes user progress to JSON
+Depends on:
+- P14-TST-04
+
+- [x] P15-EXP-02 Add CSV export option for daily logs and habit completions
+Depends on:
+- P15-EXP-01
+
+- [x] P15-EXP-03 Add share sheet integration for exported files
+Depends on:
+- P15-EXP-02
+
+### Onboarding Friction Reduction
+
+- [x] P15-ONB-01 Add guest tryout mode allowing one day of habit tracking without account creation
+Depends on:
+- P14-TST-04
+
+- [x] P15-ONB-02 Add account creation gate after first day completion with data migration to authenticated user
+Depends on:
+- P15-ONB-01
+
+### Error UX
+
+- [x] P15-ERR-01 Create toast/banner error component for transient failures
+Depends on:
+- P14-SVC-04
+
+- [x] P15-ERR-02 Add retry action to error banners for failed persistence
+Depends on:
+- P15-ERR-01
+
+- [x] P15-ERR-03 Add offline indicator banner when network is unreachable
+Depends on:
+- P15-ERR-01
+
+### Offline Handling
+
+- [x] P15-OFF-01 Add `NetworkMonitor` service using NWPathMonitor
+Depends on:
+- P14-SVC-04
+
+- [x] P15-OFF-02 Add local-first write queue for habit completions when offline
+Depends on:
+- P15-OFF-01
+
+- [x] P15-OFF-03 Add background sync flush when connectivity restores
+Depends on:
+- P15-OFF-02
+
+- [x] P15-OFF-04 Add idempotent deduplication on sync flush to prevent duplicate XP
+Depends on:
+- P15-OFF-03
+- P14-SVC-03
+
+### Session Restoration Robustness
+
+- [x] P15-SES-01 Add token expiry detection and silent refresh in `AuthService`
+Depends on:
+- P14-AUTH-03
+
+- [x] P15-SES-02 Add graceful fallback state when Supabase is unreachable during launch
+Depends on:
+- P15-SES-01
+
+- [x] P15-SES-03 Add cached last-known state display while session restoration is in progress
+Depends on:
+- P15-SES-02
+
+### Accessibility Audit
+
+- [x] P15-A11Y-01 Audit all interactive elements for 44pt minimum tap targets
+Depends on:
+- P14-TST-04
+Details:
+- Scan every Button, Toggle, and tappable view in Features/, Components/, and Navigation/
+- Verify frame sizes meet 44x44pt minimum
+- Fix any undersized targets by adding .frame(minWidth:minHeight:) or padding
+- Priority screens: ContentView (habit rows), WorkoutListView (start buttons), ReadView (upload button)
+
+- [x] P15-A11Y-02 Add VoiceOver labels and hints to all custom components
+Depends on:
+- P15-A11Y-01
+Details:
+- Add .accessibilityLabel() to XPBar (current XP, level, progress percentage)
+- Add .accessibilityLabel() to DailyMissionBar (completed count, goal, percentage)
+- Add .accessibilityLabel() to DisciplineRadarChart (stat values as text summary)
+- Add .accessibilityLabel() to CalendarGridView (day status: complete, partial, missed, forgiven)
+- Add .accessibilityHint() to action buttons explaining what they do
+- Add .accessibilityValue() to progress indicators
+
+- [x] P15-A11Y-03 Verify Dynamic Type support across all screens
+Depends on:
+- P15-A11Y-01
+Details:
+- Test all screens at accessibility font sizes (AX1 through AX5)
+- Ensure no text truncation without .lineLimit or .minimumScaleFactor
+- Verify layout doesn't break at largest Dynamic Type sizes
+- Fix any hardcoded font sizes not using the DesignSystem/Typography.swift scale
+- Ensure ScrollView wraps content that would overflow at large sizes
+
+- [x] P15-A11Y-04 Verify WCAG AA contrast ratios for all text and interactive elements
+Depends on:
+- P15-A11Y-01
+Details:
+- Check RNF Purple (#6E2BD9) against dark background (#121212) — must be ≥ 4.5:1 for body text
+- Check success green (#1F8A4D) against both dark and light backgrounds
+- Check missed grey (#2A2A2A on dark, #DADADA on light) for sufficient contrast
+- Check caption text (13pt) meets 4.5:1 ratio
+- Check large text (H1/H2) meets 3:1 ratio minimum
+- Document any failing combinations and fix in DesignSystem/Colors.swift
+
+- [x] P15-A11Y-05 Add Reduce Motion support for all animations
+Depends on:
+- P15-UX-02
+- P15-UX-03
+Details:
+- Query @Environment(\.accessibilityReduceMotion) in views with animations
+- Replace XP gain animation with instant state change when Reduce Motion is on
+- Replace streak celebration animation with static badge display
+- Replace level-up glow with simple text announcement
+- Ensure no .animation() modifier runs without checking reduce motion preference
+
+### App Store Rating Prompt
+
+- [x] P15-RATE-01 Add SKStoreReviewController trigger at streak milestones
+Depends on:
+- P14-TST-04
+Details:
+- Import StoreKit and call AppStore.requestReview(in:) at appropriate moments
+- Trigger conditions (pick first matching, max once per 90 days):
+  - User hits 7-day streak for the first time
+  - User hits 30-day streak
+  - User completes 50th habit
+- Track last prompt date in UserDefaults to enforce 90-day cooldown
+- Never prompt during onboarding or within first 3 days
+- Never prompt immediately after a failure or missed day
+- Respect Apple's system-level throttling (max 3 prompts per 365 days)
+
+### Theme Toggle
+
+- [x] P15-THM-01 Add theme preference model and persistence
+Depends on:
+- P14-TST-04
+Details:
+- Create ThemePreference enum: .light, .dark, .system
+- Store selection in UserDefaults (key: "rnf_theme_preference")
+- Default to .system on first launch
+- Load preference at app startup in RNFApp.swift
+
+- [x] P15-THM-02 Apply theme preference to the app window
+Depends on:
+- P15-THM-01
+Details:
+- Add .preferredColorScheme() modifier to RootView based on stored preference
+- Map .system → nil (follows device), .light → .light, .dark → .dark
+- Ensure change takes effect immediately without app restart
+
+- [x] P15-THM-03 Add theme selection UI in profile settings
+Depends on:
+- P15-THM-02
+Details:
+- Add a "Theme" row in the profile/settings area
+- Show segmented picker or menu with Light / Dark / System options
+- Update UserDefaults on selection
+- Show immediate visual preview of the selected theme
+## Phase 16 – Advanced Progression (Gated by User Readiness)
+
+### Feature Gating System
+
+- [x] P16-SYS-01 Create `FeatureGate` unlock evaluation system
+Depends on:
+- none
+
+### Boss Challenges (unlocked at Level 10+, 14-day streak)
+
+- [x] P16-MDL-01 Create `Boss` model with type, HP, status
+Depends on:
+- P16-SYS-01
+
+- [x] P16-SYS-02 Create `BossSystem` damage and spawn logic
+Depends on:
+- P16-MDL-01
+
+- [x] P16-SVC-01 Create `BossService` with CRUD operations
+Depends on:
+- P16-MDL-01
+
+- [x] P16-ENG-01 Create `BossEngine` orchestrating damage on habit/workout completion
+Depends on:
+- P16-SYS-02
+- P16-SVC-01
+
+- [x] P16-UI-01 Create boss battle screen with HP bar and damage animation
+Depends on:
+- P16-ENG-01
+
+- [x] P16-UI-02 Add boss status to daily progress view (gated by FeatureGate)
+Depends on:
+- P16-UI-01
+- P16-SYS-01
+
+### Achievements (unlocked at Level 5+, 7-day streak)
+
+- [x] P16-MDL-02 Create `Achievement` model with category and requirements
+Depends on:
+- P16-SYS-01
+
+- [x] P16-SVC-02 Create `AchievementService` with evaluation and persistence
+Depends on:
+- P16-MDL-02
+
+- [x] P16-ENG-02 Add achievement evaluation hook to ProgressionEngine
+Depends on:
+- P16-SVC-02
+
+- [x] P16-UI-03 Create achievements gallery screen
+Depends on:
+- P16-SVC-02
+
+- [x] P16-UI-04 Add achievement unlock toast notification
+Depends on:
+- P16-ENG-02
+
+### Mastery Paths (unlocked at Level 15+, 30-day streak, challenge complete)
+
+- [x] P16-MDL-03 Create `MasteryPath` model with tiers and XP
+Depends on:
+- P16-SYS-01
+
+- [x] P16-SVC-03 Create `MasteryPathService` with path selection and tier progression
+Depends on:
+- P16-MDL-03
+
+- [x] P16-SYS-03 Add mastery XP routing logic (habits contribute to selected path)
+Depends on:
+- P16-SVC-03
+
+- [x] P16-UI-05 Create mastery path selection screen
+Depends on:
+- P16-SVC-03
+
+- [x] P16-UI-06 Create mastery progress and tier advancement screen
+Depends on:
+- P16-SYS-03
+
+### Database
+
+- [x] P16-MIG-01 Add bosses, user_achievements, and mastery_paths tables
+Depends on:
+- none
+
+- [x] P16-MIG-02 Add RLS policies for Phase 16 tables
+Depends on:
+- P16-MIG-01
+
+### Tests
+
+- [x] P16-TST-01 Add FeatureGate unlock evaluation tests
+Depends on:
+- P16-SYS-01
+
+- [x] P16-TST-02 Add BossSystem damage and spawn tests
+Depends on:
+- P16-SYS-02
+
+- [x] P16-TST-03 Add achievement evaluation tests
+Depends on:
+- P16-SVC-02
+
+## Phase 17 – Social Expansion
+
+### Models
+
+- [x] P17-MDL-01 Create Guild, GuildMember, LeaderboardEntry, SocialChallenge models
+Depends on:
+- none
+
+### Services
+
+- [x] P17-SVC-01 Create `GuildService` with create, join, fetch operations
+Depends on:
+- P17-MDL-01
+
+- [x] P17-SVC-02 Add leaderboard fetch with ranking in `GuildService`
+Depends on:
+- P17-SVC-01
+
+- [x] P17-SVC-03 Create `SocialChallengeService` with CRUD and progress tracking
+Depends on:
+- P17-MDL-01
+
+- [x] P17-SVC-04 Add guild XP contribution tracking on habit/workout completion
+Depends on:
+- P17-SVC-01
+
+### UI
+
+- [x] P17-UI-01 Create guild screen (create/join/view members)
+Depends on:
+- P17-SVC-01
+
+- [x] P17-UI-02 Create leaderboard screen with weekly/monthly filters
+Depends on:
+- P17-SVC-02
+
+- [x] P17-UI-03 Create social challenge screen with progress bar
+Depends on:
+- P17-SVC-03
+
+- [x] P17-UI-04 Add social tab to RootView (gated by FeatureGate)
+Depends on:
+- P17-UI-01
+- P17-UI-02
+- P16-SYS-01
+
+### Database
+
+- [x] P17-MIG-01 Add guilds, guild_members, and social_challenges tables
+Depends on:
+- none
+
+- [x] P17-MIG-02 Add RLS policies for social tables
+Depends on:
+- P17-MIG-01
+
+### Tests
+
+- [x] P17-TST-01 Add guild creation and membership tests
+Depends on:
+- P17-SVC-01
+
+- [x] P17-TST-02 Add leaderboard ranking tests
+Depends on:
+- P17-SVC-02
+
+- [x] P17-TST-03 Add social challenge progress tests
+Depends on:
+- P17-SVC-03
+
+## Phase 18 – Apple Platform Expansion
+
+### HealthKit Integration
+
+- [x] P18-MDL-01 Create HealthWorkoutSummary and Apple platform shared models
+Depends on:
+- none
+
+- [x] P18-SVC-01 Create `HealthKitService` with authorization and workout fetch
+Depends on:
+- P18-MDL-01
+
+- [x] P18-SVC-02 Add health workout import confirmation path
+Depends on:
+- P18-SVC-01
+
+- [x] P18-SVC-03 Add duplicate import prevention (healthkit UUID uniqueness)
+Depends on:
+- P18-SVC-02
+
+- [x] P18-UI-01 Create health permissions request screen
+Depends on:
+- P18-SVC-01
+
+- [x] P18-UI-02 Create imported workout review/accept screen
+Depends on:
+- P18-SVC-02
+
+- [x] P18-UI-03 Add HealthKit settings toggle in profile
+Depends on:
+- P18-UI-01
+
+### Apple Watch Companion
+
+- [x] P18-MDL-02 Create Watch message DTOs (completion, workout, snapshot)
+Depends on:
+- none
+
+- [x] P18-SVC-04 Create `WatchSyncService` with WCSession communication
+Depends on:
+- P18-MDL-02
+
+- [x] P18-SVC-05 Add Watch habit completion handler with idempotency
+Depends on:
+- P18-SVC-04
+
+- [x] P18-SVC-06 Add Watch daily snapshot generation and push
+Depends on:
+- P18-SVC-04
+
+- [x] P18-WATCH-01 Create Watch app target with shared models
+Depends on:
+- P18-MDL-02
+
+- [x] P18-WATCH-02 Create Watch habit list view
+Depends on:
+- P18-WATCH-01
+
+- [x] P18-WATCH-03 Create Watch workout timer view
+Depends on:
+- P18-WATCH-01
+
+- [x] P18-WATCH-04 Create Watch daily progress complication
+Depends on:
+- P18-WATCH-01
+
+- [x] P18-WATCH-05 Add Watch-to-iPhone message handling for completions
+Depends on:
+- P18-SVC-05
+- P18-WATCH-02
+
+### Tests
+
+- [x] P18-TST-01 Add HealthKit workout mapping tests
+Depends on:
+- P18-SVC-01
+
+- [x] P18-TST-02 Add duplicate import prevention tests
+Depends on:
+- P18-SVC-03
+
+- [x] P18-TST-03 Add Watch message encoding/decoding tests
+Depends on:
+- P18-MDL-02
+
+- [x] P18-TST-04 Add Watch idempotent completion tests
+Depends on:
+- P18-SVC-05

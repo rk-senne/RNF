@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import os
 
 struct SignUpResult {
     let session: Session?
@@ -17,6 +18,7 @@ final class AuthService {
 
     func signUp(email: String, password: String) async throws -> SignUpResult {
 
+        RNFLogger.auth.info("Sign-up initiated")
         let response = try await supabase.client.auth.signUp(
             email: email,
             password: password
@@ -27,26 +29,45 @@ final class AuthService {
             userId: result.userId,
             email: result.email ?? email
         )
+        RNFLogger.auth.info("Sign-up complete")
 
         return result
     }
 
     func login(email: String, password: String) async throws -> Session {
 
-        try await supabase.client.auth.signIn(
+        RNFLogger.auth.info("Login initiated")
+        let session = try await supabase.client.auth.signIn(
             email: email,
             password: password
         )
+        RNFLogger.auth.info("Login complete")
+        return session
     }
 
     func logout() async throws {
 
+        RNFLogger.auth.info("Logout initiated")
         try await supabase.client.auth.signOut()
+        RNFLogger.auth.info("Logout complete")
     }
 
     func restoreSession() async throws -> Session {
 
-        try await supabase.client.auth.session
+        RNFLogger.auth.info("Restoring session")
+        let session = try await supabase.client.auth.session
+        RNFLogger.auth.info("Session restored")
+        return session
+    }
+
+    func refreshSessionIfNeeded() async throws -> Session {
+        RNFLogger.auth.info("Checking token expiry")
+        let session = try await supabase.client.auth.session
+        if session.expiresAt < Date().timeIntervalSince1970 + 300 {
+            RNFLogger.auth.info("Token near expiry, refreshing")
+            return try await supabase.client.auth.refreshSession()
+        }
+        return session
     }
 
     private func signUpResult(from response: AuthResponse) -> SignUpResult {

@@ -1,7 +1,11 @@
-//
-//  ProfileView.swift
-//  RNF
-//
-//  Created by Regomoditswe Senne on 2026/03/14.
-//
+import SwiftUI
 
+struct ProfileView: View {
+    var body: some View {
+        List {
+            ThemeSettingsView()
+            HealthSettingsSection()
+        }
+        .navigationTitle("Profile")
+    }
+}

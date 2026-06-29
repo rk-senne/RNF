@@ -18,13 +18,9 @@ final class ChallengeService {
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
-    private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
-    }
-
     func startChallenge(userId: UUID, startDate: Date = Date()) async throws -> Challenge {
 
-        let normalizedStartDate = normalizedDay(startDate)
+        let normalizedStartDate = startDate.startOfDay
         let endDate = Calendar.current.date(
             byAdding: .day,
             value: 89,
@@ -154,7 +150,7 @@ final class ChallengeService {
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

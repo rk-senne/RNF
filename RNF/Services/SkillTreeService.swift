@@ -74,6 +74,12 @@ final class SkillTreeService {
             return .empty
         }
 
+        // Chaos #10: Check subscription status — perks require active subscription
+        let isSubscribed = await hasActiveSubscription(userId: profile.id)
+        guard isSubscribed else {
+            return .empty
+        }
+
         async let skillNodes = fetchSkillNodes()
         async let unlockedSkills = fetchUserUnlocks(userId: profile.id)
 
@@ -81,6 +87,24 @@ final class SkillTreeService {
             skillNodes: skillNodes,
             unlockedSkills: unlockedSkills
         )
+    }
+
+    private func hasActiveSubscription(userId: UUID) async -> Bool {
+        struct SubRow: Decodable { let status: String }
+        do {
+            let rows: [SubRow] = try await supabase.client
+                .from("subscriptions")
+                .select("status")
+                .eq("user_id", value: userId.uuidString)
+                .eq("status", value: "active")
+                .limit(1)
+                .execute()
+                .value
+            return !rows.isEmpty
+        } catch {
+            // If we can't verify, deny perks (fail-safe)
+            return false
+        }
     }
 
 }

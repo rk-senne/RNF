@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct ReadingCompletionResult {
 
@@ -140,12 +141,13 @@ final class ReadingEngine {
                 advancedChallenge: advancedChallenge
             )
         } catch {
+            RNFLogger.dailyLog.error("ReadingEngine.completeReading failed: \(error.localizedDescription)")
             return nil
         }
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

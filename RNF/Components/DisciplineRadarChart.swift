@@ -32,7 +32,13 @@ struct DisciplineRadarChart: View {
 
         }
         .aspectRatio(1, contentMode: .fit)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
+    }
 
+    private var accessibilitySummary: String {
+        let pairs = zip(labels, stats).map { "\($0): \(Int($1 * 20))" }
+        return "Stats chart. " + pairs.joined(separator: ", ")
     }
 }
 

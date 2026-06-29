@@ -108,7 +108,7 @@ struct EvolutionSystem {
     }
 
     private static func effectiveLevel(for profile: Profile) -> Int {
-        max(profile.level, XPSystem.levelState(for: profile.xp_total).level)
+        XPSystem.effectiveLevel(for: profile)
     }
 
 }

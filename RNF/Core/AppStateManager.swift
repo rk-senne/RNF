@@ -43,7 +43,11 @@ final class AppStateManager: ObservableObject {
                 ]
             )
         } catch {
-            markLoggedOut()
+            if !NetworkMonitor.shared.isConnected {
+                state = .offlineFallback
+            } else {
+                markLoggedOut()
+            }
             return
         }
 
@@ -55,6 +59,15 @@ final class AppStateManager: ObservableObject {
 
             if try await dailyLogService.fetchTodayLog(userId: userId, date: date) == nil {
                 _ = try await dailyLogService.createDailyLog(userId: userId, date: date)
+            }
+
+            // GAP 2: Check yesterday's log for missed-day forgiveness prompt
+            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date
+            if let yesterdayLog = try? await dailyLogService.fetchTodayLog(userId: userId, date: yesterday),
+               yesterdayLog.status == .missed,
+               !yesterdayLog.forgiveness_used {
+                state = .missedDay
+                return
             }
 
             state = .dailyProgress
@@ -69,6 +82,14 @@ final class AppStateManager: ObservableObject {
 
     func markLoggedOut() {
         state = .loggedOut
+    }
+
+    func startGuestTryout() {
+        state = .guestTryout
+    }
+
+    func promoteGuestToAuthenticated() {
+        state = .onboardingNotifications
     }
 
     func completeNotificationSetup() {
@@ -87,6 +108,16 @@ final class AppStateManager: ObservableObject {
         state = .dayComplete
     }
 
+    /// GAP 2: Transition to missedDay when end-of-day evaluation detects incomplete goals.
+    func markDayMissed() {
+        state = .missedDay
+    }
+
+    /// After forgiveness is used or dismissed from missedDay, return to daily progress.
+    func resolveAfterMissedDay() {
+        state = .dailyProgress
+    }
+
     func startNewChallengeDay() {
         state = .challengeActive
     }
@@ -100,7 +131,7 @@ final class AppStateManager: ObservableObject {
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

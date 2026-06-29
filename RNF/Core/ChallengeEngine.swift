@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 struct ForgivenessResult {
     let dailyLog: DailyLog
@@ -36,6 +37,7 @@ final class ChallengeEngine {
         do {
             return try await challengeService.getActiveChallenge(userId: userId)
         } catch {
+            RNFLogger.challenge.error("ChallengeEngine.loadActiveChallenge failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -57,11 +59,14 @@ final class ChallengeEngine {
             }
 
             if challenge.isFinalDay {
+                RNFLogger.challenge.info("Challenge day 90 complete — marking finished")
                 return try await challengeService.completeChallenge(challengeId: challenge.id)
             }
 
+            RNFLogger.challenge.info("Advancing challenge day")
             return try await challengeService.advanceDay(challenge)
         } catch {
+            RNFLogger.challenge.error("Challenge advance failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -117,6 +122,7 @@ final class ChallengeEngine {
                 preservedStreak: evaluation.preservedStreak
             )
         } catch {
+            RNFLogger.challenge.error("ChallengeEngine.useForgiveness failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -139,6 +145,7 @@ final class ChallengeEngine {
         do {
             return try await challengeService.restartChallenge(challenge, startDate: startDate)
         } catch {
+            RNFLogger.challenge.error("ChallengeEngine.restartChallenge failed: \(error.localizedDescription)")
             return nil
         }
     }
@@ -152,7 +159,7 @@ final class ChallengeEngine {
     }
 
     private static func analyticsTimestamp(for date: Date) -> String {
-        ISO8601DateFormatter().string(from: date)
+        AnalyticsTimestamp.string(for: date)
     }
 
 }

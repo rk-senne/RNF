@@ -1,13 +1,10 @@
 import SwiftUI
 
 struct RNFColors {
-
-    static let primary = Color(hex: "#6E2BD9")
-    static let success = Color(hex: "#1F8A4D")
-    static let warning = Color(hex: "#F4B400")
-
+    static let primary = Color(hex: "#7C3AED")
+    static let success = Color(hex: "#22A559")
+    static let warning = Color(hex: "#D4940F")
     static let backgroundLight = Color(hex: "#F4F5F7")
     static let backgroundDark = Color(hex: "#121212")
-
-    static let secondaryText = Color(hex: "#8E8E93")
+    static let secondaryText = Color(hex: "#6B7280")
 }

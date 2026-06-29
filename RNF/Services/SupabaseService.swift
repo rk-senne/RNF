@@ -8,12 +8,13 @@ final class SupabaseService {
     let client: SupabaseClient
 
     private init() {
-
+        guard let url = URL(string: AppConfig.supabaseURL) else {
+            fatalError("Invalid Supabase URL in AppConfig: '\(AppConfig.supabaseURL)'")
+        }
         client = SupabaseClient(
-            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseURL: url,
             supabaseKey: AppConfig.supabaseAnonKey
         )
-
     }
 
     init(client: SupabaseClient) {

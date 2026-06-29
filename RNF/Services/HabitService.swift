@@ -58,10 +58,11 @@ final class HabitService {
         return habit
     }
 
-    func recordCompletion(_ completion: HabitCompletion) async {
+    @discardableResult
+    func recordCompletion(_ completion: HabitCompletion) async -> RNFServiceWriteResult<HabitCompletion> {
 
         guard completion.user_id != nil else {
-            return
+            return .notSaved(.unauthenticated)
         }
 
         do {
@@ -69,8 +70,11 @@ final class HabitService {
                 .from("habit_completions")
                 .insert(completion)
                 .execute()
+            return .savedRemotely(completion)
         } catch {
-            // Local state stays consistent even if the backend call fails.
+            // GAP 19: Surface persistence failures so ViewModels can inform the user.
+            // Spec: RNF_PRODUCTION_READINESS_SPEC.md — "Services must not silently hide important persistence failures."
+            return .savedLocallyOnly(completion, error: .networkUnavailable)
         }
 
     }

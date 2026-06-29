@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 final class AnalyticsService {
 
@@ -26,18 +27,33 @@ final class AnalyticsService {
     }
 
     private let supabase: SupabaseService
+    private static let logger = Logger(subsystem: "com.rnf.app", category: "Analytics")
 
     init(supabase: SupabaseService = .shared) {
         self.supabase = supabase
     }
 
+    /// GAP 7: Wire analytics backend — persist events to Supabase analytics_events table.
+    /// Spec: RNF_METRICS_SYSTEM.md — Events must be tracked: app_opened, habit_completed, level_up, etc.
     func trackEvent(
         name: String,
         properties: [String: String] = [:]
     ) async {
-        _ = supabase
-        _ = name
-        _ = properties
+        let event = AnalyticsEvent(
+            id: UUID(),
+            event_name: name,
+            properties: properties,
+            created_at: Date()
+        )
+
+        do {
+            try await supabase.client
+                .from("analytics_events")
+                .insert(event)
+                .execute()
+        } catch {
+            Self.logger.warning("Analytics event '\(name)' failed to persist: \(error.localizedDescription)")
+        }
     }
 
     func trackEvent(
@@ -49,5 +65,11 @@ final class AnalyticsService {
             properties: properties
         )
     }
+}
 
+private struct AnalyticsEvent: Encodable {
+    let id: UUID
+    let event_name: String
+    let properties: [String: String]
+    let created_at: Date
 }

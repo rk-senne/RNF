@@ -50,12 +50,14 @@ struct XPSystem {
 
     }
 
+    static let maxLevel = 100
+
     static func levelState(for totalXP: Int) -> LevelState {
 
         let sanitizedXP = max(totalXP, 0)
         var level = 1
 
-        while sanitizedXP >= totalXPRequired(for: level + 1) {
+        while level < maxLevel && sanitizedXP >= totalXPRequired(for: level + 1) {
             level += 1
         }
 
@@ -89,6 +91,10 @@ struct XPSystem {
         }
 
         return total
+    }
+
+    static func effectiveLevel(for profile: Profile) -> Int {
+        max(profile.level, levelState(for: profile.xp_total).level)
     }
 
 }

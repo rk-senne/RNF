@@ -15,9 +15,11 @@ struct ForgivenessSystem {
         currentStreak: Int
     ) -> Evaluation {
 
+        // Chaos #2: Don't waste a token preserving a 0-streak
         let canUseForgiveness = forgivenessTokens > 0
             && dailyLog.status == .missed
             && !dailyLog.forgiveness_used
+            && currentStreak > 0
 
         return Evaluation(
             canUseForgiveness: canUseForgiveness,

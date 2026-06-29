@@ -459,8 +459,11 @@ Skill Trees
 Perk System
 Boss Battles
 Evolution System
-AI Quest Generation
 Guilds / Social Challenges
+
+Deferred (post-launch, data-dependent):
+
+AI Quest Generation
 
 These features expand the RPG progression once the core loop proves retention.
 

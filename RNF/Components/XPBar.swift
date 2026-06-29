@@ -56,6 +56,8 @@ struct XPBar: View {
                 .foregroundStyle(.secondary)
 
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Level \(level) \(rankTitle()), \(xp) of \(levelXP) XP, \(Int(progress * 100)) percent progress")
     }
 
     func levelColor() -> Color {

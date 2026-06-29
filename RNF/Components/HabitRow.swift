@@ -84,10 +84,13 @@ struct HabitRow: View {
                 y: 10
             )
             .scaleEffect(animated ? 1.02 : 1)
-            .animation(.easeOut(duration: 0.22), value: animated)
+            .animationIfAllowed(.easeOut(duration: 0.22), value: animated)
         }
         .buttonStyle(.plain)
         .disabled(completed)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(habit.name), \(completed ? "completed" : "not completed, plus \(habit.xpReward) XP")")
+        .accessibilityAddTraits(completed ? [] : .isButton)
     }
 
     private var backgroundFill: some ShapeStyle {

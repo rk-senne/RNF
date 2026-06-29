@@ -1,6 +1,7 @@
 import Foundation
 import Supabase
 import PostgREST
+import os
 
 final class ReadingService {
 
@@ -87,6 +88,11 @@ final class ReadingService {
     func completeReading(userId: UUID, date: Date = Date()) async throws -> DailyLog {
         let dailyLog = try await dailyLogForReading(userId: userId, date: date)
 
+        guard !dailyLog.reading_completed else {
+            RNFLogger.sync.info("Reading already completed for today, skipping")
+            return dailyLog
+        }
+
         struct ReadingCompletionUpdate: Encodable {
             let reading_completed: Bool
         }
@@ -106,6 +112,30 @@ final class ReadingService {
     func completeReading(date: Date = Date()) async throws -> DailyLog {
         let userId = try await authProvider.requireCurrentUserID()
         return try await completeReading(userId: userId, date: date)
+    }
+
+    func completeReadingSafe(userId: UUID, date: Date = Date()) async -> RNFServiceWriteResult<DailyLog> {
+        do {
+            let dailyLog = try await dailyLogForReading(userId: userId, date: date)
+
+            guard !dailyLog.reading_completed else {
+                return .savedRemotely(dailyLog)
+            }
+
+            let completedLog = try await completeReading(userId: userId, date: date)
+            return .savedRemotely(completedLog)
+        } catch {
+            return .notSaved(.unknown)
+        }
+    }
+
+    func completeReadingSafe(date: Date = Date()) async -> RNFServiceWriteResult<DailyLog> {
+        do {
+            let userId = try await authProvider.requireCurrentUserID()
+            return await completeReadingSafe(userId: userId, date: date)
+        } catch {
+            return .notSaved(.unauthenticated)
+        }
     }
 
     private static func proofPath(userId: UUID, date: Date) -> String {

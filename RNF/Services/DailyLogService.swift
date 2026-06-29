@@ -1,6 +1,7 @@
 import Foundation
 import Supabase
 import PostgREST
+import os
 
 final class DailyLogService {
 
@@ -21,13 +22,9 @@ final class DailyLogService {
         self.authProvider = authProvider ?? AuthService(supabase: supabase)
     }
 
-    private func normalizedDay(_ date: Date) -> Date {
-        Calendar.current.startOfDay(for: date)
-    }
-
     func fetchTodayLog(userId: UUID, date: Date) async throws -> DailyLog? {
 
-        let normalizedDate = normalizedDay(date)
+        let normalizedDate = date.startOfDay
 
         let logs: [DailyLog] = try await supabase.client
             .from("daily_logs")
@@ -48,7 +45,7 @@ final class DailyLogService {
 
     func createDailyLog(userId: UUID, date: Date) async throws -> DailyLog {
 
-        let normalizedDate = normalizedDay(date)
+        let normalizedDate = date.startOfDay
 
         let dailyLog = DailyLog(
             id: UUID(),
@@ -75,10 +72,12 @@ final class DailyLogService {
 
             return createdLog
         } catch {
+            RNFLogger.dailyLog.info("Create conflict, fetching existing log")
             if let existingLog = try await fetchTodayLog(userId: userId, date: normalizedDate) {
                 return existingLog
             }
 
+            RNFLogger.dailyLog.error("Failed to create or fetch daily log")
             throw error
         }
     }
@@ -94,7 +93,7 @@ final class DailyLogService {
             return .today(goal: dailyGoal)
         }
 
-        let today = normalizedDay(Date())
+        let today = Date().startOfDay
 
         if let log = try await fetchTodayLog(
             userId: profile.id,
@@ -109,7 +108,8 @@ final class DailyLogService {
         )
     }
 
-    func recordCompletion(_ completion: HabitCompletion) async {
+    @discardableResult
+    func recordCompletion(_ completion: HabitCompletion) async -> RNFServiceWriteResult<HabitCompletion> {
         await habitService.recordCompletion(completion)
     }
 
@@ -119,13 +119,14 @@ final class DailyLogService {
             return nil
         }
 
-        let normalizedDate = normalizedDay(completion.date)
+        let normalizedDate = completion.date.startOfDay
 
         if let existingCompletion = try await fetchHabitCompletion(
             userId: userId,
             habitId: completion.habit_id,
             date: normalizedDate
         ) {
+            RNFLogger.habitCompletion.info("Duplicate completion detected, returning existing")
             return existingCompletion
         }
 
@@ -175,7 +176,7 @@ final class DailyLogService {
             .select()
             .eq("user_id", value: userId.uuidString)
             .eq("habit_id", value: habitId.uuidString)
-            .eq("date", value: normalizedDay(date))
+            .eq("date", value: date.startOfDay)
             .limit(1)
             .execute()
             .value
@@ -252,16 +253,17 @@ final class DailyLogService {
         return try await updateStatus(userId: userId, date: date)
     }
 
-    func saveDailyLog(_ dailyLog: DailyLog) async {
+    @discardableResult
+    func saveDailyLog(_ dailyLog: DailyLog) async -> RNFServiceWriteResult<DailyLog> {
 
         guard dailyLog.user_id != nil else {
-            return
+            return .notSaved(.unauthenticated)
         }
 
         let normalizedDailyLog = DailyLog(
             id: dailyLog.id,
             user_id: dailyLog.user_id,
-            date: normalizedDay(dailyLog.date),
+            date: dailyLog.date.startOfDay,
             habits_completed: dailyLog.habits_completed,
             habits_required: dailyLog.habits_required,
             workout_completed: dailyLog.workout_completed,
@@ -277,13 +279,17 @@ final class DailyLogService {
                 .from("daily_logs")
                 .upsert(normalizedDailyLog)
                 .execute()
+            return .savedRemotely(normalizedDailyLog)
         } catch {
-            // Local state stays consistent even if the backend call fails.
+            // GAP 19: Surface persistence failures.
+            // Spec: RNF_PRODUCTION_READINESS_SPEC.md
+            return .savedLocallyOnly(normalizedDailyLog, error: .networkUnavailable)
         }
 
     }
 
-    func saveProfile(_ profile: Profile) async {
+    @discardableResult
+    func saveProfile(_ profile: Profile) async -> RNFServiceWriteResult<Profile> {
         await userService.saveProfile(profile)
     }
 

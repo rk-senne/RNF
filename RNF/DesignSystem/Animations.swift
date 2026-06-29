@@ -1,15 +1,8 @@
 import SwiftUI
 
-struct RNFAnimation {
-
-    static let xp = Animation.easeInOut(duration: 0.4)
-
-    static let radar = Animation.spring(
-        response: 0.6,
-        dampingFraction: 0.7
-    )
-
-    static let aura = Animation
-        .easeInOut(duration: 2)
-        .repeatForever(autoreverses: true)
+extension View {
+    /// Conditionally applies animation only when Reduce Motion is off.
+    func animationIfAllowed(_ animation: Animation, value: some Equatable) -> some View {
+        self.animation(UIAccessibility.isReduceMotionEnabled ? nil : animation, value: value)
+    }
 }
