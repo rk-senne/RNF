@@ -17,13 +17,13 @@ struct XPBar: View {
             HStack {
 
                 Text(rankTitle())
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.secondary)
 
                 Spacer()
 
                 Text("Level \(level)")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBoldSmall)
                     .foregroundStyle(levelColor())
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -39,20 +39,21 @@ struct XPBar: View {
                 ZStack(alignment: .leading) {
 
                     Capsule()
-                        .fill(Color.black.opacity(0.06))
+                        .fill(RNFColors.borderSubtle)
 
                     Capsule()
                         .fill(levelColor())
                         .frame(
                             width: geo.size.width * progress
                         )
+                        .animationIfAllowed(.spring(response: 0.4), value: progress)
                 }
 
             }
             .frame(height: 12)
 
             Text("\(xp) / \(levelXP) XP")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(RNFFont.body)
                 .foregroundStyle(.secondary)
 
         }

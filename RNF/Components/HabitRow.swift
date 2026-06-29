@@ -6,6 +6,24 @@ struct HabitRow: View {
     let completed: Bool
     let animated: Bool
     let action: () -> Void
+
+    // P20-EXP-02b: Multi-phase completion animation
+    @State private var showXPFloat = false
+    @State private var completionPhase: CompletionPhase = .idle
+
+    private enum CompletionPhase {
+        case idle, pressed, expanded, settled
+    }
+
+    private var phaseScale: CGFloat {
+        switch completionPhase {
+        case .idle: return 1.0
+        case .pressed: return 0.96
+        case .expanded: return 1.03
+        case .settled: return 1.0
+        }
+    }
+
     private var accentColor: Color {
         completed
         ? Color(red: 0.81, green: 0.67, blue: 0.16)
@@ -14,7 +32,9 @@ struct HabitRow: View {
 
     var body: some View {
 
-        Button(action: action) {
+        Button {
+            triggerCompletion()
+        } label: {
 
             HStack(spacing: 14) {
 
@@ -25,7 +45,7 @@ struct HabitRow: View {
                         .frame(width: 56, height: 56)
 
                     Image(systemName: iconName())
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(RNFFont.iconLabel)
                         .foregroundStyle(accentColor)
 
                 }
@@ -33,11 +53,11 @@ struct HabitRow: View {
                 VStack(alignment: .leading, spacing: 6) {
 
                     Text(habit.name)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(RNFFont.section)
                         .foregroundStyle(Color.primary)
 
                     Text(habit.description ?? "")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(RNFFont.body)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
 
@@ -49,11 +69,11 @@ struct HabitRow: View {
 
                     if completed {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 30, weight: .bold))
+                            .font(RNFFont.titleMedium)
                             .foregroundStyle(Color(red: 0.55, green: 0.85, blue: 0.47))
                     } else {
                         Text("+\(habit.xpReward) XP")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .font(RNFFont.captionBoldSmall)
                             .foregroundStyle(Color(red: 0.74, green: 0.54, blue: 0.12))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -64,7 +84,7 @@ struct HabitRow: View {
                     }
 
                     Image(systemName: completed ? "sparkles" : "arrow.up.right")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(RNFFont.captionBold)
                         .foregroundStyle(Color.secondary.opacity(0.7))
                 }
 
@@ -83,14 +103,36 @@ struct HabitRow: View {
                 x: 0,
                 y: 10
             )
-            .scaleEffect(animated ? 1.02 : 1)
+            .scaleEffect(animated ? 1.02 : phaseScale)
             .animationIfAllowed(.easeOut(duration: 0.22), value: animated)
+            .animationIfAllowed(.spring(response: 0.35, dampingFraction: 0.6), value: completionPhase)
+            .overlay(alignment: .topTrailing) {
+                FloatingXPText(xp: habit.xpReward, visible: showXPFloat)
+                    .padding(.trailing, 16)
+                    .padding(.top, -8)
+            }
         }
         .buttonStyle(.plain)
         .disabled(completed)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(habit.name), \(completed ? "completed" : "not completed, plus \(habit.xpReward) XP")")
         .accessibilityAddTraits(completed ? [] : .isButton)
+    }
+
+    private func triggerCompletion() {
+        completionPhase = .pressed
+        showXPFloat = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            completionPhase = .expanded
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            completionPhase = .settled
+            action()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            showXPFloat = false
+        }
     }
 
     private var backgroundFill: some ShapeStyle {
@@ -101,8 +143,8 @@ struct HabitRow: View {
                 Color(red: 1.0, green: 0.93, blue: 0.67)
             ]
             : [
-                Color.white.opacity(0.98),
-                Color(red: 0.95, green: 0.95, blue: 0.98)
+                RNFColors.surface,
+                RNFColors.surfaceElevated
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -112,7 +154,7 @@ struct HabitRow: View {
     private var borderColor: Color {
         completed
         ? Color(red: 0.95, green: 0.86, blue: 0.42)
-        : Color.black.opacity(0.06)
+        : RNFColors.borderSubtle
     }
 
     private func iconName() -> String {

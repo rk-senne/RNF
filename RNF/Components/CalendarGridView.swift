@@ -4,15 +4,18 @@ struct CalendarGridView: View {
 
     let month: Date
     let statusesByDay: [Date: DailyLogStatus]
+    var onDayTapped: ((Date, DailyLogStatus) -> Void)?
     private let calendar: Calendar
 
     init(
         month: Date = Date(),
         statusesByDay: [Date: DailyLogStatus] = [:],
+        onDayTapped: ((Date, DailyLogStatus) -> Void)? = nil,
         calendar: Calendar = .current
     ) {
         self.month = month
         self.statusesByDay = statusesByDay
+        self.onDayTapped = onDayTapped
         self.calendar = calendar
     }
 
@@ -22,19 +25,19 @@ struct CalendarGridView: View {
 
             HStack(alignment: .firstTextBaseline) {
                 Text(monthTitle)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(RNFFont.section)
 
                 Spacer()
 
                 Text("\(completedDays) / \(monthDays.count)")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.secondary)
             }
 
             LazyVGrid(columns: weekdayColumns, spacing: 8) {
                 ForEach(weekdaySymbols, id: \.self) { weekday in
                     Text(weekday)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .font(RNFFont.pillMedium)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                 }
@@ -50,6 +53,9 @@ struct CalendarGridView: View {
                         status: status(for: day),
                         isToday: calendar.isDateInToday(day)
                     )
+                    .onTapGesture {
+                        onDayTapped?(day, status(for: day))
+                    }
                 }
             }
 
@@ -107,14 +113,15 @@ private struct CalendarDayCell: View {
     let day: Int
     let status: DailyLogStatus
     let isToday: Bool
+    @State private var pulse = false
 
     var body: some View {
 
         ZStack(alignment: .topTrailing) {
             Text("\(day)")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(RNFFont.captionBold)
                 .foregroundStyle(foregroundColor)
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, minHeight: 36, minWidth: 36)
                 .aspectRatio(1, contentMode: .fit)
                 .background {
                     Circle()
@@ -123,6 +130,7 @@ private struct CalendarDayCell: View {
                 .overlay {
                     Circle()
                         .strokeBorder(borderColor, lineWidth: isToday ? 2 : 1)
+                        .opacity(isToday && pulse ? 0.4 : 1)
                 }
 
             if status == .forgiven {
@@ -133,19 +141,26 @@ private struct CalendarDayCell: View {
             }
         }
         .accessibilityLabel("Day \(day), \(status.rawValue)")
+        .accessibilityAddTraits(.isButton)
+        .onAppear {
+            guard isToday, !UIAccessibility.isReduceMotionEnabled else { return }
+            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
 
     }
 
     private var backgroundColor: Color {
         switch status {
         case .complete:
-            return Color(red: 0.12, green: 0.54, blue: 0.3)
+            return RNFColors.success
         case .partial:
             return Color(red: 0.75, green: 0.91, blue: 0.68)
         case .missed:
             return Color(.secondarySystemFill)
         case .forgiven:
-            return Color(red: 0.12, green: 0.54, blue: 0.3)
+            return RNFColors.success
         }
     }
 
@@ -161,7 +176,7 @@ private struct CalendarDayCell: View {
     }
 
     private var borderColor: Color {
-        isToday ? Color.primary.opacity(0.55) : Color.black.opacity(0.04)
+        isToday ? Color.primary.opacity(0.55) : RNFColors.borderSubtle
     }
 
 }

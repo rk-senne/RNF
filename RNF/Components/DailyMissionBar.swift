@@ -4,6 +4,7 @@ struct DailyMissionBar: View {
 
     let completed: Int
     let goal: Int
+    @State private var didComplete = false
     private var progress: CGFloat {
         guard goal > 0 else { return 0 }
         return min(max(CGFloat(completed) / CGFloat(goal), 0), 1)
@@ -16,13 +17,13 @@ struct DailyMissionBar: View {
             HStack {
 
                 Text("Daily Mission")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.secondary)
 
                 Spacer()
 
                 Text("\(completed) / \(goal)")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBoldSmall)
                     .foregroundStyle(Color(red: 0.16, green: 0.54, blue: 0.28))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -38,7 +39,7 @@ struct DailyMissionBar: View {
                 ZStack(alignment: .leading) {
 
                     Capsule()
-                        .fill(Color.black.opacity(0.06))
+                        .fill(RNFColors.borderSubtle)
 
                     Capsule()
                         .fill(
@@ -54,16 +55,33 @@ struct DailyMissionBar: View {
                         .frame(
                             width: geo.size.width * progress
                         )
+                        .animationIfAllowed(.spring(response: 0.4), value: progress)
+                        .overlay {
+                            if didComplete {
+                                Capsule()
+                                    .fill(Color.primary.opacity(0.3))
+                                    .transition(.opacity)
+                            }
+                        }
                 }
             }
             .frame(height: 12)
 
             Text("\(completed) / \(goal) habits")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(RNFFont.body)
                 .foregroundStyle(.secondary)
 
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Daily mission, \(completed) of \(goal) habits completed, \(Int(progress * 100)) percent")
+        .onChange(of: completed) { _, newValue in
+            if newValue >= goal && goal > 0 {
+                withAnimation(.easeInOut(duration: 0.3)) { didComplete = true }
+                Task {
+                    try? await Task.sleep(nanoseconds: 600_000_000)
+                    withAnimation { didComplete = false }
+                }
+            }
+        }
     }
 }

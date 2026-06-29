@@ -11,7 +11,7 @@ struct ErrorBanner: View {
                 .foregroundStyle(.orange)
 
             Text(message)
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(RNFFont.body)
                 .lineLimit(2)
 
             Spacer()
@@ -19,7 +19,7 @@ struct ErrorBanner: View {
             if let retryAction {
                 Button(action: retryAction) {
                     Text("Retry")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .font(RNFFont.caption)
                         .foregroundStyle(.blue)
                 }
             }
@@ -27,7 +27,7 @@ struct ErrorBanner: View {
             if let dismissAction {
                 Button(action: dismissAction) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(RNFFont.captionBoldSmall)
                         .foregroundStyle(.secondary)
                 }
                 .accessibilityLabel("Dismiss error")
@@ -51,7 +51,7 @@ struct OfflineBanner: View {
             Image(systemName: "wifi.slash")
                 .foregroundStyle(.secondary)
             Text("No internet connection")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(RNFFont.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(10)
