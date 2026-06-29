@@ -16,19 +16,19 @@ struct MasteryProgressView: View {
         VStack(spacing: 20) {
             VStack(spacing: 4) {
                 Text(path.pathType.rawValue.capitalized)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(RNFFont.heroSubtitle)
                 Text(path.title)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .font(RNFFont.body)
                     .foregroundStyle(.purple)
             }
 
             VStack(spacing: 8) {
                 Text("Tier \(path.tier)")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBold)
                 ProgressView(value: max(0, min(tierProgress, 1)))
                     .tint(.purple)
                 Text("\(path.xpInPath) XP")
-                    .font(.system(size: 13, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.secondary)
             }
             .padding()

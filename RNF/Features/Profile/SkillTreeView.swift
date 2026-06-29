@@ -64,12 +64,10 @@ struct SkillTreeView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("MASTERY PATHS")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(Color.secondary)
+                        .overlineStyle()
 
                     Text(isUnlocked ? "Choose a path of mastery." : "Unlocks at Level 10.")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(RNFFont.section)
                         .foregroundStyle(Color.primary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -78,11 +76,11 @@ struct SkillTreeView: View {
 
                 VStack(alignment: .trailing, spacing: 6) {
                     Text("POINTS")
-                        .font(.system(size: 10, weight: .black, design: .rounded))
+                        .font(RNFFont.pillSmall)
                         .foregroundStyle(Color.secondary)
 
                     Text("\(earnedPoints)")
-                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .font(RNFFont.title)
                         .foregroundStyle(Color(red: 0.31, green: 0.25, blue: 0.72))
                 }
             }
@@ -101,7 +99,7 @@ struct SkillTreeView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+                .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
         )
     }
 
@@ -110,20 +108,18 @@ struct SkillTreeView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("ACTIVE PERKS")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.secondary)
+                    .overlineStyle()
 
                 Spacer()
 
                 Text(activePerkStatusText)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBoldSmall)
                     .foregroundStyle(Color.secondary)
             }
 
             if activePerks.effects.isEmpty {
                 Text(activePerkEmptyText)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(Color.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -141,7 +137,7 @@ struct SkillTreeView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+                .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
         )
     }
 
@@ -191,12 +187,12 @@ private struct ActivePerkRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(effect.name)
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBold)
                     .foregroundStyle(Color.primary)
                     .lineLimit(1)
 
                 Text(effect.summaryText)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(RNFFont.captionSmall)
                     .foregroundStyle(Color.secondary)
                     .lineLimit(1)
             }
@@ -225,17 +221,17 @@ private struct SkillTreePathCard: View {
                 Spacer()
 
                 Text("\(statValue)")
-                    .font(.system(size: 16, weight: .black, design: .rounded))
+                    .font(RNFFont.bodyBold)
                     .foregroundStyle(tint)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(path.displayName)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(RNFFont.section)
                     .foregroundStyle(Color.primary)
 
                 Text(isUnlocked ? "Tier 1 ready" : "Locked")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(Color.secondary)
             }
 

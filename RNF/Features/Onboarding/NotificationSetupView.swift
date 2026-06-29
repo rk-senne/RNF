@@ -28,18 +28,16 @@ struct NotificationSetupView: View {
             Spacer(minLength: 24)
 
             VStack(alignment: .leading, spacing: 12) {
-                Text("DAILY RHYTHM")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.secondary)
+                Text("THE FORGE")
+                    .overlineStyle()
 
-                Text("Set Your Rhythm")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
+                Text("The Forge Will Call")
+                    .font(RNFFont.display)
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("Choose the times that frame your day with intention and reflection.")
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                Text("Morning and evening. A reminder that the system is watching.")
+                    .font(RNFFont.sectionMedium)
                     .foregroundStyle(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -60,8 +58,8 @@ struct NotificationSetupView: View {
 
             if let errorMessage {
                 Text(errorMessage)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.red)
+                    .font(RNFFont.caption)
+                    .foregroundStyle(RNFColors.destructive)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -73,7 +71,7 @@ struct NotificationSetupView: View {
                     }
 
                     Text(isSaving ? "Saving" : "Continue")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(RNFFont.bodyBold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -98,7 +96,7 @@ struct NotificationSetupView: View {
 
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
+                .font(RNFFont.section)
                 .foregroundStyle(Color.accentColor)
                 .frame(width: 28)
 
@@ -107,7 +105,7 @@ struct NotificationSetupView: View {
                 selection: selection,
                 displayedComponents: .hourAndMinute
             )
-            .font(.system(size: 16, weight: .bold, design: .rounded))
+            .font(RNFFont.bodyBold)
         }
         .padding(16)
         .background(

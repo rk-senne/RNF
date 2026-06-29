@@ -26,16 +26,14 @@ struct LoginView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Image(systemName: "flame.fill")
-                    .font(.system(size: 32, weight: .black))
+                    .font(RNFFont.titleLarge)
                     .foregroundStyle(Color.accentColor)
 
                 Text("RNF")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.secondary)
+                    .overlineStyle()
 
-                Text("Welcome Back")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
+                Text("The Forge Awaits")
+                    .font(RNFFont.display)
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -58,8 +56,8 @@ struct LoginView: View {
 
             if let errorMessage {
                 Text(errorMessage)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.red)
+                    .font(RNFFont.caption)
+                    .foregroundStyle(RNFColors.destructive)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -71,13 +69,19 @@ struct LoginView: View {
                     }
 
                     Text(isLoggingIn ? "Signing In" : "Continue")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(RNFFont.bodyBold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
             }
             .buttonStyle(.borderedProminent)
             .disabled(!canSubmit)
+
+            Text(motivationalLine)
+                .font(RNFFont.caption)
+                .foregroundStyle(Color.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
 
             Spacer(minLength: 24)
         }
@@ -88,8 +92,23 @@ struct LoginView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    private var motivationalLine: String {
+        let lines = [
+            "The system remembers those who return.",
+            "Your flame was never extinguished. Only dimmed.",
+            "Absence is not failure. Return is proof.",
+            "The Forge is patient. It was always here."
+        ]
+        return lines[Calendar.current.component(.day, from: Date()) % lines.count]
+    }
+
     private var canSubmit: Bool {
-        !email.isEmpty && !password.isEmpty && !isLoggingIn
+        isValidEmail(email) && !password.isEmpty && !isLoggingIn
+    }
+
+    private func isValidEmail(_ email: String) -> Bool {
+        let pattern = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        return email.range(of: pattern, options: .regularExpression) != nil
     }
 
     private func login() {

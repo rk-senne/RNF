@@ -9,152 +9,47 @@ struct AscensionView: View {
     private let skillTreeService = SkillTreeService()
     @State private var glow = false
     @State private var activeChallenge: Challenge?
+    @State private var isLoadingChallenge = true
     @State private var activePerks: ActivePerkSummary = .empty
     @State private var activePerksLoadFailed = false
     @State private var isLoadingActivePerks = false
     @State private var calendarMonth = Date()
     @State private var calendarStatuses: [Date: DailyLogStatus] = [:]
     @State private var calendarLoadFailed = false
+    @State private var isLoadingCalendar = true
     @State private var forgivenessMessage: String?
     @State private var isUsingForgiveness = false
+    @State private var selectedDay: (date: Date, status: DailyLogStatus)?
 
     var body: some View {
 
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 24) {
 
-                VStack(spacing: 18) {
+                // LAYER 1 — HERO: Identity focal point
+                heroSection
 
-                    ZStack {
+                // LAYER 2 — STATS: Proof behind the identity
+                statsSection
 
-                        Circle()
-                            .fill(viewModel.levelColor(for: game.level).opacity(0.18))
-                            .frame(width: glow ? 232 : 208)
-                            .blur(radius: glow ? 48 : 28)
-                            .animation(
-                                .easeInOut(duration: 2.2)
-                                .repeatForever(autoreverses: true),
-                                value: glow
-                            )
+                // LAYER 3 — DEPTH: Discoverable detail
+                calendarSummary.shimmer(active: isLoadingCalendar)
 
-                        VStack(spacing: 10) {
-
-                            Text("LEVEL \(game.level)")
-                                .font(.system(size: 42, weight: .black, design: .rounded))
-                                .foregroundStyle(Color.primary)
-
-                            Text(viewModel.rankTitle(for: game.level))
-                                .font(.system(size: 22, weight: .medium, design: .rounded))
-                                .foregroundStyle(Color.secondary)
-
-                        }
-
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 6)
-                    .onAppear { glow.toggle() }
-
-                    HStack(spacing: 12) {
-                        summaryChip(
-                            title: "Streak",
-                            value: "\(game.streak) days",
-                            tint: Color(red: 0.9, green: 0.46, blue: 0.18)
-                        )
-
-                        summaryChip(
-                            title: "Titles",
-                            value: "\(game.titles.count) earned",
-                            tint: viewModel.levelColor(for: game.level)
-                        )
-                    }
-
+                if activeChallenge != nil {
+                    challengeSummary.shimmer(active: isLoadingChallenge)
                 }
-                .padding(24)
-                .background { surfaceFill }
-                .overlay(surfaceBorder)
-                .shadow(color: Color.black.opacity(0.06), radius: 24, x: 0, y: 12)
 
-                challengeSummary
-
-                EvolutionView()
-
-                activePerkSummary
-
-                engagementEntryPoints
-
-                calendarSummary
-
-                VStack(alignment: .leading, spacing: 18) {
-
-                    Text("XP PROGRESS")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(.secondary)
-
-                    ProgressView(value: Double(game.xp), total: Double(max(game.xpToNext, 1)))
-                        .tint(viewModel.levelColor(for: game.level))
-                        .scaleEffect(x: 1, y: 1.8, anchor: .center)
-
-                    Text("\(game.xp) / \(game.xpToNext) XP")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
-
+                if activePerkMetricCount > 0 {
+                    activePerkSummary
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-                .background { surfaceFill }
-                .overlay(surfaceBorder)
-
-                VStack(alignment: .leading, spacing: 18) {
-
-                    Text("CHARACTER STATS")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(.secondary)
-
-                    DisciplineRadarChart(
-                        stats: viewModel.radarValues(for: game.stats)
-                    )
-                    .frame(height: 240)
-
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-                .background { surfaceFill }
-                .overlay(surfaceBorder)
-
-                VStack(alignment: .leading, spacing: 14) {
-
-                    Text("TITLES")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(.secondary)
-
-                    ForEach(game.titles, id: \.self) { title in
-                        HStack(spacing: 12) {
-                            Image(systemName: "seal.fill")
-                                .foregroundStyle(viewModel.levelColor(for: game.level))
-                            Text(title)
-                                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Color.white.opacity(0.72))
-                        )
-                    }
-
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-                .background { surfaceFill }
-                .overlay(surfaceBorder)
 
             }
             .padding()
+        }
+        .overlay {
+            if game.level >= 20 {
+                AmbientParticleView()
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
@@ -165,7 +60,125 @@ struct AscensionView: View {
             await loadActivePerkSummary()
             await loadCalendarSummary()
         }
+        .sheet(item: Binding(
+            get: { selectedDay.map { DaySelection(date: $0.date, status: $0.status) } },
+            set: { _ in selectedDay = nil }
+        )) { item in
+            DayDetailSheet(date: item.date, status: item.status)
+        }
 
+    }
+
+    // MARK: - Hero Section
+
+    private var heroSection: some View {
+        VStack(spacing: 18) {
+
+            ZStack {
+
+                Circle()
+                    .fill(viewModel.levelColor(for: game.level).opacity(0.18))
+                    .frame(width: glow ? 232 : 208)
+                    .blur(radius: glow ? 48 : 28)
+                    .animation(
+                        UIAccessibility.isReduceMotionEnabled ? nil : .easeInOut(duration: 2.2).repeatForever(autoreverses: true),
+                        value: glow
+                    )
+
+                VStack(spacing: 10) {
+
+                    Text("LEVEL \(game.level)")
+                        .font(RNFFont.display)
+                        .foregroundStyle(Color.primary)
+
+                    Text(viewModel.rankTitle(for: game.level))
+                        .font(RNFFont.section)
+                        .foregroundStyle(Color.secondary)
+
+                }
+
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 6)
+            .onAppear { glow.toggle() }
+
+            HStack(spacing: 12) {
+                summaryChip(
+                    title: "Streak",
+                    value: "\(game.streak) days",
+                    tint: Color(red: 0.9, green: 0.46, blue: 0.18)
+                )
+
+                summaryChip(
+                    title: "Titles",
+                    value: "\(game.titles.count) earned",
+                    tint: viewModel.levelColor(for: game.level)
+                )
+            }
+
+        }
+        .padding(24)
+        .background { surfaceFill }
+        .overlay(surfaceBorder)
+        .shadow(color: .black.opacity(0.06), radius: 24, x: 0, y: 12)
+        .evolvingSurface() // P20-EXP-06c
+    }
+
+    // MARK: - Stats Section (Radar + XP combined)
+
+    private var statsSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
+
+            DisciplineRadarChart(
+                stats: viewModel.radarValues(for: game.stats)
+            )
+            .frame(height: 240)
+
+            ProgressView(value: Double(game.xp), total: Double(max(game.xpToNext, 1)))
+                .tint(viewModel.levelColor(for: game.level))
+                .scaleEffect(x: 1, y: 1.8, anchor: .center)
+
+            Text("\(game.xp) / \(game.xpToNext) XP")
+                .font(RNFFont.body)
+                .foregroundStyle(.secondary)
+
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background { surfaceFill }
+        .overlay(surfaceBorder)
+    }
+
+    // MARK: - Titles (retained, displayed in Profile)
+
+    private var titlesList: some View {
+        VStack(alignment: .leading, spacing: 14) {
+
+            Text("TITLES")
+                .overlineStyle()
+
+            ForEach(game.titles, id: \.self) { title in
+                HStack(spacing: 12) {
+                    Image(systemName: "seal.fill")
+                        .foregroundStyle(viewModel.levelColor(for: game.level))
+                    Text(title)
+                        .font(RNFFont.section)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(RNFColors.surfaceElevated)
+                )
+            }
+
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background { surfaceFill }
+        .overlay(surfaceBorder)
     }
 
     private var activePerkSummary: some View {
@@ -173,20 +186,18 @@ struct AscensionView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 Text("ACTIVE PERKS")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(.secondary)
+                    .overlineStyle()
 
                 Spacer(minLength: 12)
 
                 Text(activePerkStatusText)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(viewModel.levelColor(for: game.level))
             }
 
             if activePerkMetricCount == 0 {
                 Text(activePerksLoadFailed ? "Perks unavailable" : "No active perks")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(RNFFont.bodyBold)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -265,105 +276,17 @@ struct AscensionView: View {
         .count
     }
 
-    private var engagementEntryPoints: some View {
-
-        VStack(alignment: .leading, spacing: 14) {
-            Text("ENGAGEMENT")
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .tracking(1.2)
-                .foregroundStyle(.secondary)
-
-            HStack(spacing: 12) {
-                engagementLink(
-                    title: "Quests",
-                    subtitle: "Daily and weekly focus",
-                    icon: "checkmark.circle.fill",
-                    tint: Color(red: 0.3, green: 0.43, blue: 0.86)
-                ) {
-                    ContentView()
-                }
-
-                engagementLink(
-                    title: "Skill Tree",
-                    subtitle: "Mastery paths",
-                    icon: "point.3.connected.trianglepath.dotted",
-                    tint: viewModel.levelColor(for: game.level)
-                ) {
-                    SkillTreeView()
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background { surfaceFill }
-        .overlay(surfaceBorder)
-
-    }
-
-    private func engagementLink<Destination: View>(
-        title: String,
-        subtitle: String,
-        icon: String,
-        tint: Color,
-        @ViewBuilder destination: () -> Destination
-    ) -> some View {
-
-        NavigationLink(destination: destination()) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: icon)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(tint)
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .black))
-                        .foregroundStyle(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 17, weight: .black, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.82)
-
-                    Text(subtitle)
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.82)
-                }
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(tint.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(tint.opacity(0.22), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-
-    }
-
     private var challengeSummary: some View {
 
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 Text("CHALLENGE ARC")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(.secondary)
+                    .overlineStyle()
 
                 Spacer(minLength: 12)
 
                 Text(challengeDayText)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(viewModel.levelColor(for: game.level))
             }
 
@@ -372,7 +295,7 @@ struct AscensionView: View {
                 .scaleEffect(x: 1, y: 1.5, anchor: .center)
 
             Text(challengeStatusText)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(RNFFont.bodyBold)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -388,20 +311,21 @@ struct AscensionView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 Text("CALENDAR")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(.secondary)
+                    .overlineStyle()
 
                 Spacer(minLength: 12)
 
                 Text(calendarLoadFailed ? "Offline" : "\(game.streak) day streak")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(viewModel.levelColor(for: game.level))
             }
 
             CalendarGridView(
                 month: calendarMonth,
-                statusesByDay: calendarStatuses
+                statusesByDay: calendarStatuses,
+                onDayTapped: { date, status in
+                    selectedDay = (date, status)
+                }
             )
 
             forgivenessRecoveryAction
@@ -422,11 +346,11 @@ struct AscensionView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(game.profile.forgiveness_tokens) forgiveness tokens")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBold)
                     .foregroundStyle(.primary)
 
                 Text(forgivenessMessage ?? forgivenessStatusText)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(RNFFont.captionSmall)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -445,11 +369,12 @@ struct AscensionView: View {
             .buttonStyle(.borderedProminent)
             .tint(viewModel.levelColor(for: game.level))
             .disabled(!canUseForgiveness || isUsingForgiveness)
+            .accessibilityLabel("Use forgiveness token to protect streak")
         }
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.72))
+                .fill(RNFColors.surfaceElevated)
         )
 
     }
@@ -500,10 +425,12 @@ struct AscensionView: View {
     private func loadChallengeSummary() async {
         guard !game.profile.isPlaceholder else {
             activeChallenge = nil
+            isLoadingChallenge = false
             return
         }
 
         activeChallenge = await challengeEngine.loadActiveChallenge(userId: game.profile.id)
+        isLoadingChallenge = false
     }
 
     private func loadActivePerkSummary() async {
@@ -525,6 +452,7 @@ struct AscensionView: View {
 
         guard !game.profile.isPlaceholder else {
             calendarLoadFailed = false
+            isLoadingCalendar = false
             calendarStatuses = [
                 Calendar.current.startOfDay(for: game.dailyLog.date): calendarService.mapLogToCalendarStatus(game.dailyLog)
             ]
@@ -548,6 +476,7 @@ struct AscensionView: View {
         } catch {
             calendarLoadFailed = true
         }
+        isLoadingCalendar = false
     }
 
     private func useForgiveness() async {
@@ -571,25 +500,26 @@ struct AscensionView: View {
         game.streak = result.preservedStreak
         calendarStatuses[Calendar.current.startOfDay(for: result.dailyLog.date)] = .forgiven
         forgivenessMessage = "Streak protected"
+        RNFHaptics.warning()
     }
 
     private var surfaceFill: some View {
-        RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .fill(Color.white.opacity(0.88))
+        RoundedRectangle(cornerRadius: RNFRadius.card, style: .continuous)
+            .fill(RNFColors.surface)
     }
 
     private var surfaceBorder: some View {
-        RoundedRectangle(cornerRadius: 28, style: .continuous)
-            .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+        RoundedRectangle(cornerRadius: RNFRadius.card, style: .continuous)
+            .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
     }
 
     private func summaryChip(title: String, value: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
-                .font(.system(size: 10, weight: .black, design: .rounded))
+                .font(RNFFont.pillSmall)
                 .foregroundStyle(tint.opacity(0.75))
             Text(value)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(RNFFont.captionBold)
                 .foregroundStyle(tint)
         }
         .padding(.horizontal, 12)
@@ -603,17 +533,17 @@ struct AscensionView: View {
     private func perkMetricChip(title: String, value: String, icon: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
+                .font(RNFFont.bodyBold)
                 .foregroundStyle(viewModel.levelColor(for: game.level))
                 .frame(width: 22, height: 22)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title.uppercased())
-                    .font(.system(size: 9, weight: .black, design: .rounded))
+                    .font(RNFFont.pillSmall)
                     .foregroundStyle(.secondary)
 
                 Text(value)
-                    .font(.system(size: 15, weight: .black, design: .rounded))
+                    .font(RNFFont.statValue)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -625,8 +555,14 @@ struct AscensionView: View {
         .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.72))
+                .fill(RNFColors.surfaceElevated)
         )
     }
 
+}
+
+private struct DaySelection: Identifiable {
+    let id = UUID()
+    let date: Date
+    let status: DailyLogStatus
 }

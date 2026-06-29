@@ -9,16 +9,16 @@ struct SocialChallengeView: View {
                 ForEach(challenges) { challenge in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(challenge.title)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .font(RNFFont.bodyBold)
                         if let desc = challenge.description {
                             Text(desc)
-                                .font(.system(size: 13, design: .rounded))
+                                .font(RNFFont.caption)
                                 .foregroundStyle(.secondary)
                         }
                         ProgressView(value: challenge.progress)
                             .tint(.green)
                         Text("\(challenge.current_completions)/\(challenge.target_completions)")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .font(RNFFont.captionSmall)
                             .foregroundStyle(.secondary)
                     }
                     .padding(14)

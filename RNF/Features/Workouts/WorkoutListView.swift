@@ -49,12 +49,10 @@ struct WorkoutListView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("WORKOUTS")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(Color.secondary)
+                        .overlineStyle()
 
                     Text("Build the body that can carry the mission.")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(RNFFont.section)
                         .foregroundStyle(Color.primary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -76,7 +74,7 @@ struct WorkoutListView: View {
 
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Challenges")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
                 .foregroundStyle(Color.primary)
 
             LazyVGrid(
@@ -98,7 +96,7 @@ struct WorkoutListView: View {
 
         VStack(alignment: .leading, spacing: 12) {
             Text("Timed Workouts")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
                 .foregroundStyle(Color.primary)
 
             VStack(spacing: 12) {
@@ -128,7 +126,7 @@ struct WorkoutListView: View {
                         .minimumScaleFactor(0.8)
 
                     Text(workout.subtitle)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(RNFFont.caption)
                         .foregroundStyle(Color.secondary)
                         .lineLimit(2)
 
@@ -141,7 +139,7 @@ struct WorkoutListView: View {
                 Spacer(minLength: 8)
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(RNFFont.captionBold)
                     .foregroundStyle(Color.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: compact ? 112 : 74, alignment: .leading)
@@ -153,17 +151,17 @@ struct WorkoutListView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                    .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RNFCardButtonStyle())
 
     }
 
     private func workoutPill(_ text: String, tint: Color) -> some View {
 
         Text(text)
-            .font(.system(size: 11, weight: .black, design: .rounded))
+            .font(RNFFont.pill)
             .foregroundStyle(tint)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)

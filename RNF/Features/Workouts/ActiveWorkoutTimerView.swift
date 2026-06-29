@@ -13,6 +13,7 @@ struct ActiveWorkoutTimerView: View {
     @State private var elapsedSeconds = 0
     @State private var isRunning = true
     @State private var isComplete = false
+    @State private var didFireThreshold = false
 
     private let workoutEngine = WorkoutEngine()
 
@@ -38,7 +39,11 @@ struct ActiveWorkoutTimerView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(
+            LinearGradient(colors: phase.gradientColors, startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+        )
+        .animation(.easeInOut(duration: 1.0), value: phase)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -55,25 +60,30 @@ struct ActiveWorkoutTimerView: View {
         VStack(spacing: 24) {
             VStack(spacing: 12) {
                 Text("ACTIVE WORKOUT")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.secondary)
+                    .overlineStyle()
+                    .foregroundStyle(.white.opacity(0.7))
 
-                Text(timerText)
-                    .font(.system(size: 64, weight: .black, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(Color.primary)
-                    .minimumScaleFactor(0.7)
-                    .lineLimit(1)
+                ZStack {
+                    CircularProgressRing(progress: progress)
+                        .frame(width: 200, height: 200)
 
-                ProgressView(value: progress)
-                    .tint(Color(red: 0.3, green: 0.43, blue: 0.86))
-                    .scaleEffect(x: 1, y: 1.8, anchor: .center)
+                    Text(timerText)
+                        .font(RNFFont.metric)
+                        .monospacedDigit()
+                        .foregroundStyle(.white)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
+                }
+
+                Text(phase.encouragement)
+                    .font(RNFFont.body)
+                    .foregroundStyle(.white.opacity(0.8))
             }
 
             HStack(spacing: 12) {
                 Button {
                     isRunning.toggle()
+                    RNFHaptics.impact(.light)
                 } label: {
                     Label(isRunning ? "Pause" : "Resume", systemImage: isRunning ? "pause.fill" : "play.fill")
                         .frame(maxWidth: .infinity)
@@ -90,7 +100,7 @@ struct ActiveWorkoutTimerView: View {
             }
 
             Text("+\(xp) XP after 80% completion")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(RNFFont.caption)
                 .foregroundStyle(Color.secondary)
         }
 
@@ -104,11 +114,11 @@ struct ActiveWorkoutTimerView: View {
                 .foregroundStyle(Color(red: 0.12, green: 0.54, blue: 0.3))
 
             Text("Workout Complete")
-                .font(.system(size: 28, weight: .black, design: .rounded))
+                .font(RNFFont.title)
                 .foregroundStyle(Color.primary)
 
             Text("+\(xp) XP")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
                 .foregroundStyle(Color(red: 0.12, green: 0.54, blue: 0.3))
 
             Button {
@@ -137,6 +147,10 @@ struct ActiveWorkoutTimerView: View {
         return Double(elapsedSeconds) / Double(durationSeconds)
     }
 
+    private var phase: WorkoutPhase {
+        WorkoutPhase.from(progress: progress)
+    }
+
     private func runTimer() async {
         guard isRunning, !isComplete else {
             return
@@ -151,6 +165,11 @@ struct ActiveWorkoutTimerView: View {
 
             remainingSeconds -= 1
             elapsedSeconds += 1
+
+            if !didFireThreshold && progress >= 0.8 {
+                didFireThreshold = true
+                RNFHaptics.threshold()
+            }
         }
 
         if remainingSeconds == 0 {
@@ -172,6 +191,7 @@ struct ActiveWorkoutTimerView: View {
     private func completeSession() {
         isRunning = false
         isComplete = true
+        RNFHaptics.success()
 
         Task {
             _ = await workoutEngine.completeWorkout(

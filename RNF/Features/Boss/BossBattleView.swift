@@ -4,10 +4,33 @@ struct BossBattleView: View {
     let boss: Boss
     var onDealDamage: (() -> Void)?
 
+    private var bossLoreDescription: String {
+        switch boss.bossType {
+        case .procrastination:
+            return "It doesn't kill you. It delays you until you forget you were ever alive."
+        case .doubt:
+            return "It whispers: 'Is this even working?' It hopes you listen."
+        case .laziness:
+            return "You stopped growing. You didn't notice. That's how it wins."
+        case .distraction:
+            return "You're good enough. Why push? Why risk? Why change?"
+        case .apathy:
+            return "It needs nothing from you. That's why it's dangerous."
+        }
+    }
+
     var body: some View {
         VStack(spacing: 24) {
-            Text(boss.bossType.rawValue.capitalized)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+            VStack(spacing: 6) {
+                Text(boss.bossType.rawValue.capitalized)
+                    .font(RNFFont.titleMedium)
+
+                Text(bossLoreDescription)
+                    .font(RNFFont.body)
+                    .italic()
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
 
             VStack(spacing: 8) {
                 GeometryReader { geo in
@@ -20,17 +43,17 @@ struct BossBattleView: View {
                 .frame(height: 16)
 
                 Text("\(boss.currentHP) / \(boss.maxHP) HP")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(RNFFont.body)
                     .foregroundStyle(.secondary)
             }
 
             if boss.isDefeated {
                 Label("Defeated!", systemImage: "trophy.fill")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(RNFFont.section)
                     .foregroundStyle(.yellow)
             } else {
                 Text("Complete habits to deal damage")
-                    .font(.system(size: 14, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.secondary)
             }
         }

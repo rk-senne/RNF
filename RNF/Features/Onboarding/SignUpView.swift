@@ -26,16 +26,14 @@ struct SignUpView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Image(systemName: "flame.fill")
-                    .font(.system(size: 32, weight: .black))
+                    .font(RNFFont.titleLarge)
                     .foregroundStyle(Color.accentColor)
 
                 Text("RNF")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.secondary)
+                    .overlineStyle()
 
-                Text("Create Account")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
+                Text("Activate The Forge")
+                    .font(RNFFont.display)
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -54,6 +52,10 @@ struct SignUpView: View {
                     .submitLabel(.next)
                     .textFieldStyle(.roundedBorder)
 
+                Text("Minimum 8 characters")
+                    .font(RNFFont.caption)
+                    .foregroundStyle(password.isEmpty ? .tertiary : (password.count >= 8 ? RNFColors.success : RNFColors.destructive))
+
                 SecureField("Confirm Password", text: $confirmedPassword)
                     .textContentType(.newPassword)
                     .submitLabel(.go)
@@ -63,8 +65,8 @@ struct SignUpView: View {
 
             if let errorMessage {
                 Text(errorMessage)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.red)
+                    .font(RNFFont.caption)
+                    .foregroundStyle(RNFColors.destructive)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -76,13 +78,19 @@ struct SignUpView: View {
                     }
 
                     Text(isSigningUp ? "Creating Account" : "Continue")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(RNFFont.bodyBold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
             }
             .buttonStyle(.borderedProminent)
             .disabled(!canSubmit)
+
+            Text(motivationalLine)
+                .font(RNFFont.caption)
+                .foregroundStyle(Color.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
 
             Spacer(minLength: 24)
         }
@@ -94,7 +102,22 @@ struct SignUpView: View {
     }
 
     private var canSubmit: Bool {
-        !email.isEmpty && !password.isEmpty && !confirmedPassword.isEmpty && !isSigningUp
+        isValidEmail(email) && password.count >= 8 && password == confirmedPassword && !isSigningUp
+    }
+
+    private func isValidEmail(_ email: String) -> Bool {
+        let pattern = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        return email.range(of: pattern, options: .regularExpression) != nil
+    }
+
+    private var motivationalLine: String {
+        let lines = [
+            "Most people live unranked. You chose differently.",
+            "The system activates only under one condition: commitment.",
+            "What you build here, no one can take from you.",
+            "The Forge does not care about intentions. Only actions."
+        ]
+        return lines[Calendar.current.component(.day, from: Date()) % lines.count]
     }
 
     private func signUp() {

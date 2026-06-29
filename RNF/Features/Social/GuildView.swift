@@ -24,12 +24,12 @@ struct GuildView: View {
     private func guildCard(_ guild: Guild) -> some View {
         VStack(spacing: 12) {
             Text(guild.name)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
             HStack(spacing: 20) {
                 Label("\(guild.memberCount)", systemImage: "person.2.fill")
                 Label("\(guild.totalXP) XP", systemImage: "star.fill")
             }
-            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .font(RNFFont.body)
             .foregroundStyle(.secondary)
         }
         .padding(20)
@@ -40,7 +40,7 @@ struct GuildView: View {
     private var createGuildSection: some View {
         VStack(spacing: 12) {
             Text("Create a Guild")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
             TextField("Guild name", text: $newGuildName)
                 .textFieldStyle(.roundedBorder)
             Button("Create") { onCreate?(newGuildName) }

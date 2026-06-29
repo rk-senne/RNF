@@ -52,12 +52,10 @@ struct SubscriptionManagementView: View {
 
         VStack(alignment: .leading, spacing: 8) {
             Text("SUBSCRIPTION")
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .tracking(1.2)
-                .foregroundStyle(Color.secondary)
+                .overlineStyle()
 
             Text("Manage access to the full RNF experience.")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
                 .foregroundStyle(Color.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -79,11 +77,11 @@ struct SubscriptionManagementView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(entitlement == nil ? "Maintenance Access" : "Full Access Active")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(RNFFont.section)
                     .foregroundStyle(Color.primary)
 
                 Text(statusDetail)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -100,13 +98,13 @@ struct SubscriptionManagementView: View {
 
         VStack(alignment: .leading, spacing: 12) {
             Text("Plans")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
                 .foregroundStyle(Color.primary)
 
             switch loadState {
             case .idle, .loading:
                 ProgressView("Loading plans")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .frame(maxWidth: .infinity, minHeight: 92)
                     .subscriptionCardBackground()
             case .loaded where products.isEmpty:
@@ -119,8 +117,8 @@ struct SubscriptionManagementView: View {
                 }
             case .failed(let message):
                 Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.red)
+                    .font(RNFFont.caption)
+                    .foregroundStyle(RNFColors.destructive)
                     .frame(maxWidth: .infinity, minHeight: 92, alignment: .leading)
                     .padding(16)
                     .subscriptionCardBackground()
@@ -133,11 +131,11 @@ struct SubscriptionManagementView: View {
 
         VStack(alignment: .leading, spacing: 8) {
             Text("No plans configured")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(RNFFont.bodyBold)
                 .foregroundStyle(Color.primary)
 
             Text("StoreKit product identifiers can be supplied when this screen is wired into the app shell.")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(RNFFont.caption)
                 .foregroundStyle(Color.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -152,24 +150,24 @@ struct SubscriptionManagementView: View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(product.displayName)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(RNFFont.bodyBold)
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(product.description)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(Color.secondary)
                     .lineLimit(2)
 
                 Text(product.displayPrice)
-                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .font(RNFFont.overline)
                     .foregroundStyle(Color.accentColor)
             }
 
             Spacer(minLength: 8)
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .bold))
+                .font(RNFFont.captionBold)
                 .foregroundStyle(Color.secondary)
         }
         .padding(16)
@@ -208,7 +206,7 @@ struct SubscriptionManagementView: View {
 
             if let syncMessage {
                 Text(syncMessage)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -288,7 +286,7 @@ private extension View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
         )
     }
 

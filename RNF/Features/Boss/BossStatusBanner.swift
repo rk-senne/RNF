@@ -11,9 +11,9 @@ struct BossStatusBanner: View {
                     .foregroundStyle(.red)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(boss.bossType.rawValue.capitalized)
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(RNFFont.captionBold)
                     Text("\(boss.currentHP)/\(boss.maxHP) HP")
-                        .font(.system(size: 12, design: .rounded))
+                        .font(RNFFont.captionSmall)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()

@@ -19,11 +19,11 @@ struct MissedDayView: View {
                 .font(.system(size: 48, weight: .bold))
                 .foregroundStyle(Color.orange)
 
-            Text("Day Missed")
-                .font(.system(size: 28, weight: .black, design: .rounded))
+            Text("The flame dimmed.")
+                .font(RNFFont.title)
 
-            Text("Yesterday's goals were not completed. Use a forgiveness token to preserve your streak?")
-                .font(.system(size: 16, weight: .medium, design: .rounded))
+            Text("A single missed day does not unmake you. The Forge knows the difference between a stumble and a surrender.")
+                .font(RNFFont.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -32,8 +32,8 @@ struct MissedDayView: View {
                 Button {
                     Task { await useForgiveness() }
                 } label: {
-                    Text("Use Forgiveness Token")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                    Text("Use Resilience Token")
+                        .font(RNFFont.bodyBold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
@@ -43,8 +43,8 @@ struct MissedDayView: View {
                 Button {
                     appStateManager.resolveAfterMissedDay()
                 } label: {
-                    Text("Continue Without")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                    Text("Accept and rebuild.")
+                        .font(RNFFont.body)
                         .foregroundStyle(.secondary)
                 }
                 .disabled(isProcessing)

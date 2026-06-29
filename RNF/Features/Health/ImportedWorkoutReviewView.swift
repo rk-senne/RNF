@@ -9,9 +9,9 @@ struct ImportedWorkoutReviewView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(workout.workoutType)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(RNFFont.statValue)
                     Text("\(workout.durationSeconds / 60) min")
-                        .font(.system(size: 13, design: .rounded))
+                        .font(RNFFont.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()

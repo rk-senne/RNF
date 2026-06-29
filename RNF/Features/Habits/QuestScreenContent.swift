@@ -51,13 +51,13 @@ private struct QuestSectionHeader: View {
 
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
                 .foregroundStyle(Color.primary)
 
             Spacer(minLength: 12)
 
             Text(subtitle.uppercased())
-                .font(.system(size: 11, weight: .black, design: .rounded))
+                .font(RNFFont.pill)
                 .foregroundStyle(Color.secondary)
         }
     }
@@ -78,17 +78,17 @@ private struct WeeklyQuestCard: View {
                         .frame(width: 56, height: 56)
 
                     Image(systemName: habit == nil ? "lock.fill" : "calendar.badge.clock")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(RNFFont.iconLabel)
                         .foregroundStyle(tint)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(habit?.name ?? "Weekly Habit Unlock")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(RNFFont.section)
                         .foregroundStyle(Color.primary)
 
                     Text(habit?.description ?? "Keep completing daily quests to unlock a focused 7 day habit.")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(RNFFont.body)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -97,7 +97,7 @@ private struct WeeklyQuestCard: View {
 
                 if let habit {
                     Text("+\(habit.xpReward) XP")
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .font(RNFFont.captionBoldSmall)
                         .foregroundStyle(Color(red: 0.18, green: 0.45, blue: 0.42))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -116,7 +116,7 @@ private struct WeeklyQuestCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.06), lineWidth: 1)
+                .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
         )
     }
 

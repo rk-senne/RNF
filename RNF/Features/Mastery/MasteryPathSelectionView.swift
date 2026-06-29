@@ -7,11 +7,11 @@ struct MasteryPathSelectionView: View {
         ScrollView {
             VStack(spacing: 16) {
                 Text("Choose Your Path")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(RNFFont.heroSubtitle)
                     .padding(.top)
 
                 Text("Habits aligned with your path earn bonus mastery XP.")
-                    .font(.system(size: 14, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
@@ -20,9 +20,9 @@ struct MasteryPathSelectionView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(path.rawValue.capitalized)
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .font(RNFFont.section)
                                 Text(pathDescription(path))
-                                    .font(.system(size: 13, design: .rounded))
+                                    .font(RNFFont.caption)
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()

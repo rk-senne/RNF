@@ -11,10 +11,10 @@ struct AchievementUnlockToast: View {
                     .font(.system(size: 32))
                     .foregroundStyle(.yellow)
                 Text("Achievement Unlocked!")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBoldSmall)
                     .foregroundStyle(.secondary)
                 Text(achievement.name)
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .font(RNFFont.bodyBold)
             }
             .padding(20)
             .background(RoundedRectangle(cornerRadius: 16, style: .continuous)

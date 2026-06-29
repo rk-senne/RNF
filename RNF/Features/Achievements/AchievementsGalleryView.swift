@@ -27,10 +27,10 @@ private struct AchievementCard: View {
                 .font(.system(size: 28))
                 .foregroundStyle(isUnlocked ? .yellow : .gray)
             Text(achievement.name)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .font(RNFFont.caption)
                 .lineLimit(1)
             Text(achievement.description)
-                .font(.system(size: 11, design: .rounded))
+                .font(RNFFont.pill)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
         }

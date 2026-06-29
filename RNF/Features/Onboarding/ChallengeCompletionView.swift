@@ -17,17 +17,15 @@ struct ChallengeCompletionView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("CHALLENGE COMPLETE")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.secondary)
+                    .overlineStyle()
 
-                Text("90 Days Complete")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
+                Text("The Forge Is Yours")
+                    .font(RNFFont.display)
                     .foregroundStyle(Color.primary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("You finished the transformation arc. Your discipline title is unlocked.")
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                Text("Ninety days ago, you made a promise. Today, you kept it. The flame is no longer something you carry. It carries you.")
+                    .font(RNFFont.sectionMedium)
                     .foregroundStyle(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -66,7 +64,7 @@ struct ChallengeCompletionView: View {
                     }
 
                     Text(isRestarting ? "Restarting" : "Restart Challenge")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(RNFFont.bodyBold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
@@ -108,17 +106,17 @@ struct ChallengeCompletionView: View {
 
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 22, weight: .semibold))
+                .font(RNFFont.iconLabel)
                 .foregroundStyle(Color.accentColor)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(RNFFont.bodyBold)
                     .foregroundStyle(Color.primary)
 
                 Text(detail)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(RNFFont.body)
                     .foregroundStyle(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

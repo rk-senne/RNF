@@ -17,14 +17,12 @@ struct EvolutionView: View {
 
             HStack(alignment: .firstTextBaseline) {
                 Text("EVOLUTION")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(.secondary)
+                    .overlineStyle()
 
                 Spacer(minLength: 12)
 
                 Text(state.currentTier.name)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(state.currentTier.rank.tint)
             }
 
@@ -35,17 +33,17 @@ struct EvolutionView: View {
                         .frame(width: 58, height: 58)
 
                     Image(systemName: state.currentTier.rank.iconName)
-                        .font(.system(size: 26, weight: .bold))
+                        .font(RNFFont.titleMedium)
                         .foregroundStyle(state.currentTier.rank.tint)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(state.currentTier.name)
-                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .font(RNFFont.heroSubtitle)
                         .foregroundStyle(.primary)
 
                     Text(state.currentTier.description)
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(RNFFont.body)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -69,12 +67,12 @@ struct EvolutionView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color.white.opacity(0.88))
+            RoundedRectangle(cornerRadius: RNFRadius.card, style: .continuous)
+                .fill(RNFColors.surface)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+            RoundedRectangle(cornerRadius: RNFRadius.card, style: .continuous)
+                .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
         )
 
     }
@@ -83,7 +81,7 @@ struct EvolutionView: View {
 
         VStack(alignment: .leading, spacing: 12) {
             Text("NEXT: \(nextTier.name.uppercased())")
-                .font(.system(size: 11, weight: .black, design: .rounded))
+                .font(RNFFont.pill)
                 .tracking(1)
                 .foregroundStyle(nextTier.rank.tint)
 
@@ -119,13 +117,13 @@ struct EvolutionView: View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
                 Text(title)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(RNFFont.caption)
                     .foregroundStyle(.primary)
 
                 Spacer(minLength: 12)
 
                 Text("\(min(currentValue, requiredValue)) / \(requiredValue)")
-                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .font(RNFFont.captionBold)
                     .foregroundStyle(tint)
             }
 
@@ -142,11 +140,11 @@ struct EvolutionView: View {
 
         HStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 24, weight: .bold))
+                .font(RNFFont.heroSubtitle)
                 .foregroundStyle(EvolutionRank.apex.tint)
 
             Text("Apex evolution reached.")
-                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .font(RNFFont.statValue)
                 .foregroundStyle(.primary)
         }
         .padding(16)
@@ -168,7 +166,7 @@ struct EvolutionView: View {
         ) {
             ForEach(state.currentTier.rewards, id: \.self) { reward in
                 Text(reward.displayName)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(RNFFont.captionBoldSmall)
                     .foregroundStyle(state.currentTier.rank.tint)
                     .lineLimit(2)
                     .minimumScaleFactor(0.78)
@@ -189,13 +187,13 @@ struct EvolutionView: View {
             ForEach(statChanges.keys.sorted(), id: \.self) { stat in
                 HStack {
                     Text(stat)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(RNFFont.statValue)
 
                     Spacer()
 
                     Text("+\(statChanges[stat] ?? 0)")
-                        .font(.system(size: 15, weight: .black, design: .rounded))
-                        .foregroundStyle(Color.green)
+                        .font(RNFFont.statValue)
+                        .foregroundStyle(RNFColors.success)
                 }
             }
         }

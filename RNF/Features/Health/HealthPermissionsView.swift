@@ -12,10 +12,10 @@ struct HealthPermissionsView: View {
                 .foregroundStyle(.red)
 
             Text("Connect Apple Health")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(RNFFont.section)
 
             Text("Import workouts from Apple Health to automatically credit your daily progress.")
-                .font(.system(size: 15, design: .rounded))
+                .font(RNFFont.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)

@@ -13,59 +13,23 @@ struct ReadView: View {
         case failed(String)
     }
 
-    private struct ReadingArticle: Identifiable {
-        let id = UUID()
-        let title: String
-        let subtitle: String
-        let duration: String
-    }
-
-    private let curatedArticles = [
-        ReadingArticle(
-            title: "Discipline Beats Intensity",
-            subtitle: "Build the rhythm before chasing the rush.",
-            duration: "4 min"
-        ),
-        ReadingArticle(
-            title: "How to Recover Focus",
-            subtitle: "A short reset for attention after a fractured day.",
-            duration: "6 min"
-        ),
-        ReadingArticle(
-            title: "The Compounding Effect of Pages",
-            subtitle: "Tiny reading sessions that become identity.",
-            duration: "5 min"
-        )
-    ]
-
     @EnvironmentObject private var game: GameState
+    @EnvironmentObject private var notifications: NotificationManager
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImageData: Data?
     @State private var selectedImage: UIImage?
     @State private var uploadState: UploadState = .idle
+    @State private var showBookNameAlert = false
+    @State private var bookNameInput = ""
 
     private let readingEngine = ReadingEngine()
 
     var body: some View {
-
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("READ")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(Color.secondary)
-
-                    Text("Train attention. Feed the mind. Log the proof.")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.primary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.top, 8)
-
-                dailyReadingCard
-                readingTargetCard
-                articleList
+                currentBookSection
+                proofUploadCard
+                readingStatsRow
             }
             .padding()
         }
@@ -73,6 +37,15 @@ struct ReadView: View {
         .background(Color(.systemBackground))
         .navigationTitle("Read")
         .navigationBarTitleDisplayMode(.large)
+        .alert("Current Book", isPresented: $showBookNameAlert) {
+            TextField("Book title", text: $bookNameInput)
+            Button("Save") {
+                guard !bookNameInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                ReadingProfileService.setCurrentBook(bookNameInput.trimmingCharacters(in: .whitespaces))
+                bookNameInput = ""
+            }
+            Button("Cancel", role: .cancel) { bookNameInput = "" }
+        }
         .task {
             readingEngine.configure(gameState: game)
         }
@@ -81,70 +54,71 @@ struct ReadView: View {
                 await loadSelectedPhoto(newPhoto)
             }
         }
-
     }
 
-    private var dailyReadingCard: some View {
+    // MARK: - Current Book
 
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Daily Reading")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.primary)
-
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .center, spacing: 14) {
-                Image(systemName: "book.pages.fill")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundStyle(Color(red: 0.3, green: 0.43, blue: 0.86))
-                    .frame(width: 44, height: 44)
-                    .background(
-                        Circle()
-                            .fill(Color(red: 0.3, green: 0.43, blue: 0.86).opacity(0.12))
-                    )
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Read 10 Pages")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.primary)
-
-                    Text("Log today by uploading a book photo.")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    HStack(spacing: 8) {
-                        readingPill("Daily", tint: Color(red: 0.3, green: 0.43, blue: 0.86))
-                        readingPill("+10 XP", tint: Color(red: 0.12, green: 0.54, blue: 0.3))
-                    }
+    private var currentBookSection: some View {
+        let profile = ReadingProfileService.load()
+        return Group {
+            if profile.currentBook.isEmpty {
+                Button {
+                    showBookNameAlert = true
+                } label: {
+                    Label("Set current book", systemImage: "book.closed")
+                        .font(RNFFont.bodyBold)
+                        .foregroundStyle(RNFColors.quest)
                 }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Color.secondary)
+                .accessibilityLabel("Set the book you are currently reading")
+            } else {
+                HStack(spacing: 10) {
+                    Image(systemName: "book.fill")
+                        .foregroundStyle(RNFColors.quest)
+                    Text(profile.currentBook)
+                        .font(RNFFont.bodyBold)
+                        .lineLimit(1)
+                    Spacer()
+                    bookCompletionButton(profile: profile)
                 }
-
-                if let selectedImage {
-                    Image(uiImage: selectedImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity, minHeight: 180, maxHeight: 180)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .clipped()
-                }
-
-                uploadControls
+                .padding(12)
+                .cardBackground()
             }
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
-            .padding(16)
-            .cardBackground()
         }
+    }
 
+    @ViewBuilder
+    private func bookCompletionButton(profile: ReadingProfile) -> some View {
+        Button {
+            ReadingProfileService.completeBook()
+            RNFHaptics.success()
+            notifications.showToast(.xpGain(50))
+        } label: {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(RNFColors.success)
+        }
+        .accessibilityLabel("Mark current book as completed")
+    }
+
+    // MARK: - Proof Upload
+
+    private var proofUploadCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, minHeight: 180, maxHeight: 180)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipped()
+            }
+
+            uploadControls
+        }
+        .padding(16)
+        .cardBackground()
     }
 
     private var uploadControls: some View {
-
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 PhotosPicker(
@@ -157,6 +131,7 @@ struct ReadView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(isUploading)
+                .accessibilityLabel("Choose photo proof")
 
                 Button {
                     Task {
@@ -168,125 +143,57 @@ struct ReadView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(selectedImageData == nil || isUploading || isLoadingPhoto)
+                .accessibilityLabel(selectedImageData == nil ? "Submit disabled, choose photo first" : "Submit reading proof")
             }
 
             uploadStatus
         }
-
     }
 
     @ViewBuilder
     private var uploadStatus: some View {
-
         switch uploadState {
         case .idle:
             EmptyView()
         case .loadingPhoto:
             Label("Loading photo", systemImage: "hourglass")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(RNFFont.caption)
                 .foregroundStyle(Color.secondary)
         case .ready:
             Label("Proof ready", systemImage: "checkmark.circle.fill")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color(red: 0.12, green: 0.54, blue: 0.3))
+                .font(RNFFont.caption)
+                .foregroundStyle(RNFColors.success)
         case .uploading:
             Label("Uploading proof", systemImage: "arrow.up.circle.fill")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(RNFFont.caption)
                 .foregroundStyle(Color.secondary)
         case .completed(let xp):
             Label("Reading Complete +\(xp) XP", systemImage: "checkmark.seal.fill")
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.12, green: 0.54, blue: 0.3))
+                .font(RNFFont.caption)
+                .foregroundStyle(RNFColors.success)
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color.red)
+                .font(RNFFont.caption)
+                .foregroundStyle(RNFColors.destructive)
         }
-
     }
 
-    private var readingTargetCard: some View {
+    // MARK: - Stats
 
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Today's Target")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.primary)
-
-            HStack(spacing: 12) {
-                metricTile(title: "Pages", value: "10")
-                metricTile(title: "Proof", value: "Photo")
-            }
+    private var readingStatsRow: some View {
+        let profile = ReadingProfileService.load()
+        return HStack(spacing: 10) {
+            readingPill("\(profile.totalPages) pages", tint: RNFColors.quest)
+            readingPill("\(profile.booksCompleted) books", tint: RNFColors.success)
+            readingPill("\(profile.readingStreak)🔥", tint: RNFColors.streak)
         }
-
     }
 
-    private var articleList: some View {
-
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Curated Articles")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.primary)
-
-            ForEach(curatedArticles) { article in
-                HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: "doc.text.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color(red: 0.73, green: 0.36, blue: 0.18))
-                        .frame(width: 34, height: 34)
-                        .background(
-                            Circle()
-                                .fill(Color(red: 0.73, green: 0.36, blue: 0.18).opacity(0.12))
-                        )
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(article.title)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.primary)
-                            .lineLimit(2)
-
-                        Text(article.subtitle)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Color.secondary)
-                            .lineLimit(2)
-                    }
-
-                    Spacer(minLength: 8)
-
-                    readingPill(article.duration, tint: Color(red: 0.73, green: 0.36, blue: 0.18))
-                }
-                .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .cardBackground()
-            }
-        }
-
-    }
-
-    private func metricTile(title: String, value: String) -> some View {
-
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .foregroundStyle(Color.secondary)
-
-            Text(value)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-        }
-        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .cardBackground()
-
-    }
+    // MARK: - Helpers
 
     private func readingPill(_ text: String, tint: Color) -> some View {
-
         Text(text)
-            .font(.system(size: 11, weight: .black, design: .rounded))
+            .font(RNFFont.pill)
             .foregroundStyle(tint)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
@@ -296,7 +203,6 @@ struct ReadView: View {
                 Capsule()
                     .fill(tint.opacity(0.12))
             )
-
     }
 
     private var photoButtonTitle: String {
@@ -315,7 +221,6 @@ struct ReadView: View {
         if case .loadingPhoto = uploadState {
             return true
         }
-
         return false
     }
 
@@ -323,7 +228,6 @@ struct ReadView: View {
         if case .uploading = uploadState {
             return true
         }
-
         return false
     }
 
@@ -365,11 +269,11 @@ struct ReadView: View {
 
         if let result = await readingEngine.completeReading(imageData: selectedImageData) {
             uploadState = .completed(result.xpAwarded)
+            RNFHaptics.success()
         } else {
             uploadState = .failed("Proof could not be uploaded")
         }
     }
-
 }
 
 private extension View {
@@ -381,7 +285,7 @@ private extension View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
+                .strokeBorder(RNFColors.borderSubtle, lineWidth: 1)
         )
     }
 
