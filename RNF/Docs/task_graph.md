@@ -1351,3 +1351,554 @@ Depends on:
 - [x] P18-TST-04 Add Watch idempotent completion tests
 Depends on:
 - P18-SVC-05
+
+## Phase 19 – UX Polish
+
+### Design System Foundation
+
+- [x] P19-UX-05a Expand RNFColors with semantic surface, text, border, status, and stat tokens
+Depends on:
+- P18-TST-04
+
+- [x] P19-UX-05b Create RNFRadius constant set for all corner radii
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-05c Create RNFShadow elevation utility
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-05d Expand RNFSpacing with semantic card and section spacing values
+Depends on:
+- P19-UX-05a
+
+### Dark Mode Fix (SEV-1)
+
+- [x] P19-UX-01a Replace hardcoded Color.white.opacity surfaces in AscensionView with semantic tokens
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-01b Replace hardcoded Color.white.opacity surfaces in ContentView with semantic tokens
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-01c Replace hardcoded Color.white.opacity surfaces in EvolutionView and SkillTreeView
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-01d Audit and fix remaining hardcoded opacity colors across all view files
+Depends on:
+- P19-UX-01a
+- P19-UX-01b
+- P19-UX-01c
+
+### Typography Consolidation
+
+- [x] P19-UX-02a Expand RNFFont with display, overline, metric, pill, and bodyBold tokens
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-02b Create View+Overline modifier for uppercase tracking header pattern
+Depends on:
+- P19-UX-02a
+
+- [x] P19-UX-02c Migrate all overline and section header patterns to RNFFont tokens
+Depends on:
+- P19-UX-02b
+
+- [x] P19-UX-02d Migrate all pill, metric, and body font declarations to RNFFont tokens
+Depends on:
+- P19-UX-02c
+
+### Celebration Animations
+
+- [x] P19-UX-03a Create XPGainToast component (top-anchored non-blocking toast)
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-03b Create CelebrationOverlay component (full-screen milestone takeover)
+Depends on:
+- P19-UX-03a
+
+- [x] P19-UX-03c Create ConfettiView particle system respecting Reduce Motion
+Depends on:
+- P19-UX-03b
+
+- [x] P19-UX-03d Refactor ContentView to use new overlay components removing DispatchQueue timing
+Depends on:
+- P19-UX-03c
+- P19-UX-13a
+
+### Loading States
+
+- [x] P19-UX-04a Create ShimmerModifier in DesignSystem with Reduce Motion support
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-04b Add shimmer loading states to AscensionView async sections
+Depends on:
+- P19-UX-04a
+- P19-UX-01a
+
+- [x] P19-UX-04c Add shimmer loading state to ContentView challenge summary
+Depends on:
+- P19-UX-04a
+- P19-UX-01b
+
+### Workout Timer
+
+- [x] P19-UX-06a Create CircularProgressRing component with color interpolation
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-06b Replace linear ProgressView with CircularProgressRing in ActiveWorkoutTimerView
+Depends on:
+- P19-UX-06a
+- P19-UX-02a
+
+- [x] P19-UX-06c Add 80% threshold pulse and ambient gradient to workout timer
+Depends on:
+- P19-UX-06b
+
+### Tab Bar
+
+- [x] P19-UX-07a Create RNFTabBar component with active pill indicator and badge
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-07b Replace stock TabView in RootView with RNFTabBar
+Depends on:
+- P19-UX-07a
+
+### Scroll Effects
+
+- [x] P19-UX-08a Create ScrollEffects utility with cardScrollEntrance modifier
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-08b Add parallax and scroll entrance effects to ContentView and AscensionView
+Depends on:
+- P19-UX-08a
+
+### Card Press Interaction
+
+- [x] P19-UX-09a Create RNFCardButtonStyle with press scale and Reduce Motion support
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-09b Apply RNFCardButtonStyle to WorkoutListView, ReadView, and AscensionView cards
+Depends on:
+- P19-UX-09a
+
+### Onboarding Warmth
+
+- [x] P19-UX-10a Create StepIndicator component for onboarding flow
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-10b Add breathing glow animation to SplashView flame icon
+Depends on:
+- P19-UX-10a
+
+- [x] P19-UX-10c Add ambient gradient pulse to CommitmentView
+Depends on:
+- P19-UX-10a
+- P19-UX-01a
+
+- [x] P19-UX-10d Add motivational subtext to LoginView and SignUpView
+Depends on:
+- P19-UX-10a
+
+### Calendar Interactivity
+
+- [x] P19-UX-11a Add tap handler to CalendarDayCell with date callback
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-11b Create DayDetailSheet component for tapped day summary
+Depends on:
+- P19-UX-11a
+
+- [x] P19-UX-11c Add streak connector visual between consecutive completed days
+Depends on:
+- P19-UX-11a
+
+- [x] P19-UX-11d Add today pulse animation and best-week highlight
+Depends on:
+- P19-UX-11c
+
+### Radar Chart Enhancement
+
+- [x] P19-UX-12a Add Animatable conformance and axis labels to DisciplineRadarChart
+Depends on:
+- P19-UX-02a
+
+- [x] P19-UX-12b Add data point dots, gradient fill, and entry animation
+Depends on:
+- P19-UX-12a
+
+### Toast System Architecture
+
+- [x] P19-UX-13a Create NotificationManager ObservableObject with toast queue
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-13b Create RNFToast and RNFCelebration overlay components
+Depends on:
+- P19-UX-13a
+
+- [x] P19-UX-13c Wire NotificationManager into RootView and refactor HabitsViewModel notifications
+Depends on:
+- P19-UX-13b
+
+### Micro-Interactions
+
+- [x] P19-UX-14a Add completion shimmer to DailyMissionBar at 100%
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-14b Add spring animation to XPBar progress fill on value change
+Depends on:
+- P19-UX-05a
+
+- [x] P19-UX-14c Add streak pill bounce and calendar forgiveness flash
+Depends on:
+- P19-UX-14a
+
+### Haptic Expansion
+
+- [x] P19-UX-15a Create RNFHaptics utility with semantic haptic methods
+Depends on:
+- P18-TST-04
+
+- [x] P19-UX-15b Wire haptics into workout timer lifecycle (start, pause, threshold, complete)
+Depends on:
+- P19-UX-15a
+
+- [x] P19-UX-15c Wire haptics into reading proof, forgiveness, and primary button actions
+Depends on:
+- P19-UX-15a
+
+## Phase 20 – Experience Elevation
+
+### EXP-01: Dynamic Daily Narrative
+
+- [x] P20-EXP-01a Create NarrativeEngine with 50+ templates organized by state bucket
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-01b Integrate narrative display into ContentView above quest list
+Depends on:
+- P20-EXP-01a
+
+### EXP-02: Reward Moment Redesign
+
+- [x] P20-EXP-02a Create FloatingXPText component with upward drift animation
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-02b Redesign HabitRow completion to multi-stage choreographed sequence
+Depends on:
+- P20-EXP-02a
+
+- [x] P20-EXP-02c Add combo detection for rapid sequential completions in HabitsViewModel
+Depends on:
+- P20-EXP-02b
+
+- [x] P20-EXP-02d Create CompletionSoundPlayer with optional audio cue
+Depends on:
+- P20-EXP-02b
+
+### EXP-03: Morning Intention & Evening Reflection
+
+- [x] P20-EXP-03a Create RitualManager for tracking daily intention state
+Depends on:
+- P20-EXP-01a
+
+- [x] P20-EXP-03b Create MorningIntentionView with stat focus selection
+Depends on:
+- P20-EXP-03a
+
+- [x] P20-EXP-03c Create EveningReflectionView with daily summary
+Depends on:
+- P20-EXP-03a
+
+- [x] P20-EXP-03d Wire ritual presentation into RootView lifecycle
+Depends on:
+- P20-EXP-03b
+- P20-EXP-03c
+
+### EXP-04: Discipline Card
+
+- [x] P20-EXP-04a Create DisciplineCardView with tier-adaptive gradient design
+Depends on:
+- P20-EXP-01a
+
+- [x] P20-EXP-04b Create DisciplineCardRenderer using ImageRenderer for sharing
+Depends on:
+- P20-EXP-04a
+
+- [x] P20-EXP-04c Create MilestoneCardTrigger and wire into celebration flow
+Depends on:
+- P20-EXP-04b
+
+- [x] P20-EXP-04d Add Discipline Card entry point in ProfileView
+Depends on:
+- P20-EXP-04b
+
+### EXP-05: Power Streaks
+
+- [x] P20-EXP-05a Create StreakTierSystem with multiplier calculation
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-05b Integrate streak multiplier into PerkSystem XP calculations
+Depends on:
+- P20-EXP-05a
+
+- [x] P20-EXP-05c Add streak tier display to ContentView and multiplier to XP awards
+Depends on:
+- P20-EXP-05b
+
+- [x] P20-EXP-05d Add tier-up celebration trigger in ProgressionEngine
+Depends on:
+- P20-EXP-05c
+
+### EXP-06: Living UI
+
+- [x] P20-EXP-06a Create UIEvolutionProvider deriving visual state from level
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-06b Create EvolvingStyles with conditional surface and accent modifiers
+Depends on:
+- P20-EXP-06a
+
+- [x] P20-EXP-06c Apply evolution styles to ContentView and AscensionView surfaces
+Depends on:
+- P20-EXP-06b
+
+- [x] P20-EXP-06d Add ambient particles to Ascension at Apex level
+Depends on:
+- P20-EXP-06c
+
+### EXP-07: Journey Map
+
+- [x] P20-EXP-07a Create JourneyArc model and JourneyMapView scrollable path
+Depends on:
+- P20-EXP-09a
+
+- [x] P20-EXP-07b Create JourneyMilestoneView nodes with tap-to-memory
+Depends on:
+- P20-EXP-07a
+
+- [x] P20-EXP-07c Integrate journey map navigation from challenge summary and Ascension
+Depends on:
+- P20-EXP-07b
+
+- [x] P20-EXP-07d Add post-90 "New Arc" flow and arc archive
+Depends on:
+- P20-EXP-07c
+
+### EXP-08: Immersive Workout
+
+- [x] P20-EXP-08a Create WorkoutPhase system with intensity-based state
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-08b Add phase-based background gradient and encouragement text to timer
+Depends on:
+- P20-EXP-08a
+
+- [x] P20-EXP-08c Create BreathingPacer component for longer sessions
+Depends on:
+- P20-EXP-08b
+
+### EXP-09: Milestone Memories
+
+- [x] P20-EXP-09a Create ProgressSnapshot model and MemoryService for persistence
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-09b Create MemoryCardView with before/after radar comparison
+Depends on:
+- P20-EXP-09a
+
+- [x] P20-EXP-09c Wire snapshot saving into ProgressionEngine at milestone triggers
+Depends on:
+- P20-EXP-09b
+
+### EXP-10: Social Presence Layer
+
+- [x] P20-EXP-10a Create SocialPresenceProvider with cached guild activity fetch
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-10b Create GuildPulseBar component for daily member count
+Depends on:
+- P20-EXP-10a
+
+- [x] P20-EXP-10c Integrate social presence into ContentView and AscensionView
+Depends on:
+- P20-EXP-10b
+
+### EXP-11: Reading Experience Upgrade
+
+- [x] P20-EXP-11a Create ReadingProfile model and ReadingProfileService
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-11b Add current book, page tracking, and reading stats to ReadView
+Depends on:
+- P20-EXP-11a
+
+- [x] P20-EXP-11c Add book completion flow with celebration
+Depends on:
+- P20-EXP-11b
+
+### EXP-12: Seasonal Arcs
+
+- [x] P20-EXP-12a Create SeasonalArc model and SeasonalArcSystem
+Depends on:
+- P20-EXP-05a
+
+- [x] P20-EXP-12b Add arc progress display to ContentView
+Depends on:
+- P20-EXP-12a
+
+- [x] P20-EXP-12c Create ArcArchiveView with completed and missed arcs
+Depends on:
+- P20-EXP-12b
+
+### EXP-13: Focus Timer
+
+- [x] P20-EXP-13a Create FocusSessionType definitions and FocusTimerView
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-13b Wire Focus completion into ProgressionEngine for Mind/Focus XP
+Depends on:
+- P20-EXP-13a
+
+- [x] P20-EXP-13c Add Focus quest generation to QuestGenerator for weak Mind/Focus
+Depends on:
+- P20-EXP-13b
+
+### EXP-14: Passive Discovery Rewards (Easter Egg)
+
+- [x] P20-EXP-14a Create Discovery model and PassiveDiscoverySystem with threshold evaluation
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-14b Create DiscoveryService with HealthKit check on foreground and history persistence
+Depends on:
+- P20-EXP-14a
+
+- [x] P20-EXP-14c Add discovery toast variant to NotificationManager (gold tint, sparkle icon)
+Depends on:
+- P20-EXP-14b
+
+- [x] P20-EXP-14d Create DiscoveryLogView with earned and locked discoveries in Profile
+Depends on:
+- P20-EXP-14c
+
+- [x] P20-EXP-14e Wire foreground discovery check into RootView app lifecycle
+Depends on:
+- P20-EXP-14c
+
+### EXP-15: Discipline Quotes Engine
+
+- [x] P20-EXP-15a Create QuoteEngine with 365 curated stoic/discipline quotes indexed by day
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-15b Create QuoteFavoritesService for saving and loading favorite quotes
+Depends on:
+- P20-EXP-15a
+
+- [x] P20-EXP-15c Integrate daily quote into MorningIntention, EveningReflection, Widget, and DisciplineCard
+Depends on:
+- P20-EXP-15b
+- P20-EXP-03b
+
+### EXP-16: Multi-Pillar Streak Dashboard
+
+- [x] P20-EXP-16a Create PillarStreakSystem tracking independent streaks per discipline
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-16b Create PillarStreakRow compact display component
+Depends on:
+- P20-EXP-16a
+
+- [x] P20-EXP-16c Integrate pillar streaks into ContentView and wire update triggers
+Depends on:
+- P20-EXP-16b
+
+### EXP-17: Weekly Discipline Report
+
+- [x] P20-EXP-17a Create WeeklyReportService aggregating past 7 days from local data
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-17b Create WeeklyReportView full-screen summary card
+Depends on:
+- P20-EXP-17a
+
+- [x] P20-EXP-17c Add share-as-image rendering and weekly presentation trigger in RootView
+Depends on:
+- P20-EXP-17b
+
+### EXP-18: Habit Agency System
+
+- [x] P20-EXP-18a Create HabitPreset model with 12 curated options across 3 categories
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-18b Create HabitSelectionView for onboarding pick-3 flow
+Depends on:
+- P20-EXP-18a
+
+- [x] P20-EXP-18c Create HabitAgencyService managing selections, unlocks, and custom slots
+Depends on:
+- P20-EXP-18b
+
+- [x] P20-EXP-18d Create CustomHabitCreationView with free text and stat assignment
+Depends on:
+- P20-EXP-18c
+
+- [x] P20-EXP-18e Wire habit selections into QuestGenerator and onboarding AppStateManager flow
+Depends on:
+- P20-EXP-18d
+
+### EXP-19: Live Activity & Ambient Presence
+
+- [x] P20-EXP-19a Create RNFLiveActivity with ActivityAttributes and content state
+Depends on:
+- P19-UX-15c
+
+- [x] P20-EXP-19b Create Live Activity lock screen and Dynamic Island views
+Depends on:
+- P20-EXP-19a
+
+- [x] P20-EXP-19c Wire Activity updates on habit completion and daily goal reached
+Depends on:
+- P20-EXP-19b
+
+- [x] P20-EXP-19d Upgrade Watch complication with streak tier icon and progress ring
+Depends on:
+- P20-EXP-19a
+
+### The Forge Voice
+
+- [ ] P20-VOX-01 Create ForgeVoice utility with AVSpeechSynthesizer, rate 0.42, pitch 0.85, daily limit 2
+Depends on:
+- P19-UX-15c
+
+- [ ] P20-VOX-02 Add voice selection setting in Profile (Off/System/Oracle) with "Activated" confirmation
+Depends on:
+- P20-VOX-01
+
+- [ ] P20-VOX-03 Wire voice triggers into morning ritual, celebrations, boss spawn, discovery, and streak milestones
+Depends on:
+- P20-VOX-02
