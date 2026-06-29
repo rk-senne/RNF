@@ -8,7 +8,9 @@ final class ExportService {
             let dailyLogs: [DailyLog]
             let exportedAt: Date
         }
-        let payload = ExportPayload(profile: profile, dailyLogs: dailyLogs, exportedAt: Date())
+        var exportProfile = profile
+        exportProfile.email = nil
+        let payload = ExportPayload(profile: exportProfile, dailyLogs: dailyLogs, exportedAt: Date())
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601

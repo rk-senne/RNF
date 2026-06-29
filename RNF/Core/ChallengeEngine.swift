@@ -110,7 +110,6 @@ final class ChallengeEngine {
             await analyticsService.trackEvent(
                 usesStoredToken ? .forgivenessUsed : .streakProtectionApplied,
                 properties: [
-                    "user_id": userId.uuidString,
                     "streak_length": "\(evaluation.preservedStreak)",
                     "timestamp": Self.analyticsTimestamp(for: date)
                 ]

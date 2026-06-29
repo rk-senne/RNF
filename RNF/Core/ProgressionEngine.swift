@@ -90,7 +90,8 @@ final class ProgressionEngine {
         let awardedXP = PerkSystem.modifiedXPReward(
             baseXP: habit.xpReward,
             activePerks: activePerks,
-            currentDailyXP: todayLog.xp_earned
+            currentDailyXP: todayLog.xp_earned,
+            streak: updatedProfile.streak
         )
 
         let xpState = xpService.awardXP(
@@ -181,7 +182,6 @@ final class ProgressionEngine {
             await analyticsService.trackEvent(
                 .habitCompleted,
                 properties: [
-                    "user_id": updatedProfile.id.uuidString,
                     "habit_id": habit.id.uuidString,
                     "habit_name": habit.name,
                     "xp_awarded": "\(awardedXP)",
@@ -193,7 +193,6 @@ final class ProgressionEngine {
                 await analyticsService.trackEvent(
                     .dailyGoalCompleted,
                     properties: [
-                        "user_id": updatedProfile.id.uuidString,
                         "habits_completed": "\(updatedDailyCompleted)",
                         "daily_goal": "\(dailyGoal)",
                         "timestamp": Self.analyticsTimestamp(for: completionDate)
@@ -205,7 +204,6 @@ final class ProgressionEngine {
                 await analyticsService.trackEvent(
                     .streakIncreased,
                     properties: [
-                        "user_id": updatedProfile.id.uuidString,
                         "new_streak_length": "\(updatedProfile.streak)",
                         "timestamp": Self.analyticsTimestamp(for: completionDate)
                     ]
@@ -216,7 +214,6 @@ final class ProgressionEngine {
                 await analyticsService.trackEvent(
                     .levelUp,
                     properties: [
-                        "user_id": updatedProfile.id.uuidString,
                         "new_level": "\(updatedProfile.level)",
                         "xp_total": "\(updatedProfile.xp_total)",
                         "timestamp": Self.analyticsTimestamp(for: completionDate)

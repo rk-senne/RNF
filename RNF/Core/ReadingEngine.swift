@@ -80,7 +80,8 @@ final class ReadingEngine {
             let awardedXP = PerkSystem.modifiedXPReward(
                 baseXP: Self.readingXP,
                 activePerks: activePerks,
-                currentDailyXP: completedLog.xp_earned
+                currentDailyXP: completedLog.xp_earned,
+                streak: updatedProfile.streak
             )
             let levelState = xpService.awardXP(
                 currentTotal: updatedProfile.xp_total,
@@ -113,7 +114,6 @@ final class ReadingEngine {
             await analyticsService.trackEvent(
                 .readingCompleted,
                 properties: [
-                    "user_id": updatedProfile.id.uuidString,
                     "proof_uploaded": "true",
                     "xp_awarded": "\(awardedXP)",
                     "timestamp": Self.analyticsTimestamp(for: date)
@@ -124,7 +124,6 @@ final class ReadingEngine {
                 await analyticsService.trackEvent(
                     .levelUp,
                     properties: [
-                        "user_id": updatedProfile.id.uuidString,
                         "new_level": "\(updatedProfile.level)",
                         "xp_total": "\(updatedProfile.xp_total)",
                         "timestamp": Self.analyticsTimestamp(for: date)

@@ -48,7 +48,6 @@ final class ChallengeService {
         await analyticsService.trackEvent(
             .challengeStarted,
             properties: [
-                "user_id": userId.uuidString,
                 "start_date": Self.analyticsTimestamp(for: normalizedStartDate)
             ]
         )
@@ -120,7 +119,6 @@ final class ChallengeService {
         await analyticsService.trackEvent(
             .challengeCompleted,
             properties: [
-                "user_id": completedChallenge.user_id.uuidString,
                 "end_date": Self.analyticsTimestamp(for: completedChallenge.end_date)
             ]
         )

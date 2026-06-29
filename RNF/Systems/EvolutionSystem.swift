@@ -6,7 +6,7 @@ struct EvolutionSystem {
         EvolutionTier(
             rank: .disciple,
             name: "Disciple",
-            description: "Beginning the discipline journey",
+            description: "The flame is barely lit. One gust could end it.",
             requiredLevel: 1,
             requiredStreak: 0,
             rewards: []
@@ -14,7 +14,7 @@ struct EvolutionSystem {
         EvolutionTier(
             rank: .awakened,
             name: "Awakened",
-            description: "Conscious commitment to improvement",
+            description: "Something stirred. The system noticed.",
             requiredLevel: 5,
             requiredStreak: 7,
             rewards: [
@@ -25,7 +25,7 @@ struct EvolutionSystem {
         EvolutionTier(
             rank: .ascendant,
             name: "Ascendant",
-            description: "Mastery of personal habits",
+            description: "The world splits. Those who show up. Those who don't.",
             requiredLevel: SkillTreeSystem.unlockLevel,
             requiredStreak: 30,
             rewards: [
@@ -36,7 +36,7 @@ struct EvolutionSystem {
         EvolutionTier(
             rank: .warlord,
             name: "Warlord",
-            description: "Command of discipline across life",
+            description: "You do not bend. The world bends around you.",
             requiredLevel: 15,
             requiredStreak: 90,
             rewards: [
@@ -48,7 +48,7 @@ struct EvolutionSystem {
         EvolutionTier(
             rank: .apex,
             name: "Apex",
-            description: "Elite long-term consistency",
+            description: "There is no one above you. There is only the next day.",
             requiredLevel: 20,
             requiredStreak: 180,
             rewards: [

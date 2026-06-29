@@ -63,6 +63,12 @@ struct QuestGenerator {
         )
     }
 
+    // P20-EXP-13c: Check if focus session should be suggested
+    static func shouldSuggestFocusSession(profile: Profile) -> Bool {
+        let weakest = weakestStatName(for: profile)
+        return weakest == "focus" || weakest == "mind"
+    }
+
     private static func weakestStatName(for profile: Profile) -> String? {
 
         let statMap: [(name: String, value: Int)] = [

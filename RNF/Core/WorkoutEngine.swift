@@ -81,7 +81,8 @@ final class WorkoutEngine {
             let awardedXP = PerkSystem.modifiedXPReward(
                 baseXP: Self.workoutXP,
                 activePerks: activePerks,
-                currentDailyXP: completedLog.xp_earned
+                currentDailyXP: completedLog.xp_earned,
+                streak: updatedProfile.streak
             )
             let levelState = xpService.awardXP(
                 currentTotal: updatedProfile.xp_total,
@@ -114,7 +115,6 @@ final class WorkoutEngine {
             await analyticsService.trackEvent(
                 .workoutCompleted,
                 properties: [
-                    "user_id": updatedProfile.id.uuidString,
                     "duration": "\(durationSeconds)",
                     "xp_awarded": "\(awardedXP)",
                     "timestamp": Self.analyticsTimestamp(for: date)
@@ -125,7 +125,6 @@ final class WorkoutEngine {
                 await analyticsService.trackEvent(
                     .levelUp,
                     properties: [
-                        "user_id": updatedProfile.id.uuidString,
                         "new_level": "\(updatedProfile.level)",
                         "xp_total": "\(updatedProfile.xp_total)",
                         "timestamp": Self.analyticsTimestamp(for: date)

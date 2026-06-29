@@ -28,13 +28,15 @@ struct PerkSystem {
         baseXP: Int,
         activePerks: ActivePerkSummary,
         currentDailyXP: Int = 0,
-        dailyCap: Int = defaultDailyXPCap
+        dailyCap: Int = defaultDailyXPCap,
+        streak: Int = 0
     ) -> Int {
 
         let sanitizedBaseXP = max(0, baseXP)
         let sanitizedMultiplier = max(0, activePerks.xpMultiplierPercent)
         let bonusXP = (sanitizedBaseXP * sanitizedMultiplier) / 100
-        let uncappedReward = sanitizedBaseXP + bonusXP
+        let perkReward = sanitizedBaseXP + bonusXP
+        let uncappedReward = Int(Double(perkReward) * StreakTierSystem.multiplier(for: streak))
         let remainingDailyXP = max(0, dailyCap - max(0, currentDailyXP))
 
         return min(uncappedReward, remainingDailyXP)

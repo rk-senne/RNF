@@ -154,7 +154,6 @@ final class SubscriptionService {
         await analyticsService.trackEvent(
             eventName,
             properties: [
-                "user_id": userId.uuidString,
                 "plan_type": planType.rawValue,
                 "timestamp": Self.analyticsTimestamp(for: date)
             ]

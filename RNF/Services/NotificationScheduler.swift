@@ -81,7 +81,6 @@ final class NotificationScheduler {
         await analyticsService.trackEvent(
             .notificationOpened,
             properties: [
-                "user_id": userId.uuidString,
                 "notification_type": notificationType.rawValue,
                 "timestamp": Self.analyticsTimestamp(for: date)
             ]

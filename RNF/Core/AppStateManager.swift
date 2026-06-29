@@ -37,7 +37,6 @@ final class AppStateManager: ObservableObject {
             await analyticsService.trackEvent(
                 .appOpened,
                 properties: [
-                    "user_id": userId.uuidString,
                     "timestamp": Self.analyticsTimestamp(for: date),
                     "device_type": "ios"
                 ]
