@@ -5,6 +5,7 @@ struct LoginView: View {
 
     private let authService: AuthService
     private let onLogin: (Session) -> Void
+    private let onGuestTryout: (() -> Void)?
 
     @State private var email = ""
     @State private var password = ""
@@ -13,10 +14,12 @@ struct LoginView: View {
 
     init(
         authService: AuthService = AuthService(),
-        onLogin: @escaping (Session) -> Void = { _ in }
+        onLogin: @escaping (Session) -> Void = { _ in },
+        onGuestTryout: (() -> Void)? = nil
     ) {
         self.authService = authService
         self.onLogin = onLogin
+        self.onGuestTryout = onGuestTryout
     }
 
     var body: some View {
@@ -110,6 +113,17 @@ struct LoginView: View {
             }
             .font(RNFFont.body)
             .frame(maxWidth: .infinity)
+
+            if let onGuestTryout {
+                Button {
+                    onGuestTryout()
+                } label: {
+                    Text("Try Without Account")
+                        .font(RNFFont.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+            }
 
             Spacer(minLength: 24)
         }

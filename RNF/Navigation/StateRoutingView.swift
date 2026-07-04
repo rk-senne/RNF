@@ -10,10 +10,15 @@ struct StateRoutingView: View {
     var body: some View {
         switch appStateManager.state {
         case .loggedOut:
-            LoginView { _ in
-                appStateManager.markAuthenticated()
-                Task { await appStateManager.resolveLaunchState() }
-            }
+            LoginView(
+                onLogin: { _ in
+                    appStateManager.markAuthenticated()
+                    Task { await appStateManager.resolveLaunchState() }
+                },
+                onGuestTryout: {
+                    appStateManager.startGuestTryout()
+                }
+            )
 
         case .authenticated:
             SplashView()
