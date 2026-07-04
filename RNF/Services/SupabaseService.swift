@@ -49,24 +49,16 @@ final class SupabaseService {
         client != nil
     }
 
-    /// Non-optional client access for services that require a valid connection.
-    /// Returns the client or throws if not configured.
-    var requireClient: SupabaseClient {
+    /// Convenience non-optional accessor for service code.
+    /// All call sites already use `try await supabase.db.from(...)` so the
+    /// throwing getter is transparent.
+    var db: SupabaseClient {
         get throws {
             guard let client else {
-                throw SupabaseServiceError.notConfigured(configurationError ?? "Unknown configuration error")
+                throw SupabaseServiceError.notConfigured(configurationError ?? "Supabase not configured")
             }
             return client
         }
-    }
-
-    /// Convenience non-optional accessor. Crashes if Supabase is not configured.
-    /// Use only in code paths that have already validated configuration.
-    var db: SupabaseClient {
-        guard let client else {
-            fatalError("SupabaseService.db accessed but client is not configured: \(configurationError ?? "unknown")")
-        }
-        return client
     }
 }
 
