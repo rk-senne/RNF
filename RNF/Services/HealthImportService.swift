@@ -29,7 +29,7 @@ final class HealthImportService {
 
     /// Returns true if this HealthKit workout has already been imported.
     func isAlreadyImported(userId: UUID, healthKitUUID: String) async throws -> Bool {
-        let records: [HealthImportRecord] = try await supabase.client
+        let records: [HealthImportRecord] = try await supabase.db
             .from("health_imports")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -59,7 +59,7 @@ final class HealthImportService {
             created_at: nil
         )
 
-        let created: HealthImportRecord = try await supabase.client
+        let created: HealthImportRecord = try await supabase.db
             .from("health_imports")
             .insert(record)
             .select()

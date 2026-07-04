@@ -1,134 +1,172 @@
 # RNF Agent Operating Contract
 
-This repository uses a controlled automation loop:
+This repository uses **Moonbase KND Council** as its automation pipeline.
 
-Builder -> Verifier -> Trust Loop
+Each phase produces a **binary release** (TestFlight build) before proceeding to the next.
 
-The purpose of this contract is to allow Codex to work with limited autonomy while preserving project architecture, task ordering, and review discipline.
+---
 
-## Roles
+## Pipeline Tool
 
-### Builder
+**Moonbase** (`moonbase mission`) executes the full KND Council pipeline per task:
 
-The Builder implements exactly one task per cycle.
-
-Responsibilities:
-
-- Read `AGENTS.md`, `RNF/Docs/task_graph.md`, and relevant RNF documentation before editing.
-- Select the next dependency-free task from `RNF/Docs/task_graph.md`.
-- Implement only that task.
-- Preserve the existing SwiftUI architecture and local coding patterns.
-- Update `RNF/Docs/task_graph.md` only to reflect the status of the single completed task.
-- Run the project build.
-- Stop immediately if dependencies are unclear, the build fails, or the task requires architectural changes not already described by the task graph.
-
-The Builder must not:
-
-- Implement more than one task in a cycle.
-- Start work on a blocked task.
-- Change unrelated app behavior.
-- Refactor architecture unless the selected task explicitly requires it.
-- Invent tasks outside `RNF/Docs/task_graph.md`.
-
-### Verifier
-
-The Verifier reviews only the most recent Builder change.
-
-Responsibilities:
-
-- Inspect the last change set only.
-- Check correctness against the selected task.
-- Check adherence to existing architecture.
-- Check that `RNF/Docs/task_graph.md` was updated consistently.
-- Check that the build result is acceptable.
-- Output exactly one risk line:
-
-```text
-Risk Level: LOW
+```
+Phase 1: Numbuh 1 (Analyst) — Requirements & ACs
+Phase 2: Numbuh 2 (Architect) — Design & file plan
+Phase 3: Numbuh 3 (Implementer) — Code & tests
+Phase 4: Numbuh 4 (QA) — AC verification & risk gate
+Phase 5: Numbuh 5 (Reviewer) — PR summary & review
++ Conditional: Numbuh 0 (Oversight), 274 (Security), 362 (DevOps)
 ```
 
-Allowed risk values are `LOW`, `MEDIUM`, and `HIGH`.
+---
 
-The Verifier must not:
+## Execution Model
 
-- Implement app features.
-- Review unrelated historical code.
-- Rewrite the Builder change.
-- Approve architecture drift.
+### Per-Task Execution
 
-### System Agent
+```bash
+moonbase mission "P21-FIX-01: Replace fatalError in AppConfig with graceful Optional return"
+```
 
-The System agent owns the automation layer and trust loop.
+Each task from `RNF/Docs/task_graph.md` is a single moonbase mission. The KND Council handles the full cycle — no separate Builder/Verifier loop needed.
 
-Responsibilities:
+### Per-Phase Binary Release
 
-- Run Builder.
-- Run Verifier.
-- Capture Builder and Verifier output.
-- Parse the Verifier risk level deterministically.
-- Maintain the trust score.
-- Stop the loop when safety conditions require it.
+After all tasks in a phase are complete:
 
-The System agent must not:
+1. All tests pass (`xcodebuild test`)
+2. Build succeeds (`xcodebuild archive`)
+3. Tag the release (`git tag phase-XX-complete`)
+4. Push to TestFlight (via Fastlane or manual archive)
+5. Update `RNF/Docs/task_graph.md` phase header with release tag
 
-- Modify RNF app code.
-- Modify `RNF/Docs/task_graph.md`.
-- Override Verifier risk decisions.
-- Continue after a stop condition.
+Release naming: `v1.0-phase21`, `v1.0-phase22`, etc.
 
-## Required Task Graph Usage
+---
 
-`RNF/Docs/task_graph.md` is the source of truth for work ordering.
+## Task Graph Usage
 
-Every Builder cycle must:
+`RNF/Docs/task_graph.md` remains the source of truth for work ordering.
 
-1. Read the task graph.
-2. Identify tasks whose dependencies are complete.
-3. Select exactly one dependency-free task.
-4. Implement only that selected task.
-5. Mark only that task according to the graph's existing status format.
+Every mission must:
 
-If no dependency-free task exists, the Builder must stop without editing app code.
+1. Read the task graph
+2. Identify dependency-free tasks
+3. Execute exactly one task per mission
+4. Mark the task `[x]` on completion
+5. Respect dependency chains — never start a blocked task
+
+If multiple tasks are dependency-free, pick the earliest task ID.
+
+---
 
 ## Architecture Rules
 
-The RNF architecture must remain stable.
-
 Agents must:
 
-- Follow existing SwiftUI patterns.
-- Keep changes local to the selected task.
-- Avoid introducing new architectural layers without explicit task graph direction.
-- Avoid broad refactors.
-- Avoid replacing established project conventions.
+- Follow existing SwiftUI + MVVM patterns
+- Keep changes local to the selected task
+- Reference the relevant spec in `RNF/Docs/specs/` for implementation guidance
+- Avoid broad refactors unless the task explicitly requires it
+- Run build + tests before marking complete
 
-Any architecture drift is at least `MEDIUM` risk. Architecture drift that changes core data flow, navigation, persistence, or shared app contracts is `HIGH` risk.
+---
+
+## Risk Gate (Phase 4 — Numbuh 4)
+
+After implementation, QA classifies risk:
+
+| Risk | Action |
+|------|--------|
+| **LOW** | Mark task complete, proceed to next |
+| **MEDIUM** | Rework implementation (max 2 loops) |
+| **HIGH** | Rework architecture |
+| **CRITICAL** | Stop. Escalate to human. |
+
+This replaces the old Verifier trust score system. The KND Council's built-in risk gate is more granular and doesn't require a separate agent.
+
+---
+
+## Phase Completion Checklist
+
+Before tagging a phase release:
+
+- [ ] All phase tasks marked `[x]` in task_graph.md
+- [ ] `xcodebuild build` succeeds
+- [ ] `xcodebuild test` passes (RNFTests target)
+- [ ] No regressions in existing tests
+- [ ] Git tag created: `phase-XX-complete`
+- [ ] Binary archived for TestFlight
+- [ ] CHANGELOG updated with phase summary
+
+---
+
+## Spec References
+
+Each phase maps to spec documents in `RNF/Docs/specs/`:
+
+| Phase | Spec |
+|-------|------|
+| 21 | SPEC_PRODUCTION_BLOCKERS.md + SPEC_UI_UX_FIXES.md |
+| 22 | SPEC_ONBOARDING_REDESIGN.md + SPEC_EMOTIONAL_DESIGN.md |
+| 23 | SPEC_MONETIZATION.md |
+| 24 | SPEC_RETENTION_PSYCHOLOGY.md + SPEC_GROWTH_VIRALITY.md |
+| 25 | SPEC_INTELLIGENCE_PERSONALIZATION.md |
+| 26 | SPEC_APPLE_PLATFORM.md |
+| 27 | SPEC_LIFECYCLE_ENDGAME.md |
+| 28 | SPEC_PERSONAS_INCLUSIVITY.md |
+| 29 | SPEC_INFRASTRUCTURE_DEVOPS.md |
+
+Agents MUST read the relevant spec before implementing any task.
+
+---
+
+## Batch Execution
+
+To process an entire phase:
+
+```bash
+# Run all dependency-free tasks in Phase 21 sequentially
+moonbase mission "Execute all Phase 21 tasks from RNF/Docs/task_graph.md in dependency order"
+```
+
+Or individually:
+
+```bash
+moonbase mission "P21-FIX-01: Replace fatalError in AppConfig with graceful Optional return"
+moonbase mission "P21-FIX-02: Update SupabaseService.init to handle nil URL gracefully"
+# ... etc
+```
+
+---
 
 ## Stop Conditions
 
-The automation loop must stop when any of these conditions occur:
+The pipeline stops when:
 
-- Verifier reports `HIGH` risk.
-- Verifier reports `MEDIUM` risk.
-- Dependencies are unclear.
-- Builder cannot identify exactly one dependency-free task.
-- Builder reports or causes a build failure.
-- Builder or Verifier exits with a non-zero status.
-- Verifier output does not contain exactly one valid `Risk Level: LOW|MEDIUM|HIGH` line.
+- Numbuh 4 reports CRITICAL risk
+- Build fails after 2 rework attempts
+- A task requires architectural changes not described in specs
+- Human approval is needed (production configs, infrastructure, CI/CD)
+- Scope expands beyond the single task boundary
 
-Trust handling:
+---
 
-- `LOW`: increment trust score and continue if another cycle is allowed.
-- `MEDIUM`: stop and preserve trust score.
-- `HIGH`: stop and reset trust score to `0`.
+## Conditional Specialists
 
-## Determinism
+Trigger automatically based on changes:
 
-Agents must prefer explicit repository state over inference.
+| Specialist | Triggers When |
+|-----------|---------------|
+| Numbuh 0 (Oversight) | >5 files changed or core logic modified |
+| Numbuh 274 (Security) | Auth, input handling, or new dependencies changed |
+| Numbuh 362 (DevOps) | CI/CD, deploy configs, or infra changed |
+| Numbuh 86 (Decommission) | Old code removal needed |
+| Numbuh 9 (Migration) | Database migrations or data model changes |
 
-The loop must be repeatable:
+---
 
-- One task per Builder run.
-- One Verifier review per Builder run.
-- One risk decision per cycle.
-- One trust score update per cycle.
+## Legacy
+
+The previous Builder → Verifier → Trust Loop system has been retired. The `scripts/rnf_cycle.sh` automation script is deprecated. All automation now flows through Moonbase.

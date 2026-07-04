@@ -10,7 +10,7 @@ final class GuildService {
 
     func createGuild(name: String, description: String?, createdBy: UUID) async throws -> Guild {
         let guild = Guild(id: UUID(), name: name, description: description, memberCount: 1, totalXP: 0, created_by: createdBy, created_at: nil)
-        let created: Guild = try await supabase.client
+        let created: Guild = try await supabase.db
             .from("guilds")
             .insert(guild)
             .select()
@@ -19,24 +19,24 @@ final class GuildService {
             .value
 
         let member = GuildMember(id: UUID(), guild_id: created.id, user_id: createdBy, role: .leader, joined_at: nil)
-        try await supabase.client.from("guild_members").insert(member).execute()
+        try await supabase.db.from("guild_members").insert(member).execute()
 
         return created
     }
 
     func joinGuild(guildId: UUID, userId: UUID) async throws {
         let member = GuildMember(id: UUID(), guild_id: guildId, user_id: userId, role: .member, joined_at: nil)
-        try await supabase.client.from("guild_members").insert(member).execute()
+        try await supabase.db.from("guild_members").insert(member).execute()
     }
 
     func fetchGuild(guildId: UUID) async throws -> Guild? {
-        let guilds: [Guild] = try await supabase.client
+        let guilds: [Guild] = try await supabase.db
             .from("guilds").select().eq("id", value: guildId.uuidString).limit(1).execute().value
         return guilds.first
     }
 
     func fetchUserGuild(userId: UUID) async throws -> Guild? {
-        let members: [GuildMember] = try await supabase.client
+        let members: [GuildMember] = try await supabase.db
             .from("guild_members").select().eq("user_id", value: userId.uuidString).limit(1).execute().value
         guard let membership = members.first else { return nil }
         return try await fetchGuild(guildId: membership.guild_id)
@@ -50,7 +50,7 @@ final class GuildService {
             let level: Int
             let current_streak: Int
         }
-        let rows: [UserRow] = try await supabase.client
+        let rows: [UserRow] = try await supabase.db
             .from("users")
             .select("id, display_name, xp_total, level, current_streak")
             .order("xp_total", ascending: false)
@@ -68,7 +68,7 @@ final class GuildService {
 
     func fetchGuildLeaderboard(guildId: UUID) async throws -> [LeaderboardEntry] {
         struct MemberRow: Decodable { let user_id: UUID }
-        let members: [MemberRow] = try await supabase.client
+        let members: [MemberRow] = try await supabase.db
             .from("guild_members")
             .select("user_id")
             .eq("guild_id", value: guildId.uuidString)

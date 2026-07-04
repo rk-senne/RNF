@@ -16,15 +16,37 @@ concurrency:
 jobs:
   build:
     name: Build RNF
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
       - name: Show Xcode version
         run: xcodebuild -version
+
+      # P29-INF-12: SPM cache keyed on Package.resolved hash
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/RNFDerivedData/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      # P29-INF-01/03: Generate Secrets.xcconfig from repository secrets
+      - name: Generate Secrets.xcconfig
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          chmod +x scripts/generate_xcconfig.sh
+          ./scripts/generate_xcconfig.sh
 
       - name: Resolve packages
         run: |

@@ -15,6 +15,8 @@ struct GuildPulseBar: View {
             }
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(membersActive) guild members are active today")
         }
     }
 }

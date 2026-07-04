@@ -60,7 +60,12 @@ struct MissedDayView: View {
     private func useForgiveness() async {
         isProcessing = true
         defer { isProcessing = false }
-        _ = try? await challengeEngine.useForgiveness()
+        let authProvider: AuthProviding = AuthService()
+        guard let userId = await authProvider.currentUserID else { return }
+        _ = await challengeEngine.useForgiveness(
+            userId: userId,
+            currentStreak: gameState.streak
+        )
         appStateManager.resolveAfterMissedDay()
     }
 }

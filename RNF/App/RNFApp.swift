@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 
 @main
 struct RNFApp: App {
@@ -22,9 +23,23 @@ struct RNFApp: App {
                 .task {
                     await appStateManager.resolveLaunchState()
                 }
-
+                .onReceive(NotificationCenter.default.publisher(
+                    for: ASAuthorizationAppleIDProvider.credentialRevokedNotification
+                )) { _ in
+                    // P21-FIX-11: Handle Apple credential revocation
+                    handleAppleCredentialRevocation()
+                }
         }
-
     }
 
+    /// Responds to Apple credential revocation by logging out the user.
+    private func handleAppleCredentialRevocation() {
+        Task {
+            let authService = AuthService()
+            try? await authService.logout()
+            await MainActor.run {
+                appStateManager.markLoggedOut()
+            }
+        }
+    }
 }

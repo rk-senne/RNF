@@ -1891,14 +1891,1616 @@ Depends on:
 
 ### The Forge Voice
 
-- [ ] P20-VOX-01 Create ForgeVoice utility with AVSpeechSynthesizer, rate 0.42, pitch 0.85, daily limit 2
+- [x] P20-VOX-01 Create ForgeVoice utility with AVSpeechSynthesizer, rate 0.42, pitch 0.85, daily limit 2
 Depends on:
 - P19-UX-15c
 
-- [ ] P20-VOX-02 Add voice selection setting in Profile (Off/System/Oracle) with "Activated" confirmation
+- [x] P20-VOX-02 Add voice selection setting in Profile (Off/System/Oracle) with "Activated" confirmation
 Depends on:
 - P20-VOX-01
 
-- [ ] P20-VOX-03 Wire voice triggers into morning ritual, celebrations, boss spawn, discovery, and streak milestones
+- [x] P20-VOX-03 Wire voice triggers into morning ritual, celebrations, boss spawn, discovery, and streak milestones
 Depends on:
 - P20-VOX-02
+
+## Phase 21 – Production Blockers & UI/UX Fixes
+
+### Critical Safety Fixes
+
+- [x] P21-FIX-01 Replace fatalError in AppConfig with graceful Optional return and add runtime validation
+Depends on:
+- P20-VOX-03
+
+- [x] P21-FIX-02 Update SupabaseService.init to handle nil URL gracefully with error state instead of crash
+Depends on:
+- P21-FIX-01
+
+- [x] P21-FIX-03 Refactor FocusCompletionHandler to route XP updates through gameState.apply(updatedProfile:)
+Depends on:
+- P20-VOX-03
+
+- [x] P21-FIX-04 Add WCSessionDelegate to RNFWatch target with didReceiveMessageData handler calling WatchAppState.update
+Depends on:
+- P20-VOX-03
+
+- [x] P21-FIX-05 Update WatchComplicationProvider to read real data from WatchAppState instead of hardcoded values
+Depends on:
+- P21-FIX-04
+
+- [x] P21-FIX-06 Create AccountDeletionService with cascade delete across all user tables and storage cleanup
+Depends on:
+- P21-FIX-02
+
+- [x] P21-FIX-07 Add Supabase migration for account deletion RPC function with cascade logic
+Depends on:
+- P21-FIX-06
+
+- [x] P21-FIX-08 Create AccountDeletionView with confirmation flow, 7-day grace period, and danger zone UI
+Depends on:
+- P21-FIX-07
+
+- [x] P21-FIX-09 Add ASAuthorizationAppleIDProvider integration to AuthService with credential state handling
+Depends on:
+- P21-FIX-02
+
+- [x] P21-FIX-10 Create AppleSignInButton component and integrate into LoginView and SignUpView
+Depends on:
+- P21-FIX-09
+
+- [x] P21-FIX-11 Add credential revocation observer for Sign in with Apple in AppDelegate lifecycle
+Depends on:
+- P21-FIX-10
+
+### Navigation & Discoverability
+
+- [x] P21-NAV-01 Create ProfileTabView with sectioned NavigationStack (Identity, Progress, Social, Tools, Settings)
+Depends on:
+- P21-FIX-03
+
+- [x] P21-NAV-02 Add 5th tab to RNFTabBar with profile/menu icon and update RootView TabView
+Depends on:
+- P21-NAV-01
+
+- [x] P21-NAV-03 Add NavigationLinks in ProfileTabView to SkillTreeView, EvolutionView, AchievementsGalleryView
+Depends on:
+- P21-NAV-02
+
+- [x] P21-NAV-04 Add NavigationLinks in ProfileTabView to SocialTabView, FocusTimerView, DiscoveryLogView, ArcArchiveView
+Depends on:
+- P21-NAV-02
+
+- [x] P21-NAV-05 Replace .tabViewStyle(.page) with .tabViewStyle(.automatic) in RootView to fix gesture conflicts
+Depends on:
+- P21-NAV-02
+
+- [x] P21-NAV-06 Add LoginView "Create Account" button navigating to SignUpView and vice versa
+Depends on:
+- P21-FIX-10
+
+### Accessibility & Dynamic Type
+
+- [x] P21-A11Y-01 Refactor Typography.swift to use @ScaledMetric for all RNFFont size tokens
+Depends on:
+- P21-NAV-05
+
+- [x] P21-A11Y-02 Add .dynamicTypeSize range limits to prevent extreme sizes breaking layouts
+Depends on:
+- P21-A11Y-01
+
+- [x] P21-A11Y-03 Add accessibilityLabel to FocusTimerView countdown display with minutes and seconds
+Depends on:
+- P21-NAV-05
+
+- [x] P21-A11Y-04 Add accessibilityLabel to ActiveWorkoutTimerView countdown display
+Depends on:
+- P21-NAV-05
+
+- [x] P21-A11Y-05 Add accessibilityLabel to GuildPulseBar with member count context
+Depends on:
+- P21-NAV-05
+
+### UI Quality Fixes
+
+- [x] P21-UI-01 Add .refreshable modifier to ContentView calling viewModel.load
+Depends on:
+- P21-NAV-05
+
+- [x] P21-UI-02 Add .refreshable modifier to AscensionView with reload of calendar and challenge data
+Depends on:
+- P21-NAV-05
+
+- [x] P21-UI-03 Add .refreshable modifier to WorkoutListView and ReadView
+Depends on:
+- P21-NAV-05
+
+- [x] P21-UI-04 Add ErrorStateView display in ContentView when loadErrorMessage is set and habits are empty
+Depends on:
+- P21-UI-01
+
+- [x] P21-UI-05 Create ContentUnavailableView-based empty states for SocialTabView, AchievementsGalleryView, DiscoveryLogView
+Depends on:
+- P21-NAV-04
+
+- [x] P21-UI-06 Replace hardcoded Color literals in HabitRow with RNFColors semantic tokens
+Depends on:
+- P21-A11Y-01
+
+- [x] P21-UI-07 Replace hardcoded Color literals in DailyMissionBar and FocusTimerView with RNFColors tokens
+Depends on:
+- P21-A11Y-01
+
+- [x] P21-UI-08 Replace all hardcoded cornerRadius values across Components/ with RNFRadius tokens
+Depends on:
+- P21-A11Y-01
+
+- [x] P21-UI-09 Fix Task leak in AmbientParticleView by storing handle in @State and cancelling in onDisappear
+Depends on:
+- P21-NAV-05
+
+- [x] P21-UI-10 Move service objects out of view struct stored properties into @StateObject ViewModels or static lets
+Depends on:
+- P21-NAV-05
+
+- [x] P21-UI-11 Move DiscoveryLogView data loading from init to .task modifier with @State storage
+Depends on:
+- P21-UI-10
+
+- [x] P21-UI-12 Replace Array VectorArithmetic retroactive conformance with dedicated AnimatableVector wrapper type
+Depends on:
+- P21-NAV-05
+
+- [x] P21-UI-13 Add WidgetCenter.shared.reloadAllTimelines() call after state changes in ProgressionEngine
+Depends on:
+- P21-FIX-03
+
+### Data Integrity
+
+- [x] P21-DATA-01 Extend OfflineWriteQueue to support generic PendingWrite operations for workouts and reading
+Depends on:
+- P21-FIX-03
+
+- [x] P21-DATA-02 Add retry with exponential backoff to SyncFlushService for failed flush operations
+Depends on:
+- P21-DATA-01
+
+- [x] P21-DATA-03 Add max queue size (500 items) and 30-day TTL eviction to OfflineWriteQueue
+Depends on:
+- P21-DATA-02
+
+- [x] P21-DATA-04 Create discoveries Supabase migration table for server-side persistence
+Depends on:
+- P21-FIX-07
+
+- [x] P21-DATA-05 Update DiscoveryService to persist discoveries to Supabase with local cache fallback
+Depends on:
+- P21-DATA-04
+
+- [x] P21-DATA-06 Create custom_habits Supabase migration table with user_id and habit definition
+Depends on:
+- P21-FIX-07
+
+- [x] P21-DATA-07 Update HabitAgencyService to sync custom habits to Supabase instead of UserDefaults only
+Depends on:
+- P21-DATA-06
+
+- [x] P21-DATA-08 Create pillar_streaks Supabase migration table for server-side persistence
+Depends on:
+- P21-FIX-07
+
+- [x] P21-DATA-09 Update PillarStreakService to sync to Supabase with local cache fallback
+Depends on:
+- P21-DATA-08
+
+- [x] P21-DATA-10 Align WorkoutSession Swift model fields with workouts DB table columns via DTO mapping
+Depends on:
+- P21-DATA-01
+
+- [x] P21-DATA-11 Fix WeeklyReportService to query real completion data from DailyLogService instead of approximations
+Depends on:
+- P21-UI-01
+
+- [x] P21-DATA-12 Fix WatchSyncService data race by marking closure properties @Sendable and gating access on MainActor
+Depends on:
+- P21-FIX-04
+
+### Tests
+
+- [x] P21-TST-01 Add unit tests for AppConfig graceful nil handling and SupabaseService error state
+Depends on:
+- P21-FIX-02
+
+- [x] P21-TST-02 Add unit tests for FocusCompletionHandler verifying profile XP consistency after apply
+Depends on:
+- P21-FIX-03
+
+- [x] P21-TST-03 Add unit tests for AccountDeletionService cascade delete logic
+Depends on:
+- P21-FIX-08
+
+- [x] P21-TST-04 Add unit tests for OfflineWriteQueue generic operations, TTL eviction, and retry backoff
+Depends on:
+- P21-DATA-03
+
+- [x] P21-TST-05 Add unit tests for Watch incoming message handler and complication real data display
+Depends on:
+- P21-FIX-05
+
+## Phase 22 – Onboarding Redesign & Emotional Design
+
+### Try-Before-Commit Flow
+
+- [x] P22-ONB-01 Create GuestSessionManager handling anonymous local state with 3-day TTL
+Depends on:
+- P21-TST-05
+
+- [x] P22-ONB-02 Create TryHabitView allowing single habit completion with XP animation before signup
+Depends on:
+- P22-ONB-01
+
+- [x] P22-ONB-03 Create GuestDataMigrationService to transfer anonymous progress to authenticated profile on signup
+Depends on:
+- P22-ONB-01
+
+- [x] P22-ONB-04 Update AppStateManager to route first-launch users to try-before-commit flow instead of direct auth
+Depends on:
+- P22-ONB-02
+
+### Identity & Archetype
+
+- [x] P22-ONB-05 Create ArchetypeQuiz model with 3 questions and 27 archetype combinations mapping
+Depends on:
+- P22-ONB-04
+
+- [x] P22-ONB-06 Create ArchetypeQuizView with animated question cards and stat distribution preview
+Depends on:
+- P22-ONB-05
+
+- [x] P22-ONB-07 Create ForgeNameView replacing commitment checkbox with name input and forge ignition animation
+Depends on:
+- P22-ONB-06
+
+- [x] P22-ONB-08 Persist archetype and forge name to Profile model and Supabase users table
+Depends on:
+- P22-ONB-07
+
+### First-Session Victory
+
+- [x] P22-ONB-09 Create FirstVictoryView showing earned XP, level, and Spark Initiate title after first completion
+Depends on:
+- P22-ONB-04
+
+- [x] P22-ONB-10 Create Day1ShareCard rendered milestone image with branding and App Store link
+Depends on:
+- P22-ONB-09
+
+- [x] P22-ONB-11 Add share prompt in FirstVictoryView with UIActivityViewController for milestone card
+Depends on:
+- P22-ONB-10
+
+### Progressive Onboarding
+
+- [x] P22-ONB-12 Create FeatureRevealSchedule mapping features to unlock days (streaks Day 3, quests Day 7, skills Day 14)
+Depends on:
+- P22-ONB-08
+
+- [x] P22-ONB-13 Integrate TipKit for contextual feature discovery on first encounter with each unlocked feature
+Depends on:
+- P22-ONB-12
+
+- [x] P22-ONB-14 Update FeatureGate to check both level requirements AND day-since-install for progressive unlock
+Depends on:
+- P22-ONB-12
+
+### Low-Commitment 7-Day Mode
+
+- [x] P22-ONB-15 Add CommitmentStage enum (.exploration, .foundation, .full) to Profile model
+Depends on:
+- P22-ONB-08
+
+- [x] P22-ONB-16 Create 7DayExplorationView entry path with no-commitment framing and amber forge variant
+Depends on:
+- P22-ONB-15
+
+- [x] P22-ONB-17 Create Day7UpsellView showing user's own data as proof of consistency with upgrade prompt
+Depends on:
+- P22-ONB-16
+
+- [x] P22-ONB-18 Create Day30FoundationUpsellView promoting full 90-day commitment with streak preservation
+Depends on:
+- P22-ONB-17
+
+### Welcome-Back Flow
+
+- [x] P22-EMO-01 Add days_since_last_activity detection in AppStateManager foreground handler
+Depends on:
+- P22-ONB-18
+
+- [x] P22-EMO-02 Create WelcomeBackView with reduced 1-habit goal, hidden calendar, and warm narrative copy
+Depends on:
+- P22-EMO-01
+
+- [x] P22-EMO-03 Add routing logic to show WelcomeBackView when absence >= 2 days and no active streak freeze
+Depends on:
+- P22-EMO-02
+
+- [x] P22-EMO-04 Restore normal home view the day after welcome-back completion
+Depends on:
+- P22-EMO-03
+
+### Graduated Success
+
+- [x] P22-EMO-05 Add completion_ratio computed property to DailyLog model (completed/total habits)
+Depends on:
+- P22-EMO-04
+
+- [x] P22-EMO-06 Create GraduatedSuccessView with tier-appropriate narrative (1/4, 2/4, 3/4, 4/4)
+Depends on:
+- P22-EMO-05
+
+- [x] P22-EMO-07 Update CalendarGridView to show gradient fill intensity based on completion ratio instead of binary
+Depends on:
+- P22-EMO-06
+
+### Life Happened Pause
+
+- [x] P22-EMO-08 Create pause_periods Supabase migration table (user_id, start_date, end_date, cycle_id)
+Depends on:
+- P22-EMO-04
+
+- [x] P22-EMO-09 Create PauseService with activate, validate (1/cycle max 14 days), and query methods
+Depends on:
+- P22-EMO-08
+
+- [x] P22-EMO-10 Create LifeHappenedView prompt shown on return after 7+ missed days offering retroactive pause
+Depends on:
+- P22-EMO-09
+
+- [x] P22-EMO-11 Update StreakSystem to skip paused days in consecutive calculation
+Depends on:
+- P22-EMO-09
+
+- [x] P22-EMO-12 Update CalendarGridView to render paused days as blue with lotus icon
+Depends on:
+- P22-EMO-11
+
+### Streak-Free & Rest Days
+
+- [x] P22-EMO-13 Add streakDisplayMode (.streak, .totalDays, .hidden) to Profile model
+Depends on:
+- P22-EMO-04
+
+- [x] P22-EMO-14 Create StreakDisplayToggle setting in ProfileView respecting display mode
+Depends on:
+- P22-EMO-13
+
+- [x] P22-EMO-15 Add rest day status case to DailyLog.Status and update streak calculation to skip rest days
+Depends on:
+- P22-EMO-13
+
+- [x] P22-EMO-16 Create RestDayView banner shown when user activates intentional rest (1 per 7 days limit)
+Depends on:
+- P22-EMO-15
+
+### Humor & Sensitivity
+
+- [x] P22-EMO-17 Add 20 light-tone narrative templates to NarrativeEngine tagged with tone: .light
+Depends on:
+- P22-EMO-04
+
+- [x] P22-EMO-18 Add light-tone selection rule: 5% random when streak > 14, never on failure states
+Depends on:
+- P22-EMO-17
+
+- [x] P22-EMO-19 Add bossDisplayMode (.full, .neutral) to Profile model with setting toggle
+Depends on:
+- P22-EMO-13
+
+- [x] P22-EMO-20 Create neutral BossBattleView variant replacing adversary names with "Consistency Check" framing
+Depends on:
+- P22-EMO-19
+
+### Tests
+
+- [x] P22-TST-01 Add unit tests for GuestSessionManager TTL expiry and data migration
+Depends on:
+- P22-ONB-03
+
+- [x] P22-TST-02 Add unit tests for ArchetypeQuiz combination mapping correctness
+Depends on:
+- P22-ONB-05
+
+- [x] P22-TST-03 Add unit tests for PauseService validation (1/cycle, 14-day max, streak preservation)
+Depends on:
+- P22-EMO-11
+
+- [x] P22-TST-04 Add unit tests for StreakSystem with rest days and paused days skipped correctly
+Depends on:
+- P22-EMO-15
+
+- [x] P22-TST-05 Add unit tests for graduated completion ratio calculation and narrative tier selection
+Depends on:
+- P22-EMO-06
+
+## Phase 23 – Monetization (StoreKit 2)
+
+### Subscription Infrastructure
+
+- [x] P23-MON-01 Create StoreKit configuration file with product IDs (com.rnf.pro.monthly, yearly, lifetime)
+Depends on:
+- P22-TST-05
+
+- [x] P23-MON-02 Implement SubscriptionManager with Product loading, purchase, and Transaction.currentEntitlements
+Depends on:
+- P23-MON-01
+
+- [x] P23-MON-03 Add subscription state persistence to local Keychain and Supabase subscriptions table
+Depends on:
+- P23-MON-02
+
+- [x] P23-MON-04 Implement Transaction.updates listener for real-time entitlement changes and renewal handling
+Depends on:
+- P23-MON-03
+
+- [x] P23-MON-05 Create Supabase edge function for Apple Server Notifications V2 webhook verification
+Depends on:
+- P23-MON-03
+
+- [x] P23-MON-06 Add grace period and billing retry handling in SubscriptionManager
+Depends on:
+- P23-MON-04
+
+### Feature Gating
+
+- [x] P23-MON-07 Create SubscriptionGate utility checking entitlement before Pro feature access
+Depends on:
+- P23-MON-04
+
+- [x] P23-MON-08 Add free tier limits: cap level at 10, limit to 3 habits, restrict skill tree access
+Depends on:
+- P23-MON-07
+
+- [x] P23-MON-09 Add locked state overlays to Pro features (skill tree, focus timer, weekly report, boss battles)
+Depends on:
+- P23-MON-08
+
+### Trial System
+
+- [x] P23-MON-10 Implement 14-day full trial activation on first signup with trial_end_date tracking
+Depends on:
+- P23-MON-07
+
+- [x] P23-MON-11 Create TrialExpiryBanner shown from Day 12 with loss-aversion messaging referencing user's streak
+Depends on:
+- P23-MON-10
+
+- [x] P23-MON-12 Create soft paywall transition on Day 15 showing features being locked with upgrade CTA
+Depends on:
+- P23-MON-11
+
+### Paywall UI
+
+- [x] P23-MON-13 Create RNFPaywallView with SubscriptionStoreView integration showing all 3 tiers
+Depends on:
+- P23-MON-02
+
+- [x] P23-MON-14 Add contextual paywall trigger points (locked feature tap, trial expiry, settings)
+Depends on:
+- P23-MON-13
+
+- [x] P23-MON-15 Add current streak display in paywall UI for loss-aversion framing
+Depends on:
+- P23-MON-14
+
+- [x] P23-MON-16 Create SubscriptionManagementView in Profile settings with plan details and cancel flow
+Depends on:
+- P23-MON-13
+
+### Restore & Migration
+
+- [x] P23-MON-17 Implement restore purchases flow with AppStore.sync() and UI feedback
+Depends on:
+- P23-MON-02
+
+- [x] P23-MON-18 Create migration plan for existing users: 30-day extended trial + Founding Forger badge
+Depends on:
+- P23-MON-10
+
+### Tests
+
+- [x] P23-TST-01 Add unit tests for SubscriptionManager entitlement resolution and state transitions
+Depends on:
+- P23-MON-06
+
+- [x] P23-TST-02 Add unit tests for feature gating logic (free vs pro access per feature)
+Depends on:
+- P23-MON-09
+
+- [x] P23-TST-03 Add unit tests for trial expiry calculation and paywall trigger timing
+Depends on:
+- P23-MON-12
+
+- [x] P23-TST-04 Add StoreKit testing configuration for sandbox purchase verification
+Depends on:
+- P23-MON-17
+
+## Phase 24 – Retention Psychology & Growth
+
+### Variable Rewards (Critical Hits)
+
+- [x] P24-RET-01 Create CriticalHitEngine with seeded RNG per user+day+habitID and 20% base crit rate
+Depends on:
+- P23-TST-04
+
+- [x] P24-RET-02 Integrate CriticalHitEngine into ProgressionEngine XP calculation with 2x-3x multiplier
+Depends on:
+- P24-RET-01
+
+- [x] P24-RET-03 Create CriticalHitAnimation component with gold flash, screen shake, and distinct haptic
+Depends on:
+- P24-RET-02
+
+- [x] P24-RET-04 Wire critical hit visual into HabitRow completion sequence when crit triggers
+Depends on:
+- P24-RET-03
+
+- [x] P24-RET-05 Add streak tier crit chance bonus (Ember +5%, Flame +10%, Blaze +15%, Inferno +20%)
+Depends on:
+- P24-RET-04
+
+### Endowed Progress
+
+- [x] P24-RET-06 Update streak display logic to show "1" immediately on first-ever habit completion (not end-of-day)
+Depends on:
+- P24-RET-05
+
+- [x] P24-RET-07 Update challenge progress bar to show 1/90 filled on Day 1 first completion
+Depends on:
+- P24-RET-06
+
+### Social Proof
+
+- [x] P24-RET-08 Create Supabase edge function aggregating today's total habit_completions count with 5-min cache
+Depends on:
+- P24-RET-07
+
+- [x] P24-RET-09 Create CommunityCounterView component displaying "X habits completed today" with CountUp animation
+Depends on:
+- P24-RET-08
+
+- [x] P24-RET-10 Integrate CommunityCounterView at bottom of ContentView home screen
+Depends on:
+- P24-RET-09
+
+### Forge Tokens Economy
+
+- [x] P24-RET-11 Add forge_tokens column to users table via Supabase migration
+Depends on:
+- P24-RET-07
+
+- [x] P24-RET-12 Create token_transactions table migration for ledger (user_id, amount, reason, created_at)
+Depends on:
+- P24-RET-11
+
+- [x] P24-RET-13 Create ForgeTokenService with earn, spend, and balance query methods
+Depends on:
+- P24-RET-12
+
+- [x] P24-RET-14 Wire token earning into: challenge completion (+5), boss defeat (+3), weekly streak (+2), daily login (+1)
+Depends on:
+- P24-RET-13
+
+- [x] P24-RET-15 Create ForgeTokenShopView with cosmetic items (profile borders, streak colors, card backgrounds)
+Depends on:
+- P24-RET-14
+
+- [x] P24-RET-16 Create cosmetic_unlocks table migration and persist purchased cosmetics per user
+Depends on:
+- P24-RET-15
+
+### Streak Freezes
+
+- [x] P24-RET-17 Add streak_freezes field to Profile model and Supabase users table
+Depends on:
+- P24-RET-13
+
+- [x] P24-RET-18 Implement auto-apply streak freeze on missed day before streak breaks
+Depends on:
+- P24-RET-17
+
+- [x] P24-RET-19 Add Pro subscriber monthly freeze allocation (3/month) in SubscriptionManager
+Depends on:
+- P24-RET-18
+
+- [x] P24-RET-20 Add Forge Token purchase path for additional freezes (10 tokens = 1 freeze, max 2/month)
+Depends on:
+- P24-RET-18
+
+### Leaderboard Leagues
+
+- [x] P24-RET-21 Create league_assignments Supabase migration (user_id, tier, instance_id, week_start, weekly_xp)
+Depends on:
+- P24-RET-11
+
+- [x] P24-RET-22 Create LeagueService with join, weekly XP update, and tier query methods
+Depends on:
+- P24-RET-21
+
+- [x] P24-RET-23 Create Supabase edge function for weekly league recalculation (top 5 promote, bottom 5 demote)
+Depends on:
+- P24-RET-22
+
+- [x] P24-RET-24 Create LeagueView with current tier, position, promotion/demotion zones highlighted
+Depends on:
+- P24-RET-23
+
+- [x] P24-RET-25 Add league tier badge display in Profile and Discipline Card
+Depends on:
+- P24-RET-24
+
+### Shareable Milestones
+
+- [x] P24-GRO-01 Create MilestoneCardGenerator producing branded 9:16 images for streak 7, 14, 30, level milestones
+Depends on:
+- P24-RET-07
+
+- [x] P24-GRO-02 Create SharePromptView triggered on milestone with UIActivityViewController
+Depends on:
+- P24-GRO-01
+
+- [x] P24-GRO-03 Wire milestone card generation into ProgressionEngine tier-up and level-up triggers
+Depends on:
+- P24-GRO-02
+
+### Referral System
+
+- [x] P24-GRO-04 Create referrals Supabase migration table (referrer_id, referee_id, code, status, rewarded_at)
+Depends on:
+- P24-RET-11
+
+- [x] P24-GRO-05 Create ReferralService with code generation, validation, and reward distribution
+Depends on:
+- P24-GRO-04
+
+- [x] P24-GRO-06 Create InviteFriendView in Profile with unique code display and share action
+Depends on:
+- P24-GRO-05
+
+- [x] P24-GRO-07 Add deep link handler for rnf://invite/{code} auto-applying referral on signup
+Depends on:
+- P24-GRO-06
+
+- [x] P24-GRO-08 Wire referral reward (+1 forgiveness token + 5 Forge Tokens) on referee Day 3 completion
+Depends on:
+- P24-GRO-07
+
+### 1v1 Micro-Challenges
+
+- [x] P24-GRO-09 Create micro_challenges Supabase migration table (challenger, challengee, scores, dates, winner)
+Depends on:
+- P24-RET-11
+
+- [x] P24-GRO-10 Create MicroChallengeService with create, join, update score, and resolve winner methods
+Depends on:
+- P24-GRO-09
+
+- [x] P24-GRO-11 Create MicroChallengeView with comparison card showing both users' daily completions
+Depends on:
+- P24-GRO-10
+
+- [x] P24-GRO-12 Create challenge invite flow via share link and acceptance handler
+Depends on:
+- P24-GRO-11
+
+### Content Moderation
+
+- [x] P24-GRO-13 Create content_reports Supabase migration table (reporter_id, content_type, content_id, reason, status)
+Depends on:
+- P24-RET-11
+
+- [x] P24-GRO-14 Create ContentModerationService with report submission, client-side profanity filter, and block user
+Depends on:
+- P24-GRO-13
+
+- [x] P24-GRO-15 Add long-press "Report" action on guild names, social challenge titles, and display names
+Depends on:
+- P24-GRO-14
+
+- [x] P24-GRO-16 Create Supabase edge function for auto-hide on 3 reports and escalation rules
+Depends on:
+- P24-GRO-15
+
+### Notifications Enhancement
+
+- [x] P24-GRO-17 Create NotificationContentRotator with 20+ message variants per notification type
+Depends on:
+- P24-RET-07
+
+- [x] P24-GRO-18 Add streak-at-risk notification (sent at 8 PM if 0 completions today)
+Depends on:
+- P24-GRO-17
+
+- [x] P24-GRO-19 Add milestone celebration push notification on streak 7, 14, 30, and level-ups
+Depends on:
+- P24-GRO-17
+
+- [x] P24-GRO-20 Add comeback notification after 3 days of absence with warm re-engagement copy
+Depends on:
+- P24-GRO-17
+
+### Tests
+
+- [x] P24-TST-01 Add unit tests for CriticalHitEngine seeded RNG determinism and crit rate distribution
+Depends on:
+- P24-RET-05
+
+- [x] P24-TST-02 Add unit tests for ForgeTokenService earn/spend/balance with insufficient funds handling
+Depends on:
+- P24-RET-15
+
+- [x] P24-TST-03 Add unit tests for streak freeze auto-apply and monthly allocation limits
+Depends on:
+- P24-RET-20
+
+- [x] P24-TST-04 Add unit tests for LeagueService weekly recalculation and tier transitions
+Depends on:
+- P24-RET-25
+
+- [x] P24-TST-05 Add unit tests for ReferralService code validation and reward timing
+Depends on:
+- P24-GRO-08
+
+## Phase 25 – Intelligence & Personalization
+
+### Adaptive Notification Timing
+
+- [x] P25-INT-01 Create completion_timestamps analytics table tracking habit completion times per user
+Depends on:
+- P24-TST-05
+
+- [x] P25-INT-02 Create AdaptiveTimingService computing median completion time from 14+ days of data
+Depends on:
+- P25-INT-01
+
+- [x] P25-INT-03 Add weekday vs weekend split to adaptive timing model
+Depends on:
+- P25-INT-02
+
+- [x] P25-INT-04 Update NotificationScheduler to use adaptive timing when available, fallback to user-set time
+Depends on:
+- P25-INT-03
+
+- [x] P25-INT-05 Add drift detection: re-adapt when median shifts 30+ minutes over 7 days
+Depends on:
+- P25-INT-04
+
+### Dynamic Daily Goal
+
+- [x] P25-INT-06 Create DifficultyAdvisor service computing trailing 7-day completion rate
+Depends on:
+- P25-INT-01
+
+- [x] P25-INT-07 Add suggest-increase logic when completion rate > 90% for 7 consecutive days
+Depends on:
+- P25-INT-06
+
+- [x] P25-INT-08 Add suggest-decrease logic when completion rate < 50% for 3 consecutive days
+Depends on:
+- P25-INT-06
+
+- [x] P25-INT-09 Create DifficultyBanner UI component for goal adjustment suggestions with accept/dismiss
+Depends on:
+- P25-INT-07
+
+- [x] P25-INT-10 Create difficulty_adjustments table to persist user responses to suggestions
+Depends on:
+- P25-INT-09
+
+- [x] P25-INT-11 Add cooldown rules: no increase suggestion in first 14 days, no decrease in first 7 days
+Depends on:
+- P25-INT-08
+
+### Behavioral Insights
+
+- [x] P25-INT-12 Create InsightEngine analyzing 28-day completion data for patterns
+Depends on:
+- P25-INT-06
+
+- [x] P25-INT-13 Implement best/worst day of week insight with statistical significance threshold
+Depends on:
+- P25-INT-12
+
+- [x] P25-INT-14 Implement time-of-day correlation insight (morning completions vs full day success)
+Depends on:
+- P25-INT-12
+
+- [x] P25-INT-15 Implement stat growth rate insight highlighting fastest-growing pillar
+Depends on:
+- P25-INT-12
+
+- [x] P25-INT-16 Create weekly_insights table and integrate top 1-2 insights into WeeklyReportView
+Depends on:
+- P25-INT-15
+
+### Churn Prediction
+
+- [x] P25-INT-17 Create EngagementStateManager with 5 states (Engaged, AtRisk, Drifting, Lapsed, Churned)
+Depends on:
+- P25-INT-06
+
+- [x] P25-INT-18 Implement state transition rules based on app open frequency and completion rate
+Depends on:
+- P25-INT-17
+
+- [x] P25-INT-19 Wire AtRisk state to show "Just do one" in-app banner with reduced daily goal
+Depends on:
+- P25-INT-18
+
+- [x] P25-INT-20 Wire Drifting state to escalated push notification with streak-at-risk messaging
+Depends on:
+- P25-INT-18
+
+- [x] P25-INT-21 Wire Lapsed state to final warm push notification (max 1 per lapse cycle)
+Depends on:
+- P25-INT-20
+
+- [x] P25-INT-22 Add safeguard: max 5 re-engagement pushes per 30-day period, never push after Churned
+Depends on:
+- P25-INT-21
+
+### Quest Personalization
+
+- [x] P25-INT-23 Add quest completion tracking per type to QuestRepository
+Depends on:
+- P25-INT-12
+
+- [x] P25-INT-24 Update QuestGenerator with multi-factor scoring: stat_weakness 50% + preference 30% + freshness 20%
+Depends on:
+- P25-INT-23
+
+- [x] P25-INT-25 Add quest fatigue rule: rotate to different type after 3 consecutive days of same type
+Depends on:
+- P25-INT-24
+
+### Habit Difficulty Profiling
+
+- [x] P25-INT-26 Create HabitDifficultyProfiler computing per-habit completion rate over 30 days
+Depends on:
+- P25-INT-12
+
+- [x] P25-INT-27 Classify habits as Easy (>90%), Moderate (60-90%), Hard (<60%) with weekly recomputation
+Depends on:
+- P25-INT-26
+
+- [x] P25-INT-28 Add +3 bonus XP for Hard-classified habits in ProgressionEngine
+Depends on:
+- P25-INT-27
+
+- [x] P25-INT-29 Add difficulty indicator icon to HabitRow based on classification
+Depends on:
+- P25-INT-27
+
+- [x] P25-INT-30 Add "habit ordering" setting: hardest-first (eat the frog) or easiest-first (momentum)
+Depends on:
+- P25-INT-29
+
+### Tests
+
+- [x] P25-TST-01 Add unit tests for AdaptiveTimingService median calculation and drift detection
+Depends on:
+- P25-INT-05
+
+- [x] P25-TST-02 Add unit tests for DifficultyAdvisor thresholds and cooldown rules
+Depends on:
+- P25-INT-11
+
+- [x] P25-TST-03 Add unit tests for InsightEngine pattern detection with minimum variance requirements
+Depends on:
+- P25-INT-16
+
+- [x] P25-TST-04 Add unit tests for EngagementStateManager transitions and push safeguards
+Depends on:
+- P25-INT-22
+
+- [x] P25-TST-05 Add unit tests for HabitDifficultyProfiler classification boundaries and XP bonus
+Depends on:
+- P25-INT-28
+
+## Phase 26 – Apple Platform Integration
+
+### App Intents & Shortcuts
+
+- [x] P26-APL-01 Create CompleteHabitIntent AppIntent with habit name parameter and perform() logic
+Depends on:
+- P25-TST-05
+
+- [x] P26-APL-02 Create StartFocusIntent AppIntent with duration parameter triggering focus session
+Depends on:
+- P26-APL-01
+
+- [x] P26-APL-03 Create StartWorkoutIntent AppIntent with workout type parameter
+Depends on:
+- P26-APL-01
+
+- [x] P26-APL-04 Create CheckStreakIntent AppIntent returning current streak and tier as spoken result
+Depends on:
+- P26-APL-01
+
+- [x] P26-APL-05 Create RNFShortcutsProvider with suggested shortcuts for each intent
+Depends on:
+- P26-APL-04
+
+- [x] P26-APL-06 Add Spotlight donations for recently completed habits via CSSearchableItem
+Depends on:
+- P26-APL-05
+
+### Background App Refresh
+
+- [x] P26-APL-07 Register BGAppRefreshTaskRequest (com.rnf.refresh) in app init for hourly widget data update
+Depends on:
+- P26-APL-01
+
+- [x] P26-APL-08 Register BGProcessingTaskRequest (com.rnf.sync) for offline queue flush on WiFi
+Depends on:
+- P26-APL-07
+
+- [x] P26-APL-09 Register BGProcessingTaskRequest (com.rnf.analytics) for batched analytics upload
+Depends on:
+- P26-APL-07
+
+- [x] P26-APL-10 Create BackgroundTaskManager coordinating registration, scheduling, and handlers
+Depends on:
+- P26-APL-09
+
+### Interactive Widgets
+
+- [x] P26-APL-11 Create CompleteHabitFromWidgetIntent using AppIntent for widget button interaction
+Depends on:
+- P26-APL-01
+
+- [x] P26-APL-12 Create medium interactive widget with habit checkboxes using Button(intent:) pattern
+Depends on:
+- P26-APL-11
+
+- [x] P26-APL-13 Create large interactive widget with habits + quest status + streak display
+Depends on:
+- P26-APL-12
+
+- [x] P26-APL-14 Add .accessoryCircular and .accessoryRectangular Lock Screen widget families
+Depends on:
+- P26-APL-12
+
+- [x] P26-APL-15 Add StandBy-optimized layout for rectangular widget (dark background, large type)
+Depends on:
+- P26-APL-14
+
+### Control Center (iOS 18+)
+
+- [x] P26-APL-16 Create ControlWidget with ControlWidgetButton triggering CompleteHabitIntent
+Depends on:
+- P26-APL-11
+
+- [x] P26-APL-17 Add Control Center widget showing next uncompleted habit name with tap-to-complete
+Depends on:
+- P26-APL-16
+
+### HealthKit Auto-Tracking
+
+- [x] P26-APL-18 Create HealthKitAutoTracker with HKObserverQuery background delivery for steps
+Depends on:
+- P26-APL-10
+
+- [x] P26-APL-19 Add auto-complete logic for step-count habit when daily threshold met
+Depends on:
+- P26-APL-18
+
+- [x] P26-APL-20 Add HKObserverQuery for appleExerciseTime with auto-complete on threshold
+Depends on:
+- P26-APL-18
+
+- [x] P26-APL-21 Add HKObserverQuery for sleepAnalysis with auto-complete on duration threshold
+Depends on:
+- P26-APL-18
+
+- [x] P26-APL-22 Add user toggle "Auto-track from Health" per habit with threshold configuration
+Depends on:
+- P26-APL-21
+
+### HealthKit Write-Back
+
+- [x] P26-APL-23 Create HealthKitWriter for saving RNF workouts as HKWorkout samples
+Depends on:
+- P26-APL-22
+
+- [x] P26-APL-24 Create HealthKitWriter for saving focus sessions as HKCategoryType.mindfulSession
+Depends on:
+- P26-APL-23
+
+- [x] P26-APL-25 Add opt-in prompt "Sync to Apple Health?" on first workout completion with setting toggle
+Depends on:
+- P26-APL-24
+
+### App Attest
+
+- [x] P26-APL-26 Implement DCAppAttestService key generation and attestation on first launch
+Depends on:
+- P26-APL-10
+
+- [x] P26-APL-27 Create assertion generator for leaderboard and XP submission requests
+Depends on:
+- P26-APL-26
+
+- [x] P26-APL-28 Create Supabase edge function for server-side attestation verification
+Depends on:
+- P26-APL-27
+
+- [x] P26-APL-29 Add graceful degradation: mark unverified submissions when attestation unavailable
+Depends on:
+- P26-APL-28
+
+### Live Activities Expansion
+
+- [x] P26-APL-30 Create WorkoutTimerLiveActivity with elapsed time and progress to completion threshold
+Depends on:
+- P26-APL-10
+
+- [x] P26-APL-31 Create FocusSessionLiveActivity with countdown timer and session name
+Depends on:
+- P26-APL-30
+
+- [x] P26-APL-32 Add Dynamic Island compact and expanded views for workout and focus activities
+Depends on:
+- P26-APL-31
+
+- [x] P26-APL-33 Wire Live Activity start/update/end into WorkoutEngine and FocusTimerView lifecycle
+Depends on:
+- P26-APL-32
+
+### Deep Linking
+
+- [x] P26-APL-34 Create DeepLinkRouter parsing rnf:// URL scheme into navigation destinations
+Depends on:
+- P26-APL-01
+
+- [x] P26-APL-35 Add Associated Domains entitlement and apple-app-site-association for Universal Links
+Depends on:
+- P26-APL-34
+
+- [x] P26-APL-36 Wire onOpenURL handler in RNFApp routing to DeepLinkRouter
+Depends on:
+- P26-APL-35
+
+- [x] P26-APL-37 Add widgetURL to all widget families for tap-to-navigate-to-specific-screen
+Depends on:
+- P26-APL-36
+
+### Tests
+
+- [x] P26-TST-01 Add unit tests for all AppIntents perform() logic and error handling
+Depends on:
+- P26-APL-05
+
+- [x] P26-TST-02 Add unit tests for BackgroundTaskManager scheduling and handler coordination
+Depends on:
+- P26-APL-10
+
+- [x] P26-TST-03 Add unit tests for HealthKitAutoTracker threshold evaluation and auto-complete
+Depends on:
+- P26-APL-22
+
+- [x] P26-TST-04 Add unit tests for DeepLinkRouter URL parsing for all route patterns
+Depends on:
+- P26-APL-37
+
+## Phase 27 – Lifecycle & Endgame
+
+### Post-90 Chapters
+
+- [x] P27-LIF-01 Create chapters Supabase migration table (user_id, chapter_number, objective_type, target, progress, dates)
+Depends on:
+- P26-TST-04
+
+- [x] P27-LIF-02 Create ChapterService managing chapter creation, progress updates, and completion detection
+Depends on:
+- P27-LIF-01
+
+- [x] P27-LIF-03 Define Chapter 2-5 objectives: new pillar (stat>25), balanced (all>15), specialist (one>40), complete (all>25)
+Depends on:
+- P27-LIF-02
+
+- [x] P27-LIF-04 Create ChapterBannerView replacing challenge day counter after Day 90 completion
+Depends on:
+- P27-LIF-03
+
+- [x] P27-LIF-05 Wire chapter progress tracking into ProgressionEngine stat update logic
+Depends on:
+- P27-LIF-04
+
+- [x] P27-LIF-06 Create ChapterCompletionView celebration with narrative shift and next chapter prompt
+Depends on:
+- P27-LIF-05
+
+### Prestige / Rebirth
+
+- [x] P27-LIF-07 Create prestige_records Supabase migration table (user_id, prestige_level, rebirth_date, bonuses_earned)
+Depends on:
+- P27-LIF-01
+
+- [x] P27-LIF-08 Create PrestigeService with canRebirth validation (Chapter 2 complete OR Level 20 + challenge done)
+Depends on:
+- P27-LIF-07
+
+- [x] P27-LIF-09 Implement rebirth logic: reset stats/level/XP, preserve titles/achievements/tokens/prestige count
+Depends on:
+- P27-LIF-08
+
+- [x] P27-LIF-10 Define permanent prestige bonuses: +5% XP per rebirth, +1 starting stat point at rebirth 2+
+Depends on:
+- P27-LIF-09
+
+- [x] P27-LIF-11 Integrate prestige XP multiplier into XPSystem and ProgressionEngine calculations
+Depends on:
+- P27-LIF-10
+
+- [x] P27-LIF-12 Create RebirthConfirmationView with 3-step safety flow showing what resets vs what's kept
+Depends on:
+- P27-LIF-11
+
+- [x] P27-LIF-13 Add prestige star icon to Profile and Discipline Card based on prestige_level
+Depends on:
+- P27-LIF-12
+
+### Habit Leveling
+
+- [x] P27-LIF-14 Add habit_level computed property to Habit model based on total completions from habit_completions count
+Depends on:
+- P27-LIF-06
+
+- [x] P27-LIF-15 Define habit level thresholds: L2=10, L3=25, L4=50, L5=100 (Mastered), L6=200 (Legendary)
+Depends on:
+- P27-LIF-14
+
+- [x] P27-LIF-16 Add per-level XP bonus (+1 per habit level) to ProgressionEngine habit completion reward
+Depends on:
+- P27-LIF-15
+
+- [x] P27-LIF-17 Add star indicators to HabitRow showing habit level (1-5 stars, gold shimmer on Mastered)
+Depends on:
+- P27-LIF-16
+
+- [x] P27-LIF-18 Create HabitLevelUpToast triggered when habit crosses a level threshold
+Depends on:
+- P27-LIF-17
+
+### Monthly Habit Injection
+
+- [x] P27-LIF-19 Create habit_presets Supabase migration table with available_from date and level_gate
+Depends on:
+- P27-LIF-01
+
+- [x] P27-LIF-20 Seed initial 6 months of monthly habits (cold exposure, digital sunset, skill practice, etc.)
+Depends on:
+- P27-LIF-19
+
+- [x] P27-LIF-21 Update HabitAgencyService to query available presets filtered by current month and user level
+Depends on:
+- P27-LIF-20
+
+- [x] P27-LIF-22 Create NewHabitAvailableBanner notification and badge on Habits tab when new preset unlocks
+Depends on:
+- P27-LIF-21
+
+### Mastery Mode
+
+- [x] P27-LIF-23 Add mastery_focus_habit_id field to Profile model (nullable, max 1 at a time)
+Depends on:
+- P27-LIF-14
+
+- [x] P27-LIF-24 Create MasteryFocusView with detailed per-habit stats (best streak, total count, daily chart)
+Depends on:
+- P27-LIF-23
+
+- [x] P27-LIF-25 Add 1.5x XP multiplier for mastery focus habit in ProgressionEngine
+Depends on:
+- P27-LIF-24
+
+- [x] P27-LIF-26 Create mastery milestones (7-day streak, 30-day streak, 100 total) with toast rewards
+Depends on:
+- P27-LIF-25
+
+- [x] P27-LIF-27 Add monthly change limit: mastery focus can only be changed once per 30 days
+Depends on:
+- P27-LIF-26
+
+### Seasonal Events
+
+- [x] P27-LIF-28 Create seasonal_events Supabase migration table (event_id, name, start, end, objectives, rewards)
+Depends on:
+- P27-LIF-01
+
+- [x] P27-LIF-29 Create SeasonalEventService with opt-in, progress tracking, and reward distribution
+Depends on:
+- P27-LIF-28
+
+- [x] P27-LIF-30 Seed 4 quarterly events: Awakening (spring), Crucible (summer), Harvest (autumn), Deep Forge (winter)
+Depends on:
+- P27-LIF-29
+
+- [x] P27-LIF-31 Create SeasonalEventBannerView with opt-in prompt and progress display during active events
+Depends on:
+- P27-LIF-30
+
+- [x] P27-LIF-32 Create event-exclusive badge rewards and Forge Token bonuses for event completion
+Depends on:
+- P27-LIF-31
+
+### Legacy System
+
+- [x] P27-LIF-33 Create legacy_milestones table migration for Day 365+ achievements and custom titles
+Depends on:
+- P27-LIF-01
+
+- [x] P27-LIF-34 Create LegacyProfileGenerator aggregating full journey stats (total habits, XP, longest streak)
+Depends on:
+- P27-LIF-33
+
+- [x] P27-LIF-35 Create LegacyProfileView shareable infographic with Year One badge and journey summary
+Depends on:
+- P27-LIF-34
+
+- [x] P27-LIF-36 Add custom Legacy Title text input for Day 365+ users displayed in Profile
+Depends on:
+- P27-LIF-35
+
+- [x] P27-LIF-37 Create TimeCapsuleService for writing and scheduling future message delivery at Day 730
+Depends on:
+- P27-LIF-36
+
+### Tests
+
+- [x] P27-TST-01 Add unit tests for ChapterService objective progress and completion detection
+Depends on:
+- P27-LIF-06
+
+- [x] P27-TST-02 Add unit tests for PrestigeService rebirth validation, reset logic, and bonus stacking
+Depends on:
+- P27-LIF-13
+
+- [x] P27-TST-03 Add unit tests for habit level threshold calculation and XP bonus integration
+Depends on:
+- P27-LIF-18
+
+- [x] P27-TST-04 Add unit tests for SeasonalEventService opt-in, progress, and reward distribution
+Depends on:
+- P27-LIF-32
+
+- [x] P27-TST-05 Add unit tests for MasteryFocusService monthly change limit and XP multiplier
+Depends on:
+- P27-LIF-27
+
+## Phase 28 – Personas & Inclusivity
+
+### Alternative Themes
+
+- [x] P28-INC-01 Create ThemeProvider enum (.warrior, .garden, .scholar) with display string dictionaries
+Depends on:
+- P27-TST-05
+
+- [x] P28-INC-02 Create theme-specific naming tables for evolution tiers, streak tiers, and boss names
+Depends on:
+- P28-INC-01
+
+- [x] P28-INC-03 Create theme-specific accent color sets in Asset Catalog (forge gold, garden green, scholar blue)
+Depends on:
+- P28-INC-01
+
+- [x] P28-INC-04 Add theme_preference field to Profile model and Supabase users table
+Depends on:
+- P28-INC-03
+
+- [x] P28-INC-05 Create ThemeSelectionView in onboarding and settings with preview of each theme's look
+Depends on:
+- P28-INC-04
+
+- [x] P28-INC-06 Update NarrativeEngine to read display strings from ThemeProvider instead of hardcoded copy
+Depends on:
+- P28-INC-05
+
+- [x] P28-INC-07 Update ForgeVoice, evolution tier names, and boss battle copy to reference ThemeProvider
+Depends on:
+- P28-INC-06
+
+- [x] P28-INC-08 Update streak tier display names and icons per theme (flame/plant/scroll variants)
+Depends on:
+- P28-INC-07
+
+### Adaptive Difficulty Mode
+
+- [x] P28-INC-09 Add difficultyMode (.standard, .adaptive) to Profile model with setting toggle
+Depends on:
+- P28-INC-08
+
+- [x] P28-INC-10 Implement adaptive mode defaults: 2 habits/day, shorter workout options (5min, 10min)
+Depends on:
+- P28-INC-09
+
+- [x] P28-INC-11 Implement adaptive mode forgiveness: 2 tokens/month instead of 1
+Depends on:
+- P28-INC-10
+
+- [x] P28-INC-12 Implement adaptive mode streak calculation: 1+ completion counts as streak day
+Depends on:
+- P28-INC-11
+
+- [x] P28-INC-13 Add more frequent micro-reward animations in adaptive mode (every completion, not just milestones)
+Depends on:
+- P28-INC-12
+
+- [x] P28-INC-14 Create AdaptiveDifficultyInfoView explaining mode benefits with inclusive framing (not deficit language)
+Depends on:
+- P28-INC-13
+
+### Progressive Commitment
+
+- [x] P28-INC-15 Add commitmentStage (.exploration, .foundation, .full) to Profile model
+Depends on:
+- P28-INC-09
+
+- [x] P28-INC-16 Implement exploration stage behavior: no streak tracking, no commitment language, 7-day scope
+Depends on:
+- P28-INC-15
+
+- [x] P28-INC-17 Implement foundation stage behavior: gentle streak with extra forgiveness, 30-day scope
+Depends on:
+- P28-INC-16
+
+- [x] P28-INC-18 Create StageTransitionView celebrating graduation between commitment stages
+Depends on:
+- P28-INC-17
+
+- [x] P28-INC-19 Wire automatic stage upgrade prompts at Day 7 (exploration→foundation) and Day 30 (foundation→full)
+Depends on:
+- P28-INC-18
+
+### Buddy System
+
+- [x] P28-INC-20 Create buddy_pairs Supabase migration table (user_a, user_b, pair_code, connected_at, bond_streak)
+Depends on:
+- P28-INC-08
+
+- [x] P28-INC-21 Create BuddyService with link via code, daily completion sharing, and bond streak tracking
+Depends on:
+- P28-INC-20
+
+- [x] P28-INC-22 Create BuddyLinkView with code generation and input for pairing
+Depends on:
+- P28-INC-21
+
+- [x] P28-INC-23 Create BuddyStatusView small avatar + checkmark component for home screen corner
+Depends on:
+- P28-INC-22
+
+- [x] P28-INC-24 Implement shared bonus: +5 XP each when both buddies complete all habits on same day
+Depends on:
+- P28-INC-23
+
+- [x] P28-INC-25 Add privacy constraint: buddy only sees completion status (checkmark/X), never habit names
+Depends on:
+- P28-INC-24
+
+### Age-Inclusive Design
+
+- [x] P28-INC-26 Add "Classic Navigation" setting using .tabViewStyle(.automatic) instead of page style
+Depends on:
+- P28-INC-09
+
+- [x] P28-INC-27 Audit and enforce 44pt minimum tap target on all interactive elements across the app
+Depends on:
+- P28-INC-26
+
+- [x] P28-INC-28 Add longer onboarding screen pause duration when Reduce Motion or larger text is enabled
+Depends on:
+- P28-INC-27
+
+### Cultural Sensitivity
+
+- [x] P28-INC-29 Extract all user-facing strings to String Catalog (.xcstrings) for localization readiness
+Depends on:
+- P28-INC-06
+
+- [x] P28-INC-30 Review and tag quote pool for cultural neutrality, removing culture-specific assumptions
+Depends on:
+- P28-INC-29
+
+- [x] P28-INC-31 Add culturally neutral habit preset alternatives (contemplative practice vs meditation, movement vs specific exercises)
+Depends on:
+- P28-INC-30
+
+### Tests
+
+- [x] P28-TST-01 Add unit tests for ThemeProvider display string completeness (all keys covered per theme)
+Depends on:
+- P28-INC-08
+
+- [x] P28-TST-02 Add unit tests for adaptive mode streak calculation (1+ completion = streak day)
+Depends on:
+- P28-INC-12
+
+- [x] P28-TST-03 Add unit tests for commitment stage transitions and behavior differences
+Depends on:
+- P28-INC-19
+
+- [x] P28-TST-04 Add unit tests for BuddyService pairing, privacy constraints, and bond streak logic
+Depends on:
+- P28-INC-25
+
+## Phase 29 – Infrastructure & DevOps
+
+### CI Secret Injection
+
+- [x] P29-INF-01 Add CI step to ios-build.yml generating Secrets.xcconfig from GitHub Secrets
+Depends on:
+- P28-TST-04
+
+- [x] P29-INF-02 Add CI step to ios-tests.yml generating Secrets.xcconfig from GitHub Secrets
+Depends on:
+- P29-INF-01
+
+- [x] P29-INF-03 Add Xcode build phase script validating Secrets.xcconfig values are not placeholder strings
+Depends on:
+- P29-INF-02
+
+### Release Pipeline
+
+- [x] P29-INF-04 Create Fastlane Matchfile for certificate and provisioning profile management
+Depends on:
+- P29-INF-03
+
+- [x] P29-INF-05 Create Fastlane Gymfile for archive configuration (scheme, export method, output directory)
+Depends on:
+- P29-INF-04
+
+- [x] P29-INF-06 Create Fastlane Fastfile with lanes: build_for_testing, archive, upload_to_testflight
+Depends on:
+- P29-INF-05
+
+- [x] P29-INF-07 Create ios-deploy.yml workflow triggered by tag push with archive and TestFlight upload
+Depends on:
+- P29-INF-06
+
+- [x] P29-INF-08 Add manual dispatch option to ios-deploy.yml for staging builds from develop branch
+Depends on:
+- P29-INF-07
+
+### Version Automation
+
+- [x] P29-INF-09 Add build number automation using github.run_number in CI workflows
+Depends on:
+- P29-INF-07
+
+- [x] P29-INF-10 Add marketing version extraction from git tag in release workflow
+Depends on:
+- P29-INF-09
+
+- [x] P29-INF-11 Create version bump script using agvtool for local development
+Depends on:
+- P29-INF-10
+
+### SPM & Caching
+
+- [x] P29-INF-12 Add actions/cache step to ios-build.yml keyed on Package.resolved hash
+Depends on:
+- P29-INF-03
+
+- [x] P29-INF-13 Add swift package-ecosystem to .github/dependabot.yml with weekly interval
+Depends on:
+- P29-INF-12
+
+- [x] P29-INF-14 Commit Package.resolved to repository for reproducible builds
+Depends on:
+- P29-INF-13
+
+### Crash Reporting
+
+- [x] P29-INF-15 Add Sentry iOS SDK as SPM dependency with pinned version
+Depends on:
+- P29-INF-14
+
+- [x] P29-INF-16 Create SentryService wrapper with initialization, breadcrumbs, and user context (hashed ID only)
+Depends on:
+- P29-INF-15
+
+- [x] P29-INF-17 Add dSYM upload build phase for release builds in Xcode project
+Depends on:
+- P29-INF-16
+
+- [x] P29-INF-18 Wire SentryService.addBreadcrumb into screen transitions and service call errors
+Depends on:
+- P29-INF-17
+
+### Environment Separation
+
+- [x] P29-INF-19 Create Secrets.debug.xcconfig and Secrets.release.xcconfig templates
+Depends on:
+- P29-INF-03
+
+- [x] P29-INF-20 Create separate Xcode build schemes: RNF-Dev, RNF-Staging, RNF-Production
+Depends on:
+- P29-INF-19
+
+- [x] P29-INF-21 Configure each scheme to use corresponding xcconfig for environment-specific Supabase endpoints
+Depends on:
+- P29-INF-20
+
+### Database Deployment
+
+- [x] P29-INF-22 Add supabase db push step to CI triggered on merge to develop (staging auto-deploy)
+Depends on:
+- P29-INF-21
+
+- [x] P29-INF-23 Add supabase db push step for production with manual approval gate on merge to main
+Depends on:
+- P29-INF-22
+
+### Code Coverage
+
+- [x] P29-INF-24 Add -enableCodeCoverage YES to xcodebuild test command in ios-tests.yml
+Depends on:
+- P29-INF-12
+
+- [x] P29-INF-25 Add lcov export and upload to Codecov with 60% minimum threshold enforcement
+Depends on:
+- P29-INF-24
+
+- [x] P29-INF-26 Add coverage badge to README and PR comment with delta reporting
+Depends on:
+- P29-INF-25
+
+### Portable Automation
+
+- [x] P29-INF-27 Replace hardcoded ROOT_DIR in rnf_cycle.sh with dynamic path detection
+Depends on:
+- P29-INF-03
+
+- [x] P29-INF-28 Extract rnf_cycle.sh configuration into .env.automation file with documented variables
+Depends on:
+- P29-INF-27
+
+- [x] P29-INF-29 Add shellcheck validation step to CI for all scripts/ files
+Depends on:
+- P29-INF-28
+
+### Additional DevOps
+
+- [x] P29-INF-30 Create SECURITY.md with responsible disclosure instructions and security contact
+Depends on:
+- P29-INF-03
+
+- [x] P29-INF-31 Create CONTRIBUTING.md with setup instructions, PR process, and coding standards
+Depends on:
+- P29-INF-30
+
+- [x] P29-INF-32 Add actions/labeler workflow for auto-labeling PRs based on file paths changed
+Depends on:
+- P29-INF-31
+
+- [x] P29-INF-33 Add config.yml to ISSUE_TEMPLATE disabling blank issues and enforcing structured creation
+Depends on:
+- P29-INF-32
+
+- [x] P29-INF-34 Add UI test workflow (ios-uitests.yml) running RNFUITests target on nightly schedule
+Depends on:
+- P29-INF-12
+
+### Tests
+
+- [x] P29-TST-01 Add integration test verifying Secrets.xcconfig generation script produces valid output
+Depends on:
+- P29-INF-03
+
+- [x] P29-TST-02 Add test verifying DeepLinkRouter handles all documented URL patterns
+Depends on:
+- P29-INF-21
+
+- [x] P29-TST-03 Add test verifying SentryService breadcrumb capture without PII leakage
+Depends on:
+- P29-INF-18

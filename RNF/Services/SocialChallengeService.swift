@@ -14,13 +14,13 @@ final class SocialChallengeService {
             target_completions: targetCompletions, current_completions: 0,
             status: .active, start_date: startDate, end_date: endDate, created_at: nil
         )
-        let created: SocialChallenge = try await supabase.client
+        let created: SocialChallenge = try await supabase.db
             .from("social_challenges").insert(challenge).select().single().execute().value
         return created
     }
 
     func activeChallenges(guildId: UUID) async throws -> [SocialChallenge] {
-        try await supabase.client
+        try await supabase.db
             .from("social_challenges").select()
             .eq("guild_id", value: guildId.uuidString)
             .eq("status", value: SocialChallenge.Status.active.rawValue)
@@ -28,7 +28,7 @@ final class SocialChallengeService {
     }
 
     func incrementProgress(challengeId: UUID) async throws -> SocialChallenge {
-        let current: SocialChallenge = try await supabase.client
+        let current: SocialChallenge = try await supabase.db
             .from("social_challenges").select()
             .eq("id", value: challengeId.uuidString).single().execute().value
 
@@ -36,7 +36,7 @@ final class SocialChallengeService {
         let newStatus: SocialChallenge.Status = newCount >= current.target_completions ? .completed : .active
 
         struct Update: Encodable { let current_completions: Int; let status: SocialChallenge.Status }
-        let updated: SocialChallenge = try await supabase.client
+        let updated: SocialChallenge = try await supabase.db
             .from("social_challenges")
             .update(Update(current_completions: newCount, status: newStatus))
             .eq("id", value: challengeId.uuidString).select().single().execute().value

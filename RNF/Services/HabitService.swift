@@ -13,7 +13,7 @@ final class HabitService {
     func fetchHabits() async -> [Habit] {
 
         do {
-            let habits: [Habit] = try await supabase.client
+            let habits: [Habit] = try await supabase.db
                 .from("habits")
                 .select()
                 .execute()
@@ -33,7 +33,7 @@ final class HabitService {
     func createHabit(_ habit: Habit) async -> Habit {
 
         do {
-            try await supabase.client
+            try await supabase.db
                 .from("habits")
                 .insert(habit)
                 .execute()
@@ -47,7 +47,7 @@ final class HabitService {
     func updateHabit(_ habit: Habit) async -> Habit {
 
         do {
-            try await supabase.client
+            try await supabase.db
                 .from("habits")
                 .upsert(habit)
                 .execute()
@@ -66,7 +66,7 @@ final class HabitService {
         }
 
         do {
-            try await supabase.client
+            try await supabase.db
                 .from("habit_completions")
                 .insert(completion)
                 .execute()

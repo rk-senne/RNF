@@ -11,7 +11,7 @@ final class BossService {
     }
 
     func activeBoss(userId: UUID) async throws -> Boss? {
-        let bosses: [Boss] = try await supabase.client
+        let bosses: [Boss] = try await supabase.db
             .from("bosses")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -25,7 +25,7 @@ final class BossService {
     func spawnBoss(userId: UUID, type: Boss.BossType, level: Int) async throws -> Boss {
         var boss = Boss.create(type: type, level: level)
         boss.user_id = userId
-        let created: Boss = try await supabase.client
+        let created: Boss = try await supabase.db
             .from("bosses")
             .insert(boss)
             .select()
@@ -39,7 +39,7 @@ final class BossService {
         // HIGH-3: Clamp damage to prevent client-side abuse
         let clampedDamage = max(0, min(damage, 50))
 
-        let boss: Boss = try await supabase.client
+        let boss: Boss = try await supabase.db
             .from("bosses")
             .select()
             .eq("id", value: bossId.uuidString)
@@ -62,7 +62,7 @@ final class BossService {
         }
 
         // Only update if boss is still active (prevents double-defeat XP)
-        let updated: Boss = try await supabase.client
+        let updated: Boss = try await supabase.db
             .from("bosses")
             .update(BossUpdate(current_hp: newHP, status: newStatus, defeated_at: newHP <= 0 ? Date() : nil))
             .eq("id", value: bossId.uuidString)

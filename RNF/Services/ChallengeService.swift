@@ -37,7 +37,7 @@ final class ChallengeService {
             created_at: nil
         )
 
-        let createdChallenge: Challenge = try await supabase.client
+        let createdChallenge: Challenge = try await supabase.db
             .from("challenges")
             .insert(challenge)
             .select()
@@ -62,7 +62,7 @@ final class ChallengeService {
 
     func getActiveChallenge(userId: UUID) async throws -> Challenge? {
 
-        let challenges: [Challenge] = try await supabase.client
+        let challenges: [Challenge] = try await supabase.db
             .from("challenges")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -89,7 +89,7 @@ final class ChallengeService {
             let current_day: Int
         }
 
-        let updatedChallenge: Challenge = try await supabase.client
+        let updatedChallenge: Challenge = try await supabase.db
             .from("challenges")
             .update(DayUpdate(current_day: advancedChallenge.current_day))
             .eq("id", value: challenge.id.uuidString)
@@ -107,7 +107,7 @@ final class ChallengeService {
             let status: Challenge.Status
         }
 
-        let completedChallenge: Challenge = try await supabase.client
+        let completedChallenge: Challenge = try await supabase.db
             .from("challenges")
             .update(StatusUpdate(status: .completed))
             .eq("id", value: challengeId.uuidString)
@@ -135,7 +135,7 @@ final class ChallengeService {
             let status: Challenge.Status
         }
 
-        try await supabase.client
+        try await supabase.db
             .from("challenges")
             .update(StatusUpdate(status: .reset))
             .eq("id", value: challenge.id.uuidString)

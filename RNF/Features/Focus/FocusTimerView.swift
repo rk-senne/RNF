@@ -68,6 +68,7 @@ struct FocusTimerView: View {
                     .foregroundStyle(.white)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
+                    .accessibilityLabel("\(remainingSeconds / 60) minutes and \(remainingSeconds % 60) seconds remaining")
             }
 
             Text(encouragement)

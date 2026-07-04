@@ -30,7 +30,7 @@ final class ReadingService {
 
         let path = Self.proofPath(userId: userId, date: date)
 
-        try await supabase.client.storage
+        try await supabase.db.storage
             .from(Self.proofBucket)
             .upload(
                 path,
@@ -46,7 +46,7 @@ final class ReadingService {
             created_at: nil
         )
 
-        let createdUpload: ReadingUpload = try await supabase.client
+        let createdUpload: ReadingUpload = try await supabase.db
             .from("reading_uploads")
             .insert(upload)
             .select()
@@ -97,7 +97,7 @@ final class ReadingService {
             let reading_completed: Bool
         }
 
-        let completedLog: DailyLog = try await supabase.client
+        let completedLog: DailyLog = try await supabase.db
             .from("daily_logs")
             .update(ReadingCompletionUpdate(reading_completed: true))
             .eq("id", value: dailyLog.id.uuidString)

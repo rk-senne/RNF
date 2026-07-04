@@ -36,7 +36,7 @@ final class UserService {
 
     func loadProfile(userId: UUID) async throws -> Profile? {
 
-        let profiles: [Profile] = try await supabase.client
+        let profiles: [Profile] = try await supabase.db
             .from("users")
             .select()
             .eq("id", value: userId.uuidString)
@@ -50,7 +50,7 @@ final class UserService {
 
     func fetchForgivenessTokens(userId: UUID) async throws -> Int {
 
-        let rows: [ForgivenessTokenRow] = try await supabase.client
+        let rows: [ForgivenessTokenRow] = try await supabase.db
             .from("users")
             .select("forgiveness_tokens")
             .eq("id", value: userId.uuidString)
@@ -71,7 +71,7 @@ final class UserService {
         // Use atomic RPC to prevent TOCTOU race condition (MEDIUM-3 / Chaos #11)
         struct RPCResult: Decodable { let use_forgiveness_token: Int }
 
-        let result: Int = try await supabase.client
+        let result: Int = try await supabase.db
             .rpc("use_forgiveness_token", params: ["uid": userId.uuidString])
             .execute()
             .value
@@ -93,7 +93,7 @@ final class UserService {
         }
 
         do {
-            try await supabase.client
+            try await supabase.db
                 .from("users")
                 .upsert(profile)
                 .execute()

@@ -9,7 +9,7 @@ final class MasteryPathService {
     }
 
     func fetchActivePath(userId: UUID) async throws -> MasteryPath? {
-        let paths: [MasteryPath] = try await supabase.client
+        let paths: [MasteryPath] = try await supabase.db
             .from("mastery_paths")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -24,7 +24,7 @@ final class MasteryPathService {
             id: UUID(), user_id: userId, pathType: pathType,
             tier: 1, xpInPath: 0, started_at: nil
         )
-        let created: MasteryPath = try await supabase.client
+        let created: MasteryPath = try await supabase.db
             .from("mastery_paths")
             .insert(path)
             .select()
@@ -35,7 +35,7 @@ final class MasteryPathService {
     }
 
     func addXP(pathId: UUID, xp: Int) async throws -> MasteryPath {
-        let current: MasteryPath = try await supabase.client
+        let current: MasteryPath = try await supabase.db
             .from("mastery_paths")
             .select()
             .eq("id", value: pathId.uuidString)
@@ -51,7 +51,7 @@ final class MasteryPathService {
             let tier: Int
         }
 
-        let updated: MasteryPath = try await supabase.client
+        let updated: MasteryPath = try await supabase.db
             .from("mastery_paths")
             .update(Update(xp_in_path: newXP, tier: newTier))
             .eq("id", value: pathId.uuidString)

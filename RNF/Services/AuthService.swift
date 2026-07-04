@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import AuthenticationServices
 import os
 
 struct SignUpResult {
@@ -16,10 +17,15 @@ final class AuthService {
         self.supabase = supabase
     }
 
+    // MARK: - Email Auth
+
     func signUp(email: String, password: String) async throws -> SignUpResult {
 
         RNFLogger.auth.info("Sign-up initiated")
-        let response = try await supabase.client.auth.signUp(
+        guard let client = supabase.client else {
+            throw AuthError.serviceUnavailable
+        }
+        let response = try await client.auth.signUp(
             email: email,
             password: password
         )
@@ -37,7 +43,10 @@ final class AuthService {
     func login(email: String, password: String) async throws -> Session {
 
         RNFLogger.auth.info("Login initiated")
-        let session = try await supabase.client.auth.signIn(
+        guard let client = supabase.client else {
+            throw AuthError.serviceUnavailable
+        }
+        let session = try await client.auth.signIn(
             email: email,
             password: password
         )
@@ -48,27 +57,89 @@ final class AuthService {
     func logout() async throws {
 
         RNFLogger.auth.info("Logout initiated")
-        try await supabase.client.auth.signOut()
+        guard let client = supabase.client else {
+            throw AuthError.serviceUnavailable
+        }
+        try await client.auth.signOut()
         RNFLogger.auth.info("Logout complete")
     }
 
     func restoreSession() async throws -> Session {
 
         RNFLogger.auth.info("Restoring session")
-        let session = try await supabase.client.auth.session
+        guard let client = supabase.client else {
+            throw AuthError.serviceUnavailable
+        }
+        let session = try await client.auth.session
         RNFLogger.auth.info("Session restored")
         return session
     }
 
     func refreshSessionIfNeeded() async throws -> Session {
         RNFLogger.auth.info("Checking token expiry")
-        let session = try await supabase.client.auth.session
+        guard let client = supabase.client else {
+            throw AuthError.serviceUnavailable
+        }
+        let session = try await client.auth.session
         if session.expiresAt < Date().timeIntervalSince1970 + 300 {
             RNFLogger.auth.info("Token near expiry, refreshing")
-            return try await supabase.client.auth.refreshSession()
+            return try await client.auth.refreshSession()
         }
         return session
     }
+
+    // MARK: - Sign in with Apple (P21-FIX-09)
+
+    func signInWithApple(credential: ASAuthorizationAppleIDCredential) async throws -> Session {
+        RNFLogger.auth.info("Sign in with Apple initiated")
+        guard let client = supabase.client else {
+            throw AuthError.serviceUnavailable
+        }
+
+        guard let identityToken = credential.identityToken,
+              let tokenString = String(data: identityToken, encoding: .utf8) else {
+            throw AuthError.invalidAppleCredential
+        }
+
+        let session = try await client.auth.signInWithIdToken(
+            credentials: .init(
+                provider: .apple,
+                idToken: tokenString
+            )
+        )
+
+        // Bootstrap profile if this is a new user
+        let email = credential.email
+        try? await bootstrapProfile(userId: session.user.id, email: email)
+
+        RNFLogger.auth.info("Sign in with Apple complete")
+        return session
+    }
+
+    /// Check Apple credential state for revocation detection.
+    func checkAppleCredentialState(userID: String) async -> ASAuthorizationAppleIDProvider.CredentialState {
+        await withCheckedContinuation { continuation in
+            ASAuthorizationAppleIDProvider().getCredentialState(forUserID: userID) { state, _ in
+                continuation.resume(returning: state)
+            }
+        }
+    }
+
+    // MARK: - Errors
+
+    enum AuthError: Error, LocalizedError {
+        case serviceUnavailable
+        case invalidAppleCredential
+
+        var errorDescription: String? {
+            switch self {
+            case .serviceUnavailable: return "Authentication service is unavailable"
+            case .invalidAppleCredential: return "Invalid Apple credential"
+            }
+        }
+    }
+
+    // MARK: - Private
 
     private func signUpResult(from response: AuthResponse) -> SignUpResult {
 
@@ -112,7 +183,8 @@ final class AuthService {
 
     private func bootstrapProfile(userId: UUID, email: String?) async throws {
 
-        try await supabase.client
+        guard let client = supabase.client else { return }
+        try await client
             .from("users")
             .upsert(makeBootstrapProfile(userId: userId, email: email))
             .execute()

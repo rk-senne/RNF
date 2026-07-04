@@ -12,7 +12,7 @@ final class SkillTreeService {
 
     func fetchSkillNodes() async throws -> [SkillTreeNode] {
 
-        try await supabase.client
+        try await supabase.db
             .from("skill_nodes")
             .select()
             .execute()
@@ -21,7 +21,7 @@ final class SkillTreeService {
 
     func fetchUserUnlocks(userId: UUID) async throws -> [UserSkillUnlock] {
 
-        try await supabase.client
+        try await supabase.db
             .from("user_skills")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -42,7 +42,7 @@ final class SkillTreeService {
             unlocked_at: unlockedAt
         )
 
-        return try await supabase.client
+        return try await supabase.db
             .from("user_skills")
             .insert(unlock)
             .select()
@@ -92,7 +92,7 @@ final class SkillTreeService {
     private func hasActiveSubscription(userId: UUID) async -> Bool {
         struct SubRow: Decodable { let status: String }
         do {
-            let rows: [SubRow] = try await supabase.client
+            let rows: [SubRow] = try await supabase.db
                 .from("subscriptions")
                 .select("status")
                 .eq("user_id", value: userId.uuidString)

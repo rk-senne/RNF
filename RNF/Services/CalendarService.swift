@@ -22,7 +22,7 @@ final class CalendarService {
             to: startOfMonth
         ) ?? startOfMonth
 
-        let logs: [DailyLog] = try await supabase.client
+        let logs: [DailyLog] = try await supabase.db
             .from("daily_logs")
             .select()
             .eq("user_id", value: userId.uuidString)

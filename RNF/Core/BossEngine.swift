@@ -63,7 +63,10 @@ final class BossEngine {
                 return nil
             }
             let type = BossSystem.selectBossType(for: profile.stats)
-            return try await bossService.spawnBoss(userId: userId, type: type, level: profile.level)
+            let boss = try await bossService.spawnBoss(userId: userId, type: type, level: profile.level)
+            // P20-VOX-03: Voice trigger for boss spawn
+            ForgeVoice.speak("A new challenge approaches. Prepare yourself.")
+            return boss
         } catch {
             RNFLogger.challenge.error("BossEngine.spawnIfNeeded failed: \(error.localizedDescription)")
             return nil

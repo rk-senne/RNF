@@ -16,15 +16,37 @@ concurrency:
 jobs:
   test:
     name: Run RNFTests
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 45
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
       - name: Show Xcode version
         run: xcodebuild -version
+
+      # P29-INF-12: SPM cache
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/RNFDerivedData/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      # P29-INF-02: Generate Secrets.xcconfig for test environment
+      - name: Generate Secrets.xcconfig
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          chmod +x scripts/generate_xcconfig.sh
+          ./scripts/generate_xcconfig.sh
 
       - name: Select available iPhone simulator
         shell: bash
@@ -46,7 +68,8 @@ jobs:
           echo "SIMULATOR_DESTINATION=platform=iOS Simulator,name=$device_name" >> "$GITHUB_ENV"
           echo "Selected simulator: $device_name"
 
-      - name: Run unit tests
+      # P29-INF-24: Run tests with code coverage enabled
+      - name: Run unit tests with coverage
         run: |
           xcodebuild \
             -project RNF.xcodeproj \
@@ -54,4 +77,100 @@ jobs:
             -destination "$SIMULATOR_DESTINATION" \
             -derivedDataPath /tmp/RNFDerivedData \
             -only-testing:RNFTests \
+            -enableCodeCoverage YES \
             test
+
+      # P29-INF-25: Export coverage to lcov format
+      - name: Export code coverage (lcov)
+        run: |
+          set -euo pipefail
+
+          # Find the .xcresult bundle
+          XCRESULT=$(find /tmp/RNFDerivedData/Logs/Test -name '*.xcresult' -type d | head -n 1)
+
+          if [[ -z "$XCRESULT" ]]; then
+            echo "Error: No .xcresult bundle found"
+            exit 1
+          fi
+
+          echo "Using xcresult: $XCRESULT"
+
+          # Export coverage report using xccov
+          xcrun xccov view --report --json "$XCRESULT" > coverage.json
+
+          # Convert to lcov format
+          python3 - <<'EOF'
+          import json
+          import sys
+
+          with open("coverage.json") as f:
+              report = json.load(f)
+
+          with open("coverage.lcov", "w") as lcov:
+              for target in report.get("targets", []):
+                  if "RNFTests" in target.get("name", ""):
+                      continue
+                  for source_file in target.get("files", []):
+                      path = source_file.get("path", "")
+                      if not path:
+                          continue
+                      lcov.write(f"SF:{path}\n")
+                      for func in source_file.get("functions", []):
+                          name = func.get("name", "unknown")
+                          line = func.get("lineNumber", 0)
+                          count = func.get("executionCount", 0)
+                          lcov.write(f"FN:{line},{name}\n")
+                          lcov.write(f"FNDA:{count},{name}\n")
+                      lcov.write("end_of_record\n")
+
+          print("Coverage exported to coverage.lcov")
+          EOF
+
+      # P29-INF-25: Enforce 60% coverage threshold
+      - name: Check coverage threshold (60%)
+        run: |
+          set -euo pipefail
+
+          COVERAGE=$(python3 - <<'EOF'
+          import json
+
+          with open("coverage.json") as f:
+              report = json.load(f)
+
+          # Get the overall line coverage percentage
+          for target in report.get("targets", []):
+              name = target.get("name", "")
+              if name == "RNF.app" or name.startswith("RNF"):
+                  if "Tests" not in name and "Widget" not in name and "Watch" not in name:
+                      pct = target.get("lineCoverage", 0) * 100
+                      print(f"{pct:.1f}")
+                      break
+          else:
+              # Fallback: use overall coverage
+              pct = report.get("lineCoverage", 0) * 100
+              print(f"{pct:.1f}")
+          EOF
+          )
+
+          echo "Code coverage: ${COVERAGE}%"
+
+          # Fail if below 60%
+          python3 -c "
+          coverage = float('${COVERAGE}')
+          threshold = 60.0
+          if coverage < threshold:
+              print(f'FAIL: Coverage {coverage:.1f}% is below threshold {threshold:.1f}%')
+              exit(1)
+          else:
+              print(f'PASS: Coverage {coverage:.1f}% meets threshold {threshold:.1f}%')
+          "
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: |
+            coverage.lcov
+            coverage.json
+          retention-days: 30

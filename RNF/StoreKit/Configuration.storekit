@@ -1,0 +1,133 @@
+{
+  "identifier" : "com.rnf.storekit",
+  "type" : "Configuration",
+  "version" : 3,
+  "subscriptionGroups" : [
+    {
+      "id" : "21514001",
+      "localizations" : [
+        {
+          "description" : "Unlock unlimited habits, skill trees, weekly insights, and streak protection.",
+          "displayName" : "RNF Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "com.rnf.pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21514002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full Pro access billed yearly. Save 33%.",
+              "displayName" : "RNF Pro Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.rnf.pro.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "RNF Pro Yearly",
+          "subscriptionGroupID" : "21514001",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "21514003",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full Pro access billed monthly.",
+              "displayName" : "RNF Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.rnf.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "RNF Pro Monthly",
+          "subscriptionGroupID" : "21514001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "products" : [
+    {
+      "displayPrice" : "79.99",
+      "familyShareable" : false,
+      "internalID" : "21514004",
+      "localizations" : [
+        {
+          "description" : "All Pro features forever. Includes Founding Forger badge.",
+          "displayName" : "RNF Pro Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.rnf.pro.lifetime",
+      "referenceName" : "RNF Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "com.rnf.app",
+    "_developerTeamID" : "XXXXXXXXXX",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  }
+}

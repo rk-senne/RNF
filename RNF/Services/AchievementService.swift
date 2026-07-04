@@ -10,7 +10,7 @@ final class AchievementService {
 
     func fetchUnlocked(userId: UUID) async throws -> [String] {
         struct Row: Decodable { let achievement_id: String }
-        let rows: [Row] = try await supabase.client
+        let rows: [Row] = try await supabase.db
             .from("user_achievements")
             .select("achievement_id")
             .eq("user_id", value: userId.uuidString)
@@ -24,7 +24,7 @@ final class AchievementService {
             let user_id: UUID
             let achievement_id: String
         }
-        try await supabase.client
+        try await supabase.db
             .from("user_achievements")
             .insert(Insert(user_id: userId, achievement_id: achievementId))
             .execute()

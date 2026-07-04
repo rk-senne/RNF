@@ -17,6 +17,7 @@ final class WidgetDataWriter {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    @MainActor
     func write(from gameState: GameState) {
         let data = RNFWidgetData(
             streakCount: gameState.profile.streak,

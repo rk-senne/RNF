@@ -5,6 +5,7 @@ import SwiftUI
 struct RNFWidgetBundle: WidgetBundle {
     var body: some Widget {
         RNFStreakWidget()
+        RNFInteractiveWidget()
     }
 }
 

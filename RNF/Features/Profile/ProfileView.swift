@@ -20,6 +20,7 @@ struct ProfileView: View {
             }
 
             ThemeSettingsView()
+            VoiceSettingsView()
             HealthSettingsSection()
         }
         .navigationTitle("Profile")

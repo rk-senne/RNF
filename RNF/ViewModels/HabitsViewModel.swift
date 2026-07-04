@@ -14,6 +14,7 @@ final class HabitsViewModel: ObservableObject {
     @Published var loadErrorMessage: String?
     @Published var persistenceError: RNFServiceError?
     @Published var weeklyHabit: Habit?
+    @Published var comboCount: Int = 0
 
     private let userService: UserService
     private let questService: QuestService
@@ -21,6 +22,7 @@ final class HabitsViewModel: ObservableObject {
     private let progressionEngine: ProgressionEngine
     private weak var gameState: GameState?
     private var isLoaded = false
+    private var lastCompletionTime: Date?
 
     init(
         userService: UserService? = nil,
@@ -80,7 +82,7 @@ final class HabitsViewModel: ObservableObject {
         }
     }
 
-    func completeHabit(_ habit: Habit) async {
+    func completeHabit(_ habit: Habit, notifications: NotificationManager? = nil) async {
 
         guard
             let gameState,
@@ -97,11 +99,16 @@ final class HabitsViewModel: ObservableObject {
 
         guard let result = await progressionEngine.processHabitCompletion(habitId: habit.id) else {
             persistenceError = .unknown
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            RNFHaptics.warning()
             return
         }
         persistenceError = nil
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        RNFHaptics.impact(.medium)
+
+        // P20-EXP-05d: Detect tier-up
+        let oldTier = StreakTierSystem.tier(for: gameState.streak)
+        let newTier = StreakTierSystem.tier(for: result.updatedProfile.streak)
+        let tierChanged = oldTier != newTier && result.missionCompleted
 
         applyState(
             profile: result.updatedProfile,
@@ -113,32 +120,89 @@ final class HabitsViewModel: ObservableObject {
             dailyLog: result.updatedDailyLog
         )
 
-        xpGained = result.xpGained
-        showLevelUp = result.leveledUp
-        showMissionComplete = result.missionCompleted
-
-        if result.leveledUp {
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        // P20-EXP-09c: Save snapshot at streak milestones
+        let newStreak = result.updatedProfile.streak
+        if result.missionCompleted, [7, 14, 30, 60, 90].contains(newStreak) {
+            let s = result.updatedProfile.stats
+            MemoryService.save(ProgressSnapshot(
+                milestone: "day\(newStreak)",
+                dateString: Date().formatted("yyyy-MM-dd"),
+                level: result.updatedProfile.level,
+                streak: newStreak,
+                xpTotal: result.updatedProfile.xp_total,
+                stats: [
+                    Double(s.strength), Double(s.discipline), Double(s.focus),
+                    Double(s.energy), Double(s.wisdom), Double(s.mind), Double(s.spirit)
+                ],
+                tierName: newTier.rawValue
+            ))
         }
 
-        if result.missionCompleted {
-            let streak = result.updatedProfile.streak
-            if streak == 7 || streak == 30 || streak == 60 || streak == 90 {
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
+        // Fire through notification system
+        if let notifications {
+            notifications.showToast(.xpGain(result.xpGained))
+
+            if result.leveledUp {
+                notifications.showCelebration(.levelUp(gameState.level))
+                RNFHaptics.success()
+            }
+
+            if result.missionCompleted {
+                notifications.showCelebration(.missionComplete)
+                let streak = result.updatedProfile.streak
+                if streak == 7 || streak == 14 || streak == 30 || streak == 60 || streak == 90 {
+                    RNFHaptics.success()
+                    // P20-VOX-03: Voice trigger for streak milestones
+                    ForgeVoice.speak("\(streak) days. The discipline holds.")
+                }
+            }
+
+            if let badge = result.unlockedBadge {
+                notifications.showCelebration(.badgeUnlocked(badge))
+            }
+
+            // P20-EXP-05d: Fire tier-up celebration
+            if tierChanged {
+                notifications.showCelebration(.tierUp(newTier.rawValue))
+                RNFHaptics.success()
+            }
+        } else {
+            // Fallback for legacy callers
+            xpGained = result.xpGained
+            showLevelUp = result.leveledUp
+            showMissionComplete = result.missionCompleted
+            if let badge = result.unlockedBadge {
+                unlockedBadge = badge
+                showBadgeUnlocked = true
             }
         }
 
-        if let badge = result.unlockedBadge {
-            unlockedBadge = badge
-            showBadgeUnlocked = true
-        } else {
-            unlockedBadge = ""
-            showBadgeUnlocked = false
+        WidgetDataWriter.shared.write(from: gameState)
+
+        // P20-EXP-19c: Update Live Activity with current progress
+        if #available(iOS 16.2, *) {
+            let tierName = StreakTierSystem.tier(for: gameState.streak).rawValue
+            if gameState.dailyCompleted >= gameState.dailyGoal {
+                LiveActivityManager.end()
+            } else {
+                LiveActivityManager.update(
+                    habitsCompleted: gameState.dailyCompleted,
+                    habitsGoal: gameState.dailyGoal,
+                    streak: gameState.streak,
+                    tierName: tierName
+                )
+            }
         }
 
-        if let gameState {
-            WidgetDataWriter.shared.write(from: gameState)
+        // P20-EXP-02c: Combo detection
+        if let last = lastCompletionTime, Date().timeIntervalSince(last) < 60 {
+            comboCount += 1
+            let comboBonus = 5 * comboCount
+            notifications?.showToast(.xpGain(comboBonus))
+        } else {
+            comboCount = 1
         }
+        lastCompletionTime = Date()
     }
 
     private func applyState(

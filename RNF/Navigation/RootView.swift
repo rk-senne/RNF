@@ -32,8 +32,11 @@ struct RootView: View {
                     AscensionView()
                 }
                 .tag(3)
+
+                ProfileTabView()
+                    .tag(4)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            .tabViewStyle(.automatic) // P21-NAV-05: Fix gesture conflicts
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             RNFTabBar(
@@ -73,10 +76,12 @@ struct RootView: View {
         }
         .onAppear {
             ritualManager.checkMorningIntention()
-            evolution.update(level: game.level) // P20-EXP-06c
+            if ReleaseGate.isEnabled(.insights) {
+                evolution.update(level: game.level)
+            }
             if WeeklyReportService.shouldShow() { showWeeklyReport = true }
             // P20-EXP-19c: Start Live Activity on app open
-            if #available(iOS 16.2, *) {
+            if #available(iOS 16.2, *), ReleaseGate.isEnabled(.insights) {
                 LiveActivityManager.start(
                     challengeDay: 1,
                     habitsCompleted: game.dailyCompleted,
@@ -87,11 +92,15 @@ struct RootView: View {
             }
         }
         .onChange(of: game.level) { _, newLevel in
-            evolution.update(level: newLevel) // P20-EXP-06c
+            if ReleaseGate.isEnabled(.insights) {
+                evolution.update(level: newLevel)
+            }
         }
         // P20-EXP-14e: Discovery evaluation on foreground
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            Task { await checkDiscoveries() }
+            if ReleaseGate.isEnabled(.insights) {
+                Task { await checkDiscoveries() }
+            }
         }
         .fullScreenCover(isPresented: $showWeeklyReport) {
             WeeklyReportView(

@@ -1,13 +1,33 @@
 import Foundation
 
-// P20-EXP-13b: Wire Focus XP on session completion
+/// Handles Focus session completion by routing XP updates through
+/// the profile → gameState.apply path for consistency with other engines.
 struct FocusCompletionHandler {
+
+    /// Completes a focus session, awarding XP and stat gains through the profile.
+    @MainActor
     static func complete(xp: Int, gameState: GameState) {
-        let applied = XPSystem.applyXP(totalXP: gameState.xp, gainedXP: xp)
-        gameState.xp = applied.xpIntoLevel
-        gameState.xpToNext = applied.xpToNext
-        if applied.leveledUp { gameState.level = applied.level }
-        gameState.stats.focus += 1
-        gameState.stats.mind += 1
+        var updatedProfile = gameState.profile
+
+        // Apply XP to profile
+        updatedProfile.xp_total += xp
+        let levelState = XPSystem.levelState(for: updatedProfile.xp_total)
+        updatedProfile.level = levelState.level
+
+        // Apply stat gains (Focus + Mind)
+        updatedProfile.focus += 1
+        updatedProfile.mind += 1
+
+        // Route through the standard apply path
+        gameState.apply(
+            profile: updatedProfile,
+            levelState: levelState,
+            titles: gameState.titles,
+            quests: gameState.quests,
+            dailyGoal: gameState.dailyGoal,
+            dailyCompleted: gameState.dailyCompleted,
+            completedHabitIDs: gameState.completedHabitIDs,
+            dailyLog: gameState.dailyLog
+        )
     }
 }

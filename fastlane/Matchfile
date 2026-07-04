@@ -1,0 +1,31 @@
+# P29-INF-04: Certificate management via fastlane match
+
+# Git repository containing certificates and profiles
+git_url(ENV["MATCH_GIT_URL"] || "https://github.com/YOUR_ORG/ios-certificates.git")
+
+# Storage mode: git (default) or google_cloud
+storage_mode("git")
+
+# App identifier(s) for certificate management
+app_identifier(["com.rnf.app", "com.rnf.app.widget", "com.rnf.app.watchkitapp"])
+
+# Apple Developer Portal username
+username(ENV["APPLE_ID"] || "your@email.com")
+
+# Team ID
+team_id(ENV["TEAM_ID"] || "YOUR_TEAM_ID")
+
+# Certificate types to manage
+type("appstore") # Options: development, adhoc, appstore, enterprise
+
+# Platform
+platform("ios")
+
+# Read-only mode for CI (prevents accidental cert regeneration)
+readonly(true) if ENV["CI"]
+
+# Force overwrite existing profiles (use with caution)
+force(false)
+
+# Keychain name for CI
+keychain_name("fastlane_tmp_keychain") if ENV["CI"]

@@ -54,7 +54,7 @@ struct SignUpView: View {
 
                 Text("Minimum 8 characters")
                     .font(RNFFont.caption)
-                    .foregroundStyle(password.isEmpty ? .tertiary : (password.count >= 8 ? RNFColors.success : RNFColors.destructive))
+                    .foregroundStyle(password.isEmpty ? Color.secondary.opacity(0.5) : (password.count >= 8 ? RNFColors.success : RNFColors.destructive))
 
                 SecureField("Confirm Password", text: $confirmedPassword)
                     .textContentType(.newPassword)
@@ -91,6 +91,32 @@ struct SignUpView: View {
                 .foregroundStyle(Color.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
+
+            // P21-FIX-10: Sign in with Apple
+            AppleSignInButton(
+                onSuccess: { credential in
+                    Task {
+                        do {
+                            let session = try await authService.signInWithApple(credential: credential)
+                            onSignUp(SignUpResult(session: session, userId: session.user.id, email: session.user.email))
+                        } catch {
+                            errorMessage = "Apple Sign-In failed. Try again."
+                        }
+                    }
+                },
+                onError: { _ in
+                    errorMessage = "Apple Sign-In was cancelled."
+                }
+            )
+
+            // P21-NAV-06: Navigate to Login
+            NavigationLink("Already have an account? Sign In") {
+                LoginView(authService: authService, onLogin: { session in
+                    onSignUp(SignUpResult(session: session, userId: session.user.id, email: session.user.email))
+                })
+            }
+            .font(RNFFont.body)
+            .frame(maxWidth: .infinity)
 
             Spacer(minLength: 24)
         }

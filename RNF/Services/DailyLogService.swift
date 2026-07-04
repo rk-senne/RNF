@@ -26,7 +26,7 @@ final class DailyLogService {
 
         let normalizedDate = date.startOfDay
 
-        let logs: [DailyLog] = try await supabase.client
+        let logs: [DailyLog] = try await supabase.db
             .from("daily_logs")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -62,7 +62,7 @@ final class DailyLogService {
         )
 
         do {
-            let createdLog: DailyLog = try await supabase.client
+            let createdLog: DailyLog = try await supabase.db
                 .from("daily_logs")
                 .insert(dailyLog)
                 .select()
@@ -143,7 +143,7 @@ final class DailyLogService {
         let createdCompletion: HabitCompletion
 
         do {
-            createdCompletion = try await supabase.client
+            createdCompletion = try await supabase.db
                 .from("habit_completions")
                 .insert(normalizedCompletion)
                 .select()
@@ -171,7 +171,7 @@ final class DailyLogService {
         date: Date
     ) async throws -> HabitCompletion? {
 
-        let completions: [HabitCompletion] = try await supabase.client
+        let completions: [HabitCompletion] = try await supabase.db
             .from("habit_completions")
             .select()
             .eq("user_id", value: userId.uuidString)
@@ -236,7 +236,7 @@ final class DailyLogService {
             let status: DailyLog.Status
         }
 
-        let updatedLog: DailyLog = try await supabase.client
+        let updatedLog: DailyLog = try await supabase.db
             .from("daily_logs")
             .update(StatusUpdate(status: updatedStatus))
             .eq("id", value: dailyLog.id.uuidString)
@@ -275,7 +275,7 @@ final class DailyLogService {
         )
 
         do {
-            try await supabase.client
+            try await supabase.db
                 .from("daily_logs")
                 .upsert(normalizedDailyLog)
                 .execute()

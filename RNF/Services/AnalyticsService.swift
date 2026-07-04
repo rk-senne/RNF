@@ -47,7 +47,7 @@ final class AnalyticsService {
         )
 
         do {
-            try await supabase.client
+            try await supabase.db
                 .from("analytics_events")
                 .insert(event)
                 .execute()

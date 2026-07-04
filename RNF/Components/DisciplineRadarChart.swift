@@ -130,9 +130,9 @@ struct RadarShape: Shape {
 
     var values: [Double]
 
-    var animatableData: [Double] {
-        get { values }
-        set { values = newValue }
+    var animatableData: AnimatableVector {
+        get { AnimatableVector(values) }
+        set { values = newValue.values }
     }
 
     func path(in rect: CGRect) -> Path {
@@ -163,18 +163,3 @@ struct RadarShape: Shape {
 
 }
 
-extension Array: @retroactive VectorArithmetic where Element == Double {
-    public static func - (lhs: [Double], rhs: [Double]) -> [Double] {
-        zip(lhs, rhs).map { $0 - $1 }
-    }
-    public static func + (lhs: [Double], rhs: [Double]) -> [Double] {
-        zip(lhs, rhs).map { $0 + $1 }
-    }
-    public mutating func scale(by rhs: Double) {
-        self = map { $0 * rhs }
-    }
-    public var magnitudeSquared: Double {
-        reduce(0) { $0 + $1 * $1 }
-    }
-    public static var zero: [Double] { [] }
-}

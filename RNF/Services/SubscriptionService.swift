@@ -82,7 +82,7 @@ final class SubscriptionService {
             renewal_date: entitlement?.expirationDate
         )
 
-        try await supabase.client
+        try await supabase.db
             .from("subscriptions")
             .update(update)
             .eq("user_id", value: userId.uuidString)

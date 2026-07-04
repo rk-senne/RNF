@@ -121,7 +121,7 @@ private struct CalendarDayCell: View {
             Text("\(day)")
                 .font(RNFFont.captionBold)
                 .foregroundStyle(foregroundColor)
-                .frame(maxWidth: .infinity, minHeight: 36, minWidth: 36)
+                .frame(minWidth: 36, maxWidth: .infinity, minHeight: 36)
                 .aspectRatio(1, contentMode: .fit)
                 .background {
                     Circle()

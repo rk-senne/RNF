@@ -44,7 +44,7 @@ final class WorkoutService {
             let workout_completed: Bool
         }
 
-        let completedLog: DailyLog = try await supabase.client
+        let completedLog: DailyLog = try await supabase.db
             .from("daily_logs")
             .update(WorkoutCompletionUpdate(workout_completed: true))
             .eq("id", value: dailyLog.id.uuidString)

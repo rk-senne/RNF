@@ -17,6 +17,8 @@ final class RitualManager: ObservableObject {
         let today = dateString()
         if lastIntentDate != today {
             showMorningIntention = true
+            // P20-VOX-03: Voice trigger for morning ritual
+            ForgeVoice.speak("The forge awaits. Set your intention.")
         }
     }
 

@@ -1,0 +1,139 @@
+name: iOS Deploy
+
+# P29-INF-07: Tag push trigger + manual dispatch for staging
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version_override:
+        description: 'Version override (leave empty for auto)'
+        required: false
+        type: string
+
+concurrency:
+  group: ios-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Archive & Deploy to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 60
+    environment: ${{ github.event.inputs.environment || 'production' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version derivation
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      # P29-INF-12: SPM cache
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: /tmp/RNFDerivedData/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      # P29-INF-01/03: Generate Secrets.xcconfig
+      - name: Generate Secrets.xcconfig
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          chmod +x scripts/generate_xcconfig.sh
+          ./scripts/generate_xcconfig.sh
+
+      # P29-INF-09/10: Version automation from git tag + run_number
+      - name: Derive version from git tag
+        id: version
+        run: |
+          set -euo pipefail
+
+          if [[ -n "${{ github.event.inputs.version_override }}" ]]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            # Strip 'v' prefix: v1.2.3 → 1.2.3
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            # Fallback: latest tag + dev suffix
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.1.0")
+            VERSION="${LATEST_TAG#v}-dev"
+          fi
+
+          BUILD_NUMBER="${{ github.run_number }}"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION ($BUILD_NUMBER)"
+
+      # P29-INF-04: Install Fastlane
+      - name: Install Fastlane
+        run: |
+          gem install fastlane --no-document
+
+      # P29-INF-08: Certificate setup via match
+      - name: Setup signing certificates
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+        run: |
+          bundle exec fastlane match appstore --readonly
+        working-directory: ${{ github.workspace }}
+
+      # P29-INF-07: Archive and upload
+      - name: Archive and upload to TestFlight
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        run: |
+          bundle exec fastlane deploy version:"$VERSION" build_number:"$BUILD_NUMBER"
+
+      - name: Upload dSYMs artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsyms-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build_number }}
+          path: |
+            *.app.dSYM.zip
+            /tmp/RNFArchive/*.dSYM
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RNF ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build_number }})
+          body: |
+            ## RNF ${{ steps.version.outputs.version }}
+
+            Build: ${{ steps.version.outputs.build_number }}
+            Environment: ${{ github.event.inputs.environment || 'production' }}
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

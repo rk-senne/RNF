@@ -2,6 +2,7 @@ import Foundation
 
 enum WatchSnapshotGenerator {
 
+    @MainActor
     static func generate(from gameState: GameState) -> WatchDailySnapshot {
         WatchDailySnapshot(
             date: Date(),

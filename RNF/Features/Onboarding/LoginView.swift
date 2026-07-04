@@ -83,6 +83,34 @@ struct LoginView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
 
+            // P21-FIX-10: Sign in with Apple
+            AppleSignInButton(
+                onSuccess: { credential in
+                    Task {
+                        do {
+                            let session = try await authService.signInWithApple(credential: credential)
+                            onLogin(session)
+                        } catch {
+                            errorMessage = "Apple Sign-In failed. Try again."
+                        }
+                    }
+                },
+                onError: { _ in
+                    errorMessage = "Apple Sign-In was cancelled."
+                }
+            )
+
+            // P21-NAV-06: Navigate to Sign Up
+            NavigationLink("Create Account") {
+                SignUpView(authService: authService, onSignUp: { result in
+                    if let session = result.session {
+                        onLogin(session)
+                    }
+                })
+            }
+            .font(RNFFont.body)
+            .frame(maxWidth: .infinity)
+
             Spacer(minLength: 24)
         }
         .padding(24)

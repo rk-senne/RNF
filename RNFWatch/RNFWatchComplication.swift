@@ -22,16 +22,34 @@ struct WatchComplicationEntry: TimelineEntry {
 
 struct WatchComplicationProvider: TimelineProvider {
     func placeholder(in context: Context) -> WatchComplicationEntry {
-        WatchComplicationEntry(date: Date(), streak: 0, progress: 0)
+        WatchComplicationEntry(date: Date(), streak: 7, progress: 0.5)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WatchComplicationEntry) -> Void) {
-        completion(WatchComplicationEntry(date: Date(), streak: 0, progress: 0))
+        let entry = loadEntry()
+        completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchComplicationEntry>) -> Void) {
-        let entry = WatchComplicationEntry(date: Date(), streak: 0, progress: 0)
-        completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(1800))))
+        let entry = loadEntry()
+        // Refresh every 30 minutes
+        let nextUpdate = Date().addingTimeInterval(1800)
+        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+    }
+
+    // P21-FIX-05: Read real data from shared UserDefaults (App Group)
+    private func loadEntry() -> WatchComplicationEntry {
+        let defaults = UserDefaults(suiteName: "group.com.rnf.shared") ?? .standard
+        let streak = defaults.integer(forKey: "rnf_widget_streak")
+        let completed = defaults.integer(forKey: "rnf_widget_daily_completed")
+        let goal = max(defaults.integer(forKey: "rnf_widget_daily_goal"), 1)
+        let progress = Double(completed) / Double(goal)
+
+        return WatchComplicationEntry(
+            date: Date(),
+            streak: streak,
+            progress: min(progress, 1.0)
+        )
     }
 }
 
@@ -42,7 +60,6 @@ struct WatchComplicationView: View {
     var body: some View {
         switch family {
         case .accessoryCircular:
-            // P20-EXP-19d: Show progress gauge with streak
             ZStack {
                 Gauge(value: entry.progress) {
                     Text("")
@@ -56,7 +73,6 @@ struct WatchComplicationView: View {
                 }
             }
         case .accessoryInline:
-            // P20-EXP-19d: Show tier name in inline
             Text("\(StreakTierSystem.icon(for: StreakTierSystem.tier(for: entry.streak))) \(entry.streak)d • \(StreakTierSystem.tier(for: entry.streak).rawValue)")
         default:
             Text("\(entry.streak)")
