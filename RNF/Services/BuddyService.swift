@@ -101,10 +101,22 @@ final class BuddyService: ObservableObject {
             isActive: false
         )
 
-        // TODO: Persist to Supabase buddy_pairs table
-        RNFLogger.social.info("Created buddy invite with code: \(code)")
-        activePair = pair
-        return .savedRemotely(pair)
+        do {
+            let created: BuddyPair = try await supabase.db
+                .from("buddy_pairs")
+                .insert(pair)
+                .select()
+                .single()
+                .execute()
+                .value
+            RNFLogger.social.info("Created buddy invite with code: \(code)")
+            activePair = created
+            return .savedRemotely(created)
+        } catch {
+            RNFLogger.social.error("BuddyService: createInvite failed — \(error.localizedDescription)")
+            activePair = pair
+            return .savedLocallyOnly(pair, error: .networkUnavailable)
+        }
     }
 
     /// Joins an existing pair using a link code.
@@ -113,20 +125,28 @@ final class BuddyService: ObservableObject {
             return .notSaved(.serverRejected)
         }
 
-        // TODO: Query Supabase for matching code, update buddy_id
-        let pair = BuddyPair(
-            id: UUID(),
-            userId: UUID(), // Original creator
-            buddyId: userId,
-            linkCode: code,
-            bondStreak: 0,
-            createdAt: Date(),
-            isActive: true
-        )
+        do {
+            struct BuddyJoinUpdate: Encodable {
+                let buddy_id: UUID
+                let is_active: Bool
+            }
 
-        activePair = pair
-        RNFLogger.social.info("Joined buddy pair with code: \(code)")
-        return .savedRemotely(pair)
+            let updated: BuddyPair = try await supabase.db
+                .from("buddy_pairs")
+                .update(BuddyJoinUpdate(buddy_id: userId, is_active: true))
+                .eq("link_code", value: code)
+                .select()
+                .single()
+                .execute()
+                .value
+
+            activePair = updated
+            RNFLogger.social.info("Joined buddy pair with code: \(code)")
+            return .savedRemotely(updated)
+        } catch {
+            RNFLogger.social.error("BuddyService: joinWithCode failed — \(error.localizedDescription)")
+            return .notSaved(.notFound)
+        }
     }
 
     // MARK: - Daily Completion Sharing (P28-INC-21/23)
@@ -147,36 +167,55 @@ final class BuddyService: ObservableObject {
             completionCount: dailyCompleted
         )
 
-        // TODO: Push to Supabase buddy_daily_status table
-        RNFLogger.social.info("Shared daily status: \(status.didComplete)")
+        do {
+            try await supabase.db
+                .from("buddy_daily_status")
+                .upsert(status)
+                .execute()
+            RNFLogger.social.info("Shared daily status: \(status.didComplete)")
+        } catch {
+            RNFLogger.social.error("BuddyService: shareDailyStatus failed — \(error.localizedDescription)")
+        }
     }
 
     /// Fetches buddy's daily status (privacy-safe: no habit details).
     func fetchBuddyStatus(for pair: BuddyPair, currentUserId: UUID) async -> BuddyDailyStatus? {
         let buddyId = pair.userId == currentUserId ? pair.buddyId : pair.userId
 
-        // TODO: Query Supabase for buddy's today status
-        let status = BuddyDailyStatus(
-            userId: buddyId,
-            date: Date().startOfDay,
-            didComplete: false,
-            completionCount: 0
-        )
+        do {
+            let statuses: [BuddyDailyStatus] = try await supabase.db
+                .from("buddy_daily_status")
+                .select()
+                .eq("user_id", value: buddyId.uuidString)
+                .eq("date", value: Date().startOfDay)
+                .limit(1)
+                .execute()
+                .value
 
-        buddyStatus = status
-        return status
+            let status = statuses.first
+            buddyStatus = status
+            return status
+        } catch {
+            RNFLogger.social.error("BuddyService: fetchBuddyStatus failed — \(error.localizedDescription)")
+            return nil
+        }
     }
 
-    // MARK: - Bond Streak (P28-INC-22)
+    // MARK: - Bond Streak (P28-INC-22, P32-SOC-01 Enhancement)
 
-    /// Calculates the bond streak — consecutive days both buddies completed.
+    /// Enhanced bond streak — increments when EITHER buddy completes 1+ habit.
+    /// This lowers the bar compared to the original "both must complete all" model,
+    /// creating lower-friction mutual accountability.
+    ///
+    /// The bond streak only resets if NEITHER buddy logged any completions.
     func calculateBondStreak(
         myCompleted: Bool,
         buddyCompleted: Bool,
         currentBondStreak: Int
     ) -> BondStreakResult {
+        let eitherCompleted = myCompleted || buddyCompleted
         let bothCompleted = myCompleted && buddyCompleted
-        let newStreak = bothCompleted ? currentBondStreak + 1 : 0
+        let newStreak = eitherCompleted ? currentBondStreak + 1 : 0
         let bonus = bothCompleted ? Self.xpBonusBothComplete : 0
 
         bondStreak = newStreak
@@ -205,16 +244,44 @@ final class BuddyService: ObservableObject {
         bondStreak = 0
         buddyStatus = nil
 
-        // TODO: Update Supabase — set is_active = false
-        RNFLogger.social.info("Buddy pair \(pairId) deactivated")
+        do {
+            struct DeactivateUpdate: Encodable {
+                let is_active: Bool
+            }
+
+            try await supabase.db
+                .from("buddy_pairs")
+                .update(DeactivateUpdate(is_active: false))
+                .eq("id", value: pairId.uuidString)
+                .execute()
+            RNFLogger.social.info("Buddy pair \(pairId) deactivated")
+        } catch {
+            RNFLogger.social.error("BuddyService: unpair failed — \(error.localizedDescription)")
+        }
+
         return true
     }
 
     // MARK: - Load Active Pair
 
     func loadActivePair(userId: UUID) async {
-        // TODO: Query Supabase for active pair where user_id or buddy_id matches
-        // For now, loads from local state
+        do {
+            let pairs: [BuddyPair] = try await supabase.db
+                .from("buddy_pairs")
+                .select()
+                .eq("is_active", value: true)
+                .or("user_id.eq.\(userId.uuidString),buddy_id.eq.\(userId.uuidString)")
+                .limit(1)
+                .execute()
+                .value
+
+            activePair = pairs.first
+            if let pair = activePair {
+                bondStreak = pair.bondStreak
+            }
+        } catch {
+            RNFLogger.social.error("BuddyService: loadActivePair failed — \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Privacy Verification

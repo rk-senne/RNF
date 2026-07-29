@@ -117,6 +117,9 @@ Each phase maps to spec documents in `RNF/Docs/specs/`:
 | 27 | SPEC_LIFECYCLE_ENDGAME.md |
 | 28 | SPEC_PERSONAS_INCLUSIVITY.md |
 | 29 | SPEC_INFRASTRUCTURE_DEVOPS.md |
+| 30 | SPEC_COMPETITIVE_GAPS.md (Streak Survival & Day-1 Wins) |
+| 31 | SPEC_COMPETITIVE_GAPS.md (Flexible Intensity & Forecast) |
+| 32 | SPEC_COMPETITIVE_GAPS.md (Social Enhancement & League Urgency) |
 
 Agents MUST read the relevant spec before implementing any task.
 

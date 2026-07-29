@@ -159,6 +159,7 @@ SPEC_PERSONAS_INCLUSIVITY ─────────┘──▶ v1.1+ (Post-La
 | SPEC_APPLE_PLATFORM | 📋 Specced | — | — |
 | SPEC_LIFECYCLE_ENDGAME | 📋 Specced | — | — |
 | SPEC_PERSONAS_INCLUSIVITY | 📋 Specced | — | — |
+| SPEC_COMPETITIVE_GAPS | 📋 Specced | — | — |
 
 Status legend: 📋 Specced | 🚧 In Progress | ✅ Complete | ⏸️ Deferred
 

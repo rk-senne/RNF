@@ -3504,3 +3504,149 @@ Depends on:
 - [x] P29-TST-03 Add test verifying SentryService breadcrumb capture without PII leakage
 Depends on:
 - P29-INF-18
+
+## Phase 30 – Streak Survival & Day-1 Wins (Competitive Gaps)
+
+### Streak Shield System
+
+- [x] P30-RET-01 Create StreakShieldSystem.swift in Systems/ with equip/consume/auto-protect pure logic
+Depends on:
+- P29-INF-31
+
+- [x] P30-RET-02 Add equippedShields field to Profile model and create Supabase migration 028_add_streak_shields.sql
+Depends on:
+- P30-RET-01
+
+- [x] P30-RET-03 Create StreakShieldService.swift in Services/ for shield count read/write persistence
+Depends on:
+- P30-RET-02
+
+- [x] P30-RET-04 Integrate shield auto-consumption into StreakSystem missed-day evaluation path
+Depends on:
+- P30-RET-03
+
+- [x] P30-RET-05 Create StreakShieldEquipView component with equip button and shield icon on streak display
+Depends on:
+- P30-RET-04
+
+### Day-1 Spark Achievements
+
+- [x] P30-RET-06 Define 5 SparkAchievement cases in Achievement model (firstHabit, quizComplete, goalSet, firstRead, firstWorkout)
+Depends on:
+- P29-INF-31
+
+- [x] P30-RET-07 Create SparkAchievementTrigger.swift in Core/ with event-to-achievement mapping logic
+Depends on:
+- P30-RET-06
+
+- [x] P30-RET-08 Wire SparkAchievementTrigger into onboarding flow and first-session completion handlers
+Depends on:
+- P30-RET-07
+
+### Tests
+
+- [x] P30-TST-01 Add unit tests for StreakShieldSystem (equip cap, consume on miss, auto-protect, forge token cost)
+Depends on:
+- P30-RET-04
+
+- [x] P30-TST-02 Add unit tests for SparkAchievementTrigger event→achievement firing correctness
+Depends on:
+- P30-RET-07
+
+## Phase 31 – Flexible Intensity & Progress Forecast
+
+### Intensity System
+
+- [x] P31-FLX-01 Create IntensitySystem.swift in Systems/ with level calculation (ember/flame/blaze/inferno) and XP multiplier
+Depends on:
+- P30-TST-02
+
+- [x] P31-FLX-02 Add intensityLevel computed property to DailyLog model based on completion ratio + extras
+Depends on:
+- P31-FLX-01
+
+- [x] P31-FLX-03 Update DailyLogService.updateStatus to persist calculated intensity level
+Depends on:
+- P31-FLX-02
+
+- [x] P31-FLX-04 Update StreakSystem to accept any IntensityLevel >= .ember as streak-valid day
+Depends on:
+- P31-FLX-01
+
+- [x] P31-FLX-05 Update CalendarGridView to render intensity gradient colors (grey→amber→orange→red→gold)
+Depends on:
+- P31-FLX-03
+
+### Progress Forecast
+
+- [x] P31-FLX-06 Create ProgressForecast.swift struct in Core/ with pure pace calculation and level projection
+Depends on:
+- P30-TST-02
+
+- [x] P31-FLX-07 Create ForecastCardView.swift component showing projected level date and pace trend arrow
+Depends on:
+- P31-FLX-06
+
+- [x] P31-FLX-08 Integrate ForecastCardView into ProfileView or WeeklyReportService output
+Depends on:
+- P31-FLX-07
+
+### Tests
+
+- [x] P31-TST-01 Add unit tests for IntensitySystem boundary cases (0 completions, partial, full, extras)
+Depends on:
+- P31-FLX-04
+
+- [x] P31-TST-02 Add unit tests for ProgressForecast calculation accuracy (linear projection, pace changes)
+Depends on:
+- P31-FLX-06
+
+## Phase 32 – Social Enhancement & League Urgency
+
+### Bond Streak Enhancement
+
+- [x] P32-SOC-01 Update BuddyService bond_streak increment logic to fire on EITHER buddy's 1+ daily completion
+Depends on:
+- P31-TST-02
+
+- [x] P32-SOC-02 Create BondStreakView shared flame component with growing animation for home screen
+Depends on:
+- P32-SOC-01
+
+- [x] P32-SOC-03 Add bond streak milestone notifications at 7, 14, 30, 60, 90 days via NotificationScheduler
+Depends on:
+- P32-SOC-01
+
+### League Urgency
+
+- [x] P32-SOC-04 Create LeagueUrgencyService.swift with demotion risk calculation based on weekly XP vs pool
+Depends on:
+- P31-TST-02
+
+- [x] P32-SOC-05 Add mid-week league threat notification (Thursday) via NotificationScheduler when at risk
+Depends on:
+- P32-SOC-04
+
+- [x] P32-SOC-06 Create LeagueWeekRecapCard showing position delta and promotion/demotion result
+Depends on:
+- P32-SOC-04
+
+### Impact Narrative
+
+- [x] P32-SOC-07 Create ImpactNarrativeSystem.swift in Systems/ with milestone→message mapping (7d, 30d, 90d, 365 habits)
+Depends on:
+- P31-TST-02
+
+- [x] P32-SOC-08 Integrate impact messages into MilestoneCardTrigger celebration overlay display
+Depends on:
+- P32-SOC-07
+
+### Tests
+
+- [x] P32-TST-01 Add unit tests for BuddyService bond streak increment (either-completes logic, reset on gap)
+Depends on:
+- P32-SOC-01
+
+- [x] P32-TST-02 Add unit tests for LeagueUrgencyService demotion risk classification
+Depends on:
+- P32-SOC-04
