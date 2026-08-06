@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class FeatureGateTests: XCTestCase {
 
     func testBossUnlocksAtLevel10With14DayStreak() {

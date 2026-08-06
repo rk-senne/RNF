@@ -3,7 +3,24 @@ import XCTest
 
 // MARK: - P26-TST-01/02/03/04: Apple Platform Integration Tests
 
+@MainActor
 final class ApplePlatformTests: XCTestCase {
+
+    // HealthKitAutoTracker persists its configuration list to
+    // UserDefaults.standard under this key. Reset it around every test so the
+    // auto-tracker cases start from a clean slate and don't accumulate configs
+    // across tests (or across prior runs on the same simulator).
+    private let autoTrackConfigKey = "rnf_healthkit_auto_track_configs"
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: autoTrackConfigKey)
+    }
+
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: autoTrackConfigKey)
+        super.tearDown()
+    }
 
     // P18-TST-01: HealthKit workout mapping
     func testHealthWorkoutSummaryMapping() {

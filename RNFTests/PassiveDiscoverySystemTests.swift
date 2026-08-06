@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class PassiveDiscoverySystemTests: XCTestCase {
 
     private func makeHistory(_ ids: [String]) -> [DiscoveryRecord] {

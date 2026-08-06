@@ -102,6 +102,9 @@ struct RootView: View {
                 Task { await checkDiscoveries() }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .rnfSwitchToHabitsTab)) { _ in
+            selectedTab = 0
+        }
         .fullScreenCover(isPresented: $showWeeklyReport) {
             WeeklyReportView(
                 report: WeeklyReportService.generate(profile: game.profile, streak: game.streak),

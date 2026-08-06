@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class AppConfigTests: XCTestCase {
 
     // MARK: - AppConfig
@@ -39,6 +40,7 @@ final class AppConfigTests: XCTestCase {
     }
 }
 
+@MainActor
 final class FocusCompletionHandlerTests: XCTestCase {
 
     @MainActor

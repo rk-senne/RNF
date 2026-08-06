@@ -3,6 +3,7 @@ import XCTest
 
 /// P23-TST-01/02/03/04: Unit tests for entitlement resolution,
 /// feature gating logic, trial expiry calculation, and subscription state.
+@MainActor
 final class SubscriptionManagerTests: XCTestCase {
 
     // MARK: - P23-TST-01: Entitlement Resolution

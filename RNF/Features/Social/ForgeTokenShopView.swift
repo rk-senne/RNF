@@ -5,6 +5,7 @@ import SwiftUI
 struct ForgeTokenShopView: View {
 
     @EnvironmentObject private var gameState: GameState
+    @StateObject private var tokenService = ForgeTokenService()
 
     @State private var selectedCategory: CosmeticCategory = .borders
     @State private var purchaseConfirmation: ShopItem?
@@ -85,8 +86,7 @@ struct ForgeTokenShopView: View {
     // MARK: - Data
 
     private var tokenBalance: Int {
-        // Token balance from profile; fallback to 0
-        0 // TODO: Read from gameState once forge_tokens is wired
+        tokenService.balance
     }
 
     private func items(for category: CosmeticCategory) -> [ShopItem] {
@@ -94,8 +94,10 @@ struct ForgeTokenShopView: View {
     }
 
     private func purchaseItem(_ item: ShopItem) {
-        RNFHaptics.success()
-        // TODO: Call ForgeTokenService to deduct and unlock
+        let success = tokenService.spend(amount: item.price, reason: "Purchased \(item.name)")
+        if success {
+            RNFHaptics.success()
+        }
     }
 }
 

@@ -18,6 +18,9 @@ struct CircularProgressRing: View {
                 .rotationEffect(.degrees(-90))
                 .animationIfAllowed(.spring(response: 0.4), value: progress)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Daily progress")
+        .accessibilityValue("\(Int(min(max(progress, 0), 1) * 100)) percent complete")
     }
 
     private var ringColor: Color {

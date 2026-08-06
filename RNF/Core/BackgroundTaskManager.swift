@@ -36,7 +36,11 @@ final class BackgroundTaskManager {
             using: nil
         ) { [weak self] task in
             guard let self else { return }
-            self.handleWidgetRefresh(task: task as! BGAppRefreshTask)
+            guard let refreshTask = task as? BGAppRefreshTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleWidgetRefresh(task: refreshTask)
         }
 
         BGTaskScheduler.shared.register(
@@ -44,7 +48,11 @@ final class BackgroundTaskManager {
             using: nil
         ) { [weak self] task in
             guard let self else { return }
-            self.handleSyncFlush(task: task as! BGProcessingTask)
+            guard let processingTask = task as? BGProcessingTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleSyncFlush(task: processingTask)
         }
 
         BGTaskScheduler.shared.register(
@@ -52,7 +60,11 @@ final class BackgroundTaskManager {
             using: nil
         ) { [weak self] task in
             guard let self else { return }
-            self.handleAnalyticsBatch(task: task as! BGProcessingTask)
+            guard let processingTask = task as? BGProcessingTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleAnalyticsBatch(task: processingTask)
         }
 
         logger.info("BackgroundTaskManager: All tasks registered")

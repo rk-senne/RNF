@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class SocialSystemTests: XCTestCase {
 
     // P17-TST-01: Guild model integrity

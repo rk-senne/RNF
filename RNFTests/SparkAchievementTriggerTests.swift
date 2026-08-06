@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class SparkAchievementTriggerTests: XCTestCase {
     
     // MARK: - Achievement ID Mapping

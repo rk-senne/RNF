@@ -1,7 +1,7 @@
 # RNF Project Conventions
 
 ## Stack
-- **Language:** Swift 5.0 (iOS 26.2+)
+- **Language:** Swift 5.0 (iOS 17.0+)
 - **UI:** SwiftUI (declarative, MVVM)
 - **Backend:** Supabase (PostgreSQL + Auth + Storage)
 - **Concurrency:** Swift structured concurrency (async/await, @MainActor)

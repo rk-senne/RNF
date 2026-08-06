@@ -2,6 +2,7 @@ import XCTest
 @testable import RNF
 
 /// P25-TST-02: Tests for DifficultyAdvisor — threshold evaluation and cooldown rules.
+@MainActor
 final class DifficultyAdvisorTests: XCTestCase {
 
     private let goalKey = "rnf_daily_goal"

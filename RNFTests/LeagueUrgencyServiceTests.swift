@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class LeagueUrgencyServiceTests: XCTestCase {
 
     // MARK: - Demotion Risk Assessment

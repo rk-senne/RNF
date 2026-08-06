@@ -86,14 +86,40 @@ final class SyncFlushService {
     }
 
     private func flushWorkoutCompletion(_ write: OfflineWriteQueue.PendingWrite) async -> Bool {
-        // Workout flush logic — uses WorkoutService
-        // TODO: Wire to WorkoutService when available
-        return true
+        guard let completion = try? JSONDecoder().decode(
+            PendingWorkoutCompletion.self, from: write.payload
+        ) else { return true } // Malformed data, don't retry
+
+        do {
+            let workoutService = WorkoutService()
+            _ = try await workoutService.completeWorkout(userId: write.userId, date: completion.date)
+            return true
+        } catch {
+            return false
+        }
     }
 
     private func flushReadingCompletion(_ write: OfflineWriteQueue.PendingWrite) async -> Bool {
-        // Reading flush logic — uses ReadingService
-        // TODO: Wire to ReadingService when available
-        return true
+        guard let completion = try? JSONDecoder().decode(
+            PendingReadingCompletion.self, from: write.payload
+        ) else { return true } // Malformed data, don't retry
+
+        do {
+            let readingService = ReadingService()
+            _ = try await readingService.completeReading(userId: write.userId, date: completion.date)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    // MARK: - Payload Models
+
+    private struct PendingWorkoutCompletion: Codable {
+        let date: Date
+    }
+
+    private struct PendingReadingCompletion: Codable {
+        let date: Date
     }
 }

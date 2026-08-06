@@ -64,6 +64,7 @@ final class StreakFreezeTests: XCTestCase {
             case monthlyLimitReached
         }
 
+        @MainActor
         mutating func purchaseFreezeWithTokens(forgeService: ForgeTokenService) -> PurchaseResult {
             guard tokenPurchasesThisMonth < Self.maxTokenPurchasesPerMonth else {
                 return .monthlyLimitReached

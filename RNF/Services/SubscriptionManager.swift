@@ -113,7 +113,11 @@ final class SubscriptionManager: ObservableObject {
 
     func restorePurchases() async {
         Self.logger.info("Restoring purchases")
-        try? await AppStore.sync()
+        do {
+            try await AppStore.sync()
+        } catch {
+            Self.logger.error("AppStore.sync failed during restore: \(error.localizedDescription)")
+        }
         await resolveEntitlements()
     }
 

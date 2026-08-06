@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class SkillTreeSystemTests: XCTestCase {
 
     func testSkillPointsStartAtLevelTenAndRepeatEveryFiveLevels() {

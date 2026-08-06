@@ -149,7 +149,7 @@ struct MicroChallengeView: View {
     private var actionButton: some View {
         Button {
             RNFHaptics.buttonTap()
-            // TODO: Navigate to habit completion flow
+            NotificationCenter.default.post(name: .rnfSwitchToHabitsTab, object: nil)
         } label: {
             Text("Complete a Habit")
                 .font(RNFFont.bodyBold)
@@ -230,6 +230,12 @@ struct MicroChallenge: Identifiable {
         expiresAt: Date().addingTimeInterval(3600 * 4),
         status: .active
     )
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let rnfSwitchToHabitsTab = Notification.Name("rnfSwitchToHabitsTab")
 }
 
 // MARK: - Preview

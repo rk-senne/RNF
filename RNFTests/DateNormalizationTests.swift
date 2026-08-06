@@ -2,6 +2,7 @@ import Foundation
 import XCTest
 @testable import RNF
 
+@MainActor
 final class DateNormalizationTests: XCTestCase {
 
     // MARK: - Daily Log Date Normalization

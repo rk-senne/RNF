@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class BondStreakEnhancementTests: XCTestCase {
 
     // MARK: - Enhanced Bond Streak Logic (P32-SOC-01)

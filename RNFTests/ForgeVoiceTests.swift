@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class ForgeVoiceTests: XCTestCase {
 
     override func setUp() {

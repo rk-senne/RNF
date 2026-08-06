@@ -4,6 +4,7 @@ import XCTest
 // P24-TST-01: CriticalHitEngine Tests
 // Validates seeded RNG determinism, crit rate distribution, and streak tier bonuses
 
+@MainActor
 final class CriticalHitEngineTests: XCTestCase {
 
     // MARK: - Test Constants
@@ -226,12 +227,12 @@ final class CriticalHitEngineTests: XCTestCase {
     }
 
     func testEffectiveCritRateIncludesStreakBonus() {
-        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .spark), 0.20)
-        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .ember), 0.25)
-        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .flame), 0.30)
-        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .blaze), 0.35)
-        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .inferno), 0.40)
-        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .eternal), 0.45)
+        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .spark), 0.20, accuracy: 0.0001)
+        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .ember), 0.25, accuracy: 0.0001)
+        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .flame), 0.30, accuracy: 0.0001)
+        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .blaze), 0.35, accuracy: 0.0001)
+        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .inferno), 0.40, accuracy: 0.0001)
+        XCTAssertEqual(CriticalHitEngine.effectiveCritRate(for: .eternal), 0.45, accuracy: 0.0001)
     }
 
     func testEffectiveCritRateCappedAt60Percent() {

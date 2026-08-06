@@ -9,10 +9,20 @@ final class EvolutionService {
     }
 
     func evolutionState(for profile: Profile) -> EvolutionState {
-        // TODO: Integrate with Supabase for persisted evolution state
-        _ = supabase
+        let state = EvolutionSystem.state(for: profile)
+        persistLastKnownRank(state.currentTier.rank, userId: profile.id)
+        return state
+    }
 
-        return EvolutionSystem.state(for: profile)
+    private func persistLastKnownRank(_ rank: EvolutionRank, userId: UUID) {
+        UserDefaults.standard.set(rank.rawValue, forKey: "rnf_evolution_rank_\(userId.uuidString)")
+    }
+
+    func lastKnownRank(userId: UUID) -> EvolutionRank? {
+        guard let raw = UserDefaults.standard.string(forKey: "rnf_evolution_rank_\(userId.uuidString)") else {
+            return nil
+        }
+        return EvolutionRank(rawValue: raw)
     }
 
     func currentTier(for profile: Profile) -> EvolutionTier {

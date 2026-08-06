@@ -18,7 +18,7 @@ final class AppStateManagerTests: XCTestCase {
         MockURLProtocol.requestHandler = { request in
             (Self.response(for: request), Self.jsonData("{}"))
         }
-        try? await supabase.client.auth.signOut(scope: .local)
+        try? await supabase.client!.auth.signOut(scope: .local)
         MockURLProtocol.requestHandler = nil
 
         await manager.resolveLaunchState(date: Self.date("2026-06-08T00:00:00Z"))
@@ -171,7 +171,7 @@ final class AppStateManagerTests: XCTestCase {
     }
 
     private func setSession(on supabase: SupabaseService) async throws {
-        try await supabase.client.auth.setSession(
+        try await supabase.client!.auth.setSession(
             accessToken: Self.accessToken,
             refreshToken: "dummy-refresh-token"
         )

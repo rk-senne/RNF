@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class PillarStreakServiceTests: XCTestCase {
 
     override func setUp() {
@@ -36,6 +37,7 @@ final class PillarStreakServiceTests: XCTestCase {
     }
 }
 
+@MainActor
 final class WeeklyReportServiceTests: XCTestCase {
 
     override func setUp() {

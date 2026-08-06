@@ -2,6 +2,7 @@ import XCTest
 @testable import RNF
 
 /// P25-TST-05: Tests for HabitDifficultyProfiler — classification boundaries and XP bonus.
+@MainActor
 final class HabitDifficultyTests: XCTestCase {
 
     private let difficultyDataKey = "rnf_habit_difficulty_ratings"

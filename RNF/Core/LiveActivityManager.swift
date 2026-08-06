@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import os
 
 // P20-EXP-19b: Manages Live Activity lifecycle
 @available(iOS 16.2, *)
@@ -16,7 +17,9 @@ struct LiveActivityManager {
         )
         do {
             _ = try Activity.request(attributes: attributes, content: .init(state: state, staleDate: nil))
-        } catch { }
+        } catch {
+            RNFLogger.sync.error("LiveActivityManager: Failed to start activity — \(error.localizedDescription)")
+        }
     }
 
     @MainActor

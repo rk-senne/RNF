@@ -78,7 +78,13 @@ final class ProgressionEngine {
             return nil
         }
 
-        let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+        let activePerks: ActivePerkSummary
+        do {
+            activePerks = try await skillTreeService.activePerks(for: updatedProfile)
+        } catch {
+            RNFLogger.habitCompletion.error("Failed to load active perks: \(error.localizedDescription)")
+            activePerks = .empty
+        }
         var updatedStats = updatedProfile.stats
         StatSystem.applyReward(
             stats: &updatedStats,

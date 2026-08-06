@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class ArchetypeQuizTests: XCTestCase {
 
     // MARK: - All 27 Combinations Produce Valid Archetypes (P22-TST-02)

@@ -1,6 +1,7 @@
 import XCTest
 @testable import RNF
 
+@MainActor
 final class HabitAgencyServiceTests: XCTestCase {
 
     override func tearDown() {

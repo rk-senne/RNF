@@ -138,10 +138,15 @@ final class LeagueService: ObservableObject {
 
     /// Report XP earned this week for league ranking
     func reportWeeklyXP(userID: UUID, xpGained: Int) async {
-        guard isJoined, let client = supabase.client else { return }
+        guard isJoined else { return }
 
+        // Local-first: always accumulate weekly XP locally when joined, so the
+        // count is correct offline. Only the remote sync below depends on a
+        // configured Supabase client (mirrors `join()`'s local-first pattern).
         let currentWeeklyXP = userDefaults.integer(forKey: Self.weeklyXPKey) + xpGained
         userDefaults.set(currentWeeklyXP, forKey: Self.weeklyXPKey)
+
+        guard let client = supabase.client else { return }
 
         do {
             struct XPUpdate: Encodable {

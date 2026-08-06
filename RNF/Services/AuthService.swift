@@ -110,7 +110,12 @@ final class AuthService {
 
         // Bootstrap profile if this is a new user
         let email = credential.email
-        try? await bootstrapProfile(userId: session.user.id, email: email)
+        do {
+            try await bootstrapProfile(userId: session.user.id, email: email)
+        } catch {
+            // Non-fatal: user can still proceed, profile may already exist
+            RNFLogger.auth.warning("bootstrapProfile failed during Apple sign-in (may already exist): \(error.localizedDescription)")
+        }
 
         RNFLogger.auth.info("Sign in with Apple complete")
         return session

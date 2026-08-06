@@ -2,6 +2,7 @@ import XCTest
 @testable import RNF
 
 /// P25-TST-01: Tests for AdaptiveTimingService — median calculation and drift detection.
+@MainActor
 final class AdaptiveTimingServiceTests: XCTestCase {
 
     private let medianKey = "rnf_adaptive_timing_weekday_median"
@@ -38,7 +39,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
             minutesSinceMidnight(8, 0)
         ]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         // Median of [420, 435, 450, 465, 480] = 450 (7:30)
         XCTAssertEqual(median, minutesSinceMidnight(7, 30), accuracy: 0.01)
@@ -51,7 +52,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
             minutesSinceMidnight(10, 0)
         ]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         XCTAssertEqual(median, minutesSinceMidnight(8, 0), accuracy: 0.01)
     }
@@ -59,7 +60,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
     func testMedianWithSingleValueReturnsThatValue() {
         let timestamps: [TimeInterval] = [minutesSinceMidnight(9, 30)]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         XCTAssertEqual(median, minutesSinceMidnight(9, 30), accuracy: 0.01)
     }
@@ -75,7 +76,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
             minutesSinceMidnight(8, 0)
         ]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         // Average of 440 and 460 = 450 (7:30)
         XCTAssertEqual(median, minutesSinceMidnight(7, 30), accuracy: 0.01)
@@ -87,7 +88,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
             minutesSinceMidnight(10, 0)
         ]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         // Average of 360 and 600 = 480 (8:00)
         XCTAssertEqual(median, minutesSinceMidnight(8, 0), accuracy: 0.01)
@@ -104,7 +105,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
             minutesSinceMidnight(8, 30)
         ]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         // Sorted middle two: 7:00 (420) and 7:30 (450) → avg = 435 (7:15)
         XCTAssertEqual(median, minutesSinceMidnight(7, 15), accuracy: 0.01)
@@ -127,7 +128,7 @@ final class AdaptiveTimingServiceTests: XCTestCase {
             minutesSinceMidnight(7, 0)
         ]
 
-        let median = AdaptiveTimingService.computeMedian(timestamps)
+        let median = AdaptiveTimingService.computeMedian(timestamps)!
 
         XCTAssertEqual(median, minutesSinceMidnight(7, 0), accuracy: 0.01)
     }

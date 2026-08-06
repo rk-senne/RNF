@@ -2,6 +2,7 @@ import XCTest
 @testable import RNF
 
 /// P25-TST-03: Tests for InsightEngine — pattern detection with mock 28-day data and minimum variance.
+@MainActor
 final class InsightEngineTests: XCTestCase {
 
     private let insightsShownKey = "rnf_insights_last_shown"

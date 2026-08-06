@@ -77,7 +77,13 @@ final class WorkoutEngine {
             )
 
             var updatedProfile = gameState.profile
-            let activePerks = (try? await skillTreeService.activePerks(for: updatedProfile)) ?? .empty
+            let activePerks: ActivePerkSummary
+            do {
+                activePerks = try await skillTreeService.activePerks(for: updatedProfile)
+            } catch {
+                RNFLogger.sync.error("Failed to load active perks: \(error.localizedDescription)")
+                activePerks = .empty
+            }
             let awardedXP = PerkSystem.modifiedXPReward(
                 baseXP: Self.workoutXP,
                 activePerks: activePerks,

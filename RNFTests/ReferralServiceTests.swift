@@ -1,4 +1,5 @@
 import XCTest
+import Supabase
 @testable import RNF
 
 // P24-TST-05: ReferralService Tests

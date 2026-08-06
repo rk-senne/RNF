@@ -1,7 +1,9 @@
 import Foundation
 import XCTest
+import Supabase
 @testable import RNF
 
+@MainActor
 final class AuthUserScopingTests: XCTestCase {
 
     // MARK: - AuthProviding Boundary

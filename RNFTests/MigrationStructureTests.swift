@@ -4,6 +4,7 @@ import XCTest
 
 /// These tests verify that the app's model assumptions align with the migration SQL schema.
 /// They do not connect to a database — they validate structural contracts statically.
+@MainActor
 final class MigrationStructureTests: XCTestCase {
 
     // MARK: - Uniqueness Constraint Alignment

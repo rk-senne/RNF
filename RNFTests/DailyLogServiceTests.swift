@@ -3,6 +3,7 @@ import Supabase
 import XCTest
 @testable import RNF
 
+@MainActor
 final class DailyLogServiceTests: XCTestCase {
 
     override func tearDown() {

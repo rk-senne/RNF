@@ -2,6 +2,7 @@ import XCTest
 @testable import RNF
 
 /// P25-TST-04: Tests for EngagementStateManager — state transitions and push safeguards.
+@MainActor
 final class EngagementStateTests: XCTestCase {
 
     private let stateKey = "rnf_engagement_state"
